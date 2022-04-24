@@ -1,0 +1,29 @@
+namespace Ragon.Common.Protocol
+{
+  public enum RagonOperation: ushort
+  {
+    AUTHORIZE,
+    AUTHORIZED_SUCCESS,
+    AUTHORIZED_FAILED,
+    
+    JOIN_ROOM,
+    LEAVE_ROOM,
+    
+    LOAD_SCENE,
+    SCENE_IS_LOADED,
+    
+    PLAYER_CONNECTED,
+    PLAYER_DISCONNECTED,
+    
+    CREATE_ENTITY,
+    DESTROY_ENTITY,
+    
+    RESTORE_BEGIN,
+    RESTORE_END,
+    RESTORED,
+    
+    REPLICATE_ENTITY_STATE,
+    REPLICATE_ENTITY_PROPERTY,
+    REPLICATE_EVENT,
+  }
+}
