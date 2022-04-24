@@ -1,5 +1,3 @@
-### Ragon
-
 <p align="center">
   <img src="Images/logo.png" width="200" >
 </p>
