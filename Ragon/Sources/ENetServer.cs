@@ -5,7 +5,6 @@ using System.Threading;
 using DisruptorUnity3d;
 using ENet;
 using NLog;
-using NLog.LayoutRenderers.Wrappers;
 
 namespace Ragon.Core
 {
@@ -18,15 +17,6 @@ namespace Ragon.Core
     Assigning,
     Connected
   }
-
-  public enum DeliveryType
-  {
-    UnreliableUnsequenced,
-    UnreliableSequenced,
-    UnreliableFragmented,
-    ReliableSequenced
-  }
-
 
   public class ENetServer : IDisposable
   {
@@ -42,7 +32,7 @@ namespace Ragon.Core
     private RingBuffer<Event> _sendBuffer;
     public void WriteEvent(Event evnt) => _sendBuffer.Enqueue(evnt);
     public bool ReadEvent(out Event evnt) => _receiveBuffer.TryDequeue(out evnt);
-    
+
     public void Start(ushort port)
     {
       Library.Initialize();
@@ -71,11 +61,25 @@ namespace Ragon.Core
       {
         while (_sendBuffer.TryDequeue(out var data))
         {
-          var newPacket = new Packet();
-          newPacket.Create(data.Data, data.Data.Length, PacketFlags.Reliable);
-          _peers[data.PeerId].Send(0, ref newPacket);
+          if (data.Type == EventType.DATA)
+          {
+            var newPacket = new Packet();
+
+            var packetFlags = PacketFlags.Instant;
+            if (data.Delivery == DeliveryType.Reliable)
+              packetFlags = PacketFlags.Reliable;
+            else if (data.Delivery == DeliveryType.Unreliable)
+              packetFlags = PacketFlags.Instant;
+            
+            newPacket.Create(data.Data, data.Data.Length, packetFlags);
+            _peers[data.PeerId].Send(0, ref newPacket);
+          }
+          else if (data.Type == EventType.DISCONNECTED)
+          {
+            _peers[data.PeerId].DisconnectNow(0);
+          }
         }
-        
+
         bool polled = false;
         while (!polled)
         {
@@ -96,7 +100,6 @@ namespace Ragon.Core
             case ENet.EventType.Connect:
             {
               var @event = new Event {PeerId = _netEvent.Peer.ID, Type = EventType.CONNECTED};
-              // Console.WriteLine("Client connected - ID: " + _netEvent.Peer.ID + ", IP: " + _netEvent.Peer.IP);
               _peers[_netEvent.Peer.ID] = _netEvent.Peer;
               _receiveBuffer.Enqueue(@event);
               break;
@@ -104,22 +107,19 @@ namespace Ragon.Core
             case ENet.EventType.Disconnect:
             {
               var @event = new Event {PeerId = _netEvent.Peer.ID, Type = EventType.DISCONNECTED};
-              // Console.WriteLine("Client disconnected - ID: " + _netEvent.Peer.ID + ", IP: " + _netEvent.Peer.IP);
               _receiveBuffer.Enqueue(@event);
               break;
             }
             case ENet.EventType.Timeout:
             {
-              // Console.WriteLine("Client timeout - ID: " + _netEvent.Peer.ID + ", IP: " + _netEvent.Peer.IP);
               var @event = new Event {PeerId = _netEvent.Peer.ID, Type = EventType.TIMEOUT};
-              // Console.WriteLine("Client disconnected - ID: " + _netEvent.Peer.ID + ", IP: " + _netEvent.Peer.IP);
               _receiveBuffer.Enqueue(@event);
               break;
             }
             case ENet.EventType.Receive:
             {
-              // Console.WriteLine("Packet received from - ID: " + _netEvent.Peer.ID + ", IP: " + _netEvent.Peer.IP + ", Channel ID: " + _netEvent.ChannelID + ", Data length: " + _netEvent.Packet.Length);
               var data = new byte[_netEvent.Packet.Length];
+             
               _netEvent.Packet.CopyTo(data);
               _netEvent.Packet.Dispose();
 

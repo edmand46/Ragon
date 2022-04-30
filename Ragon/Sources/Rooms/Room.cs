@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using NetStack.Serialization;
 using NLog;
+using NLog.LayoutRenderers;
 using Ragon.Common.Protocol;
 
 namespace Ragon.Core
@@ -13,10 +15,7 @@ namespace Ragon.Core
     private ILogger _logger = LogManager.GetCurrentClassLogger();
     private Dictionary<uint, Player> _players = new();
     private Dictionary<int, Entity> _entities = new();
-    private uint Owner;
-
-    private BitBuffer _buffer = new BitBuffer(8192);
-    private byte[] _bytes = new byte[8192];
+    private uint _owner;
 
     private readonly PluginBase _plugin;
     private readonly RoomThread _roomThread;
@@ -25,9 +24,8 @@ namespace Ragon.Core
 
     // Cache
     private uint[] _readyPlayers = Array.Empty<uint>();
-
-    public int Players => _players.Count;
-    public int MaxPlayers { get; } = 0;
+    private uint[] _allPlayers = Array.Empty<uint>();
+    private Entity[] _entitiesAll = Array.Empty<Entity>(); 
 
     public Room(RoomThread roomThread, PluginBase pluginBase, string map)
     {
@@ -35,6 +33,7 @@ namespace Ragon.Core
       _plugin = pluginBase;
       _map = map;
 
+      _logger.Info("Room created");
       _plugin.Attach(this);
     }
 
@@ -42,7 +41,7 @@ namespace Ragon.Core
     {
       if (_players.Count == 0)
       {
-        Owner = peerId;
+        _owner = peerId;
       }
 
       var player = new Player()
@@ -55,88 +54,112 @@ namespace Ragon.Core
       };
 
       _players.Add(peerId, player);
-      _plugin.OnPlayerConnected(player);
+      
+      _allPlayers = _players.Select(p => p.Key).ToArray();
+      
+      Span<byte> data = stackalloc byte[10];
+      Span<byte> operationData = data.Slice(0, 2);
+      Span<byte> peerData = data.Slice(2, 4);
+      Span<byte> ownerData = data.Slice(4, 4);
 
-      var data = new byte[8];
-      ProtocolHeader.WriteEntity((int) peerId, data, 0);
-      ProtocolHeader.WriteEntity((int) Owner, data, 4);
-      Send(peerId, RagonOperation.JOIN_ROOM, data);
+      ProtocolHeader.WriteUShort((ushort) RagonOperation.JOIN_ROOM, ref operationData);
+      ProtocolHeader.WriteInt((int) peerId, ref peerData);
+      ProtocolHeader.WriteInt((int) _owner, ref ownerData);
 
-      var sceneRawData = Encoding.UTF8.GetBytes(_map);
-      Send(peerId, RagonOperation.LOAD_SCENE, sceneRawData);
+      Send(peerId, data);
+
+      // var sceneRawData = Encoding.UTF8.GetBytes(_map);
+      // Send(peerId, RagonOperation.LOAD_SCENE, sceneRawData);
     }
 
     public void Leave(uint peerId)
     {
       if (_players.Remove(peerId, out var player))
       {
-        _plugin.OnPlayerDisconnected(player);
+        _allPlayers = _players.Select(p => p.Key).ToArray();
+        
         foreach (var entityId in player.EntitiesIds)
         {
-          var entityData = new byte[4];
-          ProtocolHeader.WriteEntity(entityId, entityData, 0);
-          Broadcast(_readyPlayers, RagonOperation.DESTROY_ENTITY, entityData);
+          Span<byte> entityData = stackalloc byte[6];
+          var operationData = entityData.Slice(0, 2);
           
+          ProtocolHeader.WriteUShort((ushort) RagonOperation.DESTROY_ENTITY, ref operationData);
+          ProtocolHeader.WriteInt(entityId, ref entityData);
+
+          Broadcast(_allPlayers, entityData);
+
           _entities.Remove(entityId);
         }
       }
     }
 
-    public void ProcessEvent(RagonOperation operation, uint peerId, byte[] rawData)
+    public void ProcessEvent(RagonOperation operation, uint peerId, ReadOnlySpan<byte> rawData)
     {
+      if (_plugin.InternalHandle(peerId, (ushort) operation, ref rawData)) return;
+
       switch (operation)
       {
         case RagonOperation.REPLICATE_ENTITY_STATE:
         {
-          var entityId = ProtocolHeader.ReadEntity(rawData, 2);
+          var entityData = rawData.Slice(2, 4);
+          var entityId = ProtocolHeader.ReadInt(ref entityData);
           if (_entities.TryGetValue(entityId, out var ent))
           {
-            var data = new byte[rawData.Length - 6]; // opcode(ushort)(2) + entity(int)(4) 
-            Array.Copy(rawData, 6, data, 0, rawData.Length - 6);
-            _entities[entityId].State = data;
-
-            Broadcast(_readyPlayers, rawData);
+            ent.State = rawData.Slice(6, rawData.Length - 6).ToArray();
+            
+            Span<byte> data = stackalloc byte[rawData.Length];
+            rawData.CopyTo(data);
+            Broadcast(_readyPlayers, data);
           }
-
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_PROPERTY:
         {
-          var entityId = ProtocolHeader.ReadEntity(rawData, 2);
+          var entityData = rawData.Slice(2, 4);
+          var entityId = ProtocolHeader.ReadInt(ref entityData);
           if (_entities.TryGetValue(entityId, out var ent))
           {
-            var propertyId = ProtocolHeader.ReadProperty(rawData, 6);
-            var data = new byte[rawData.Length - 10]; // opcode(ushort)(2) + entity(int)(4) + propertyId(int)(4) 
-            Array.Copy(rawData, 10, data, 0, rawData.Length - 10);
-
+            var propertyData = rawData.Slice(6, 4);
+            var propertyId = ProtocolHeader.ReadInt(ref propertyData);
+            var payload = rawData.Slice(10, rawData.Length - 10).ToArray();
             var props = _entities[entityId].Properties;
+
             if (props.ContainsKey(propertyId))
             {
-              props[propertyId] = data;
+              props[propertyId] = payload;
             }
             else
             {
-              props.Add(propertyId, data);
+              props.Add(propertyId, payload);
             }
 
-            Broadcast(_readyPlayers, RagonOperation.REPLICATE_ENTITY_PROPERTY, rawData);
+            // Span<byte> sendData = MemoryMarshal.CreateSpan(ref MemoryMarshal.GetReference(rawData), rawData.Length);
+
+            Span<byte> sendData = stackalloc byte[rawData.Length];
+            rawData.CopyTo(sendData);
+            Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           }
 
           break;
         }
         case RagonOperation.REPLICATE_EVENT:
+        case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
-          
-          Broadcast(_readyPlayers, rawData);
+          Span<byte> data = stackalloc byte[rawData.Length + 4];
+          Span<byte> peerData = data.Slice(2, 4);
+          Span<byte> rawDataSlice = data.Slice(4, rawData.Length);
+
+          rawData.CopyTo(rawDataSlice);
+          ProtocolHeader.WriteInt((int) peerId, ref peerData);
+
+          Broadcast(_readyPlayers, data, DeliveryType.Reliable);
           break;
         }
         case RagonOperation.CREATE_ENTITY:
         {
           var entity = new Entity(peerId);
-          var data = new byte[rawData.Length - 2]; // opcode(ushort)(2) 
-          Array.Copy(rawData, 2, data, 0, rawData.Length - 2);
-
-          entity.State = data;
+          var entityPayload = rawData.Slice(2, rawData.Length - 2); 
+          entity.State = entityPayload.ToArray();
           entity.Properties = new Dictionary<int, byte[]>();
 
           var player = _players[peerId];
@@ -144,21 +167,27 @@ namespace Ragon.Core
           player.EntitiesIds.Add(entity.EntityId);
 
           _entities.Add(entity.EntityId, entity);
-
-          var entityData = new byte[entity.State.Length + 8];
-          ProtocolHeader.WriteEntity(entity.EntityId, entityData, 0);
-          ProtocolHeader.WriteEntity((int) peerId, entityData, 4);
+          _entitiesAll = _entities.Values.ToArray();
           
-          Array.Copy(entity.State, 0, entityData, 8, entity.State.Length);
+          Span<byte> data = stackalloc byte[entityPayload.Length + 10];
+          var operationData = data.Slice(0, 2);
+          var entityData = data.Slice(2, 4);
+          var peerData = data.Slice(6, 4);
+          var payload = data.Slice(10, entityPayload.Length);
           
-          _logger.Trace("Create entity Owner:" + peerId + " Id: " + entity.EntityId);
+          entityPayload.CopyTo(payload);
           
-          Broadcast(_readyPlayers, RagonOperation.CREATE_ENTITY, entityData);
+          ProtocolHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref operationData);
+          ProtocolHeader.WriteInt(entity.EntityId, ref entityData);
+          ProtocolHeader.WriteInt((int) peerId, ref peerData);
+          
+          Broadcast(_allPlayers, data, DeliveryType.Reliable);
           break;
         }
         case RagonOperation.DESTROY_ENTITY:
         {
-          var entityId = ProtocolHeader.ReadEntity(rawData);
+          var entityData = rawData.Slice(2, 4);
+          var entityId = ProtocolHeader.ReadInt(ref entityData);
           if (_entities.TryGetValue(entityId, out var entity))
           {
             if (entity.OwnerId == peerId)
@@ -169,8 +198,11 @@ namespace Ragon.Core
               player.EntitiesIds.Remove(entity.EntityId);
 
               _entities.Remove(entityId);
+              _entitiesAll = _entities.Values.ToArray();
 
-              Broadcast(_readyPlayers, rawData);
+              Span<byte> sendData = stackalloc byte[rawData.Length];
+              rawData.CopyTo(sendData);
+              Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
             }
           }
 
@@ -178,17 +210,26 @@ namespace Ragon.Core
         }
         case RagonOperation.SCENE_IS_LOADED:
         {
-          Send(peerId, RagonOperation.RESTORE_BEGIN, Array.Empty<byte>());
+          Send(peerId, RagonOperation.RESTORE_BEGIN);
           foreach (var entity in _entities.Values)
           {
-            var entityData = new byte[entity.State.Length + 8];
-            ProtocolHeader.WriteEntity(entity.EntityId, entityData, 0);
-            ProtocolHeader.WriteEntity((int) entity.OwnerId, entityData, 4);
-          
-            Array.Copy(entity.State, 0, entityData, 8, entity.State.Length);
-            Send(peerId, RagonOperation.CREATE_ENTITY, entityData);
+            var entityState = entity.State.AsSpan();
+            
+            Span<byte> sendData = stackalloc byte[entity.State.Length + 10];
+            Span<byte> operationData = sendData.Slice(0, 2);
+            Span<byte> entityData = sendData.Slice(2, 4);
+            Span<byte> ownerData = sendData.Slice(6, 4);
+            Span<byte> entityStateData = sendData.Slice(10, entity.State.Length);
+
+            ProtocolHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref operationData);;
+            ProtocolHeader.WriteInt(entity.EntityId, ref entityData);
+            ProtocolHeader.WriteInt((int) entity.OwnerId, ref ownerData);
+            
+            entityState.CopyTo(entityStateData);
+            
+            Send(peerId, sendData, DeliveryType.Reliable);
           }
-          Send(peerId, RagonOperation.RESTORE_END, Array.Empty<byte>());
+          Send(peerId, RagonOperation.RESTORE_END);
           break;
         }
         case RagonOperation.RESTORED:
@@ -203,140 +244,92 @@ namespace Ragon.Core
     public void Tick(float deltaTime)
     {
       _ticks++;
-
       _plugin.OnTick(_ticks, deltaTime);
+      
+      // for (var i = 0; i < _entitiesAll.Length; i++)
+      // {
+      //   var entity = _entities[i];
+      //   Span<byte> data = stackalloc byte[entity.State.Length];
+      //   rawData.CopyTo(data);
+      //   Broadcast(_readyPlayers, data);
+      // }
     }
 
     public void Start()
     {
+      _logger.Info("Room started");
       _plugin.OnStart();
     }
 
     public void Stop()
     {
+      _logger.Info("Room stopped");
       _plugin.OnStop();
     }
 
     public void Dispose()
     {
+      _logger.Info("Room destroyed");
+      _plugin.Detach();
     }
 
-    public void Send(uint peerId, RagonOperation operation, byte[] payload)
+    public Player GetPlayerByPeerId(uint peerId) => _players[peerId];
+    public Player GetOwner() => _players[_owner];
+    public int PlayersCount => _players.Count;
+
+    public void Send(uint peerId, RagonOperation operation, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
-      if (payload.Length > 0)
-      {
-        var data = new byte[payload.Length + 2];
-
-        Array.Copy(payload, 0, data, 2, payload.Length);
-        ProtocolHeader.WriteOperation((ushort) operation, data);
-
-        _roomThread.WriteOutEvent(new Event()
-        {
-          PeerId = peerId,
-          Data = data,
-          Type = EventType.DATA,
-        });
-      }
-      else
-      {
-        var data = new byte[2];
-
-        ProtocolHeader.WriteOperation((ushort) operation, data);
-
-        _roomThread.WriteOutEvent(new Event()
-        {
-          PeerId = peerId,
-          Data = data,
-          Type = EventType.DATA,
-        });
-      }
-    }
-
-    public void Send(uint peerId, RagonOperation operation, IData payload)
-    {
-      _buffer.Clear();
-      payload.Serialize(_buffer);
-      _buffer.ToArray(_bytes);
-
-      var data = new byte[_buffer.Length + 2];
-
-      Array.Copy(_bytes, 0, data, 2, _buffer.Length);
-
-      ProtocolHeader.WriteOperation((ushort) operation, data);
-
+      Span<byte> data = stackalloc byte[2];
+      ProtocolHeader.WriteUShort((ushort) operation, ref data);
+      
+      var bytes = data.ToArray();
       _roomThread.WriteOutEvent(new Event()
       {
         PeerId = peerId,
-        Data = data,
+        Data = bytes,
         Type = EventType.DATA,
+        Delivery = deliveryType,
+      });
+    }
+    
+    public void Send(uint peerId, Span<byte> payload, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
+      var bytes = payload.ToArray();
+      _roomThread.WriteOutEvent(new Event()
+      {
+        PeerId = peerId,
+        Data = bytes,
+        Type = EventType.DATA,
+        Delivery = deliveryType,
       });
     }
 
-
-    public void Broadcast(uint[] peersIds, RagonOperation operation, IData payload)
+    public void Broadcast(uint[] peersIds, Span<byte> rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
-      _buffer.Clear();
-      payload.Serialize(_buffer);
-      _buffer.ToArray(_bytes);
-
-      var data = new byte[_buffer.Length + 2];
-
-      Array.Copy(_bytes, 0, data, 2, _buffer.Length);
-
-      ProtocolHeader.WriteOperation((ushort) operation, data);
-
+      var bytes = rawData.ToArray();
       foreach (var peer in peersIds)
       {
         _roomThread.WriteOutEvent(new Event()
         {
           PeerId = peer,
-          Data = data,
+          Data = bytes,
           Type = EventType.DATA,
+          Delivery = deliveryType,
         });
       }
     }
 
-    public void Broadcast(uint[] peersIds, RagonOperation operation, byte[] payload)
+    public void Broadcast(Span<byte> rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
-      var data = new byte[payload.Length + 2];
-
-      Array.Copy(payload, 0, data, 2, payload.Length);
-
-      ProtocolHeader.WriteOperation((ushort) operation, data);
-
-      foreach (var peer in peersIds)
-      {
-        _roomThread.WriteOutEvent(new Event()
-        {
-          PeerId = peer,
-          Data = data,
-          Type = EventType.DATA,
-        });
-      }
-    }
-
-    public void Broadcast(uint[] peersIds, byte[] rawData)
-    {
-      foreach (var peer in peersIds)
-      {
-        _roomThread.WriteOutEvent(new Event()
-        {
-          PeerId = peer,
-          Data = rawData,
-          Type = EventType.DATA,
-        });
-      }
-    }
-
-    public void Broadcast(byte[] rawData)
-    {
+      var bytes = rawData.ToArray();
       foreach (var player in _players.Values.ToArray())
       {
         _roomThread.WriteOutEvent(new Event()
         {
           PeerId = player.PeerId,
-          Data = rawData,
+          Data = bytes,
           Type = EventType.DATA,
+          Delivery = deliveryType,
         });
       }
     }

@@ -2,7 +2,7 @@ using NetStack.Serialization;
 
 namespace Ragon.Core
 {
-  public interface IData
+  public interface IPacket
   {
     public void Serialize(BitBuffer buffer);
     public void Deserialize(BitBuffer buffer);

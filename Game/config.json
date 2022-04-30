@@ -1,4 +1,5 @@
 {
+  "apiKey": "123",
   "server": {
     "port": 4444,
     "skipTimeout": 60

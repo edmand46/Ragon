@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Game.Source;
 using NetStack.Serialization;
 using Ragon.Core;

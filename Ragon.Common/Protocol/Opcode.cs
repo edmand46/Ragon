@@ -11,9 +11,9 @@ namespace Ragon.Common.Protocol
     
     LOAD_SCENE,
     SCENE_IS_LOADED,
-    
-    PLAYER_CONNECTED,
-    PLAYER_DISCONNECTED,
+
+    PLAYER_JOINED,
+    PLAYER_LEAVED,
     
     CREATE_ENTITY,
     DESTROY_ENTITY,
@@ -24,6 +24,7 @@ namespace Ragon.Common.Protocol
     
     REPLICATE_ENTITY_STATE,
     REPLICATE_ENTITY_PROPERTY,
+    REPLICATE_ENTITY_EVENT,
     REPLICATE_EVENT,
   }
 }

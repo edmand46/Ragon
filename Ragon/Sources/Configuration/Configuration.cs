@@ -2,6 +2,8 @@
 {
   public class Configuration
   {
-    public string[] blacklist;
+    public int UdpPort;
+    public int WsPort;
+    public string Transport;
   }
 }

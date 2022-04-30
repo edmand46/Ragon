@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon", "Ragon\Ragon.csproj", "{BABA1AF0-CF91-43F2-9577-53800068ACCF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YohohoArenaPlugin", "YohohoArenaPlugin\YohohoArenaPlugin.csproj", "{C2B87ADE-A122-4366-8EB7-24DAE11EBAF0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game", "Game\Game.csproj", "{C2B87ADE-A122-4366-8EB7-24DAE11EBAF0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Common", "Ragon.Common\Ragon.Common.csproj", "{F478B2A2-36F4-43B9-9BB7-382A57C449B2}"
 EndProject

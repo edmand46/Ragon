@@ -11,10 +11,12 @@
       <OutputPath>/Users/edmand46/UnityProjects/ragon-client/Assets/RagonSDK/</OutputPath>
       <DebugSymbols>false</DebugSymbols>
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DefineConstants>TRACE;NETSTACK_SPAN</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <OutputPath>/Users/edmand46/UnityProjects/ragon-client/Assets/RagonSDK/</OutputPath>
+      <DefineConstants>TRACE;NETSTACK_SPAN</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using NetStack.Serialization;
 using NLog;
 using Ragon.Common.Protocol;
 
@@ -13,8 +12,8 @@ namespace Ragon.Core
     private List<Room> _rooms;
     private Dictionary<uint, Room> _peersByRoom;
     private PluginFactory _factory;
+    private AuthorizationManager _manager;
     private RoomThread _roomThread;
-    private BitBuffer _bitBuffer;
 
     public Action<(uint, Room)> OnJoined;
     public Action<(uint, Room)> OnLeaved;
@@ -23,12 +22,13 @@ namespace Ragon.Core
     {
       _roomThread = roomThread;
       _factory = factory;
+
+      _manager = _factory.CreateManager();
       _rooms = new List<Room>();
       _peersByRoom = new Dictionary<uint, Room>();
-      _bitBuffer = new BitBuffer(1024);
     }
 
-    public void ProccessEvent(RagonOperation operation, uint peerId, byte[] payload)
+    public void ProcessEvent(RagonOperation operation, uint peerId, byte[] payload)
     {
       switch (operation)
       {
@@ -54,28 +54,47 @@ namespace Ragon.Core
 
     public void OnAuthorize(uint peerId, byte[] payload)
     {
-      _bitBuffer.Clear();
-      // _bitBuffer.FromArray(payload, payload.Length);
-
-      // var authorizePacket = new AuthorationData();
-      // authorizePacket.Deserialize(_bitBuffer);
-
-      var data = new byte[2];
-      
-      ProtocolHeader.WriteOperation((ushort) RagonOperation.AUTHORIZED_SUCCESS, data);
-
-      _roomThread.WriteOutEvent(new Event()
+      if (_manager.OnAuthorize(peerId, payload))
       {
-        Type = EventType.DATA,
-        Data = data,
-        PeerId = peerId,
-      });
+        Span<byte> data =  stackalloc byte[2];
+        ProtocolHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_SUCCESS, ref data);
+
+        var bytes = data.ToArray();
+        _roomThread.WriteOutEvent(new Event()
+        {
+          Delivery = DeliveryType.Reliable,
+          Type = EventType.DATA,
+          Data = bytes,
+          PeerId = peerId,
+        });  
+      }
+      else
+      {
+        Span<byte> data =  stackalloc byte[2];
+        ProtocolHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_FAILED, ref data);
+
+        var bytes = data.ToArray();
+        _roomThread.WriteOutEvent(new Event()
+        {
+          Delivery = DeliveryType.Reliable,
+          Type = EventType.DATA,
+          Data = bytes,
+          PeerId = peerId,
+        });
+        
+        _roomThread.WriteOutEvent(new Event()
+        {
+          Delivery = DeliveryType.Reliable,
+          Type = EventType.DISCONNECTED,
+          Data = Array.Empty<byte>(),
+          PeerId = peerId,
+        });
+      }
     }
 
     public Room Join(uint peerId, byte[] payload)
     {
       var map = Encoding.UTF8.GetString(payload);
-      
       if (_rooms.Count > 0)
       {
         var existsRoom = _rooms[0];
@@ -89,10 +108,10 @@ namespace Ragon.Core
       if (plugin == null)
         throw new NullReferenceException($"Plugin for map {map} is null");
 
-      _logger.Info("Room created");
-
       var room = new Room(_roomThread, plugin, map);
       room.Joined(peerId, payload);
+      room.Start();
+      
       _peersByRoom.Add(peerId, room);
 
       _rooms.Add(room);
@@ -102,10 +121,25 @@ namespace Ragon.Core
 
     public Room Left(uint peerId, byte[] payload)
     {
-      _peersByRoom.Remove(peerId, out var room);
-      room?.Leave(peerId);
-
+      _peersByRoom.Remove(peerId, out var room); 
+      
       return room;
+    }
+
+    public void Disconnected(uint peerId)
+    {
+      _peersByRoom.Remove(peerId, out var room);
+      if (room != null)
+      {
+        room.Leave(peerId);
+        if (room.PlayersCount <= 0)
+        {
+          _rooms.Remove(room);
+          
+          room.Stop();
+          room.Dispose();
+        }
+      }
     }
 
     public void Tick(float deltaTime)

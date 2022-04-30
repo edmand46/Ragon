@@ -6,6 +6,16 @@
         <TargetFrameworks>net6.0;netstandard2.1</TargetFrameworks>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DefineConstants>TRACE;NETSTACK_SPAN</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DefineConstants>TRACE;NETSTACK_SPAN</DefineConstants>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="ENet-CSharp" Version="2.4.8" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
@@ -14,6 +24,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Ragon.Common\Ragon.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Sources\Protocol" />
     </ItemGroup>
 
 </Project>

@@ -62,14 +62,15 @@ namespace Ragon.Core
               
               if (_socketByRooms.ContainsKey(evnt.PeerId))
               {
-                _roomManager.Left(evnt.PeerId, Array.Empty<byte>());
+                _roomManager.Disconnected(evnt.PeerId);
                 _socketByRooms.Remove(evnt.PeerId);
               }
             }
 
             if (evnt.Type == EventType.DATA)
             {
-              var operation = (RagonOperation) ProtocolHeader.ReadOperation(evnt.Data, 0);
+              ReadOnlySpan<byte> data = evnt.Data.AsSpan();
+              var operation = (RagonOperation) ProtocolHeader.ReadUShort(ref data);
               if (_socketByRooms.TryGetValue(evnt.PeerId, out var room))
               {
                 room.ProcessEvent(operation, evnt.PeerId, evnt.Data);
@@ -77,10 +78,8 @@ namespace Ragon.Core
               else
               {
                 var payload = new byte[evnt.Data.Length - 2];
-
                 Array.Copy(evnt.Data, 2, payload, 0, evnt.Data.Length - 2);
-
-                _roomManager.ProccessEvent(operation, evnt.PeerId, payload);
+                _roomManager.ProcessEvent(operation, evnt.PeerId, payload);
               }
             }
           }
