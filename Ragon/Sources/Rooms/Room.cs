@@ -106,8 +106,6 @@ namespace Ragon.Core
 
     public void ProcessEvent(RagonOperation operation, uint peerId, ReadOnlySpan<byte> rawData)
     {
-      if (_plugin.InternalHandle(peerId, (ushort) operation, ref rawData)) return;
-
       switch (operation)
       {
         case RagonOperation.REPLICATE_ENTITY_STATE:
@@ -158,6 +156,11 @@ namespace Ragon.Core
         case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
           Span<byte> data = stackalloc byte[rawData.Length];
+          
+          var evntCodeData = rawData.Slice(2, 2);
+          var evntId = RagonHeader.ReadUShort(ref evntCodeData);
+          if (_plugin.InternalHandle(peerId, evntId, ref rawData)) return;
+          
           rawData.CopyTo(data);
           Broadcast(_readyPlayers, data, DeliveryType.Reliable);
           break;

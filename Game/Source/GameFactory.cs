@@ -6,6 +6,6 @@ namespace Game.Source
   {
     public string PluginName { get; set; }  = "ExamplePlugin";
     public PluginBase CreatePlugin(string map) => new ExamplePlugin();
-    public AuthorizationManager CreateManager() => new GameAuthorizer();
+    public AuthorizationManager CreateManager(Configuration configuration) => new GameAuthorizer(configuration);
   }
 }

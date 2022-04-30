@@ -28,9 +28,4 @@
       <ProjectReference Include="..\Ragon.Common\Ragon.Common.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Sources\Protocol" />
-      <Folder Include="Sources\Storage" />
-    </ItemGroup>
-
 </Project>

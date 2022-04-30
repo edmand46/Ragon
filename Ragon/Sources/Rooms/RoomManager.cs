@@ -23,7 +23,7 @@ namespace Ragon.Core
       _roomThread = roomThread;
       _factory = factory;
 
-      _manager = _factory.CreateManager();
+      _manager = _factory.CreateManager(roomThread);
       _rooms = new List<Room>();
       _peersByRoom = new Dictionary<uint, Room>();
     }

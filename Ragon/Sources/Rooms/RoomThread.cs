@@ -18,20 +18,23 @@ namespace Ragon.Core
     
     private RingBuffer<Event> _receiveBuffer = new RingBuffer<Event>(8192 + 8192);
     private RingBuffer<Event> _sendBuffer = new RingBuffer<Event>(8192 + 8192);
-
+    
+    public Configuration Configuration { get; private set; }
     public bool ReadOutEvent(out Event evnt) => _sendBuffer.TryDequeue(out evnt);
     public void WriteOutEvent(Event evnt) => _sendBuffer.Enqueue(evnt);
 
     public bool ReadIntEvent(out Event evnt) => _receiveBuffer.TryDequeue(out evnt);
     public void WriteInEvent(Event evnt) => _receiveBuffer.Enqueue(evnt);
-
-    public RoomThread(PluginFactory factory)
+    
+    public RoomThread(PluginFactory factory, Configuration configuration)
     {
       _thread = new Thread(Execute);
       _thread.IsBackground = true;
       _timer = new Stopwatch();
       _socketByRooms = new Dictionary<uint, Room>();
-
+    
+      Configuration = configuration;
+      
       _roomManager = new RoomManager(this, factory);
       _roomManager.OnJoined += (tuple) => _socketByRooms.Add(tuple.Item1, tuple.Item2);
       _roomManager.OnLeaved += (tuple) => _socketByRooms.Remove(tuple.Item1);

@@ -1,9 +1,10 @@
-﻿namespace Ragon.Core
+﻿using System;
+
+namespace Ragon.Core
 {
-  public class Configuration
+  [Serializable]
+  public struct Configuration
   {
-    public int UdpPort;
-    public int WsPort;
-    public string Transport;
+    public string ApiKey;
   }
 }

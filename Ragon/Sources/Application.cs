@@ -16,11 +16,13 @@ namespace Ragon.Core
     private readonly List<RoomThread> _roomThreads = new();
     private readonly Dictionary<uint, RoomThread> _socketByRoomThreads = new();
     private readonly Dictionary<RoomThread, int> _roomThreadCounter = new();
-
+    private readonly Configuration _configuration;
     private readonly ENetServer _socketServer;
+    
     public Application(PluginFactory factory, Configuration configuration, int threadsCount)
     {
       _socketServer = new ENetServer();
+      _configuration = configuration;
       
       for (var i = 0; i < threadsCount; i++)
       {

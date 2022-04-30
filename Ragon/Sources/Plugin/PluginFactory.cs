@@ -4,7 +4,7 @@ namespace Ragon.Core
   {
     public string PluginName { get; set; }
     public PluginBase CreatePlugin(string map);
-    public AuthorizationManager CreateManager();
+    public AuthorizationManager CreateManager(Configuration configuration);
   }
   
   
