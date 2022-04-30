@@ -20,6 +20,8 @@
       <PackageReference Include="ENet-CSharp" Version="2.4.8" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
       <PackageReference Include="NLog" Version="5.0.0-rc2" />
+      <PackageReference Include="StackExchange.Redis" Version="2.5.61" />
+      <PackageReference Include="StackExchange.Redis.Extensions.Core" Version="8.0.4" />
     </ItemGroup>
 
     <ItemGroup>
@@ -28,6 +30,7 @@
 
     <ItemGroup>
       <Folder Include="Sources\Protocol" />
+      <Folder Include="Sources\Storage" />
     </ItemGroup>
 
 </Project>

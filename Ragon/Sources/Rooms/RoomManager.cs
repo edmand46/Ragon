@@ -57,7 +57,7 @@ namespace Ragon.Core
       if (_manager.OnAuthorize(peerId, payload))
       {
         Span<byte> data =  stackalloc byte[2];
-        ProtocolHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_SUCCESS, ref data);
+        RagonHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_SUCCESS, ref data);
 
         var bytes = data.ToArray();
         _roomThread.WriteOutEvent(new Event()
@@ -71,7 +71,7 @@ namespace Ragon.Core
       else
       {
         Span<byte> data =  stackalloc byte[2];
-        ProtocolHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_FAILED, ref data);
+        RagonHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_FAILED, ref data);
 
         var bytes = data.ToArray();
         _roomThread.WriteOutEvent(new Event()

@@ -83,7 +83,7 @@ namespace Ragon.Core
             
             _buffer.ToSpan(ref bufferSpan);
 
-            ProtocolHeader.WriteUShort((ushort) operation, ref data);
+            RagonHeader.WriteUShort((ushort) operation, ref data);
             
             Room.Send(peerId, data);
         }
@@ -99,7 +99,7 @@ namespace Ragon.Core
 
             _buffer.ToSpan(ref bufferSpan);
 
-            ProtocolHeader.WriteUShort((ushort) operation, ref data);
+            RagonHeader.WriteUShort((ushort) operation, ref data);
 
             Room.Broadcast(peersIds, data);
         }

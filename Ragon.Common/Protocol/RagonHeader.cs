@@ -4,7 +4,7 @@ using NetStack.Buffers;
 
 namespace Ragon.Core
 {
-  public static class ProtocolHeader
+  public static class RagonHeader
   {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void WriteUShort(ushort id, ref Span<byte> data) {
@@ -31,6 +31,5 @@ namespace Ragon.Core
     {
       return (ushort)(data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24));
     }
-    
   }
 }

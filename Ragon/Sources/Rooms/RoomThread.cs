@@ -15,7 +15,7 @@ namespace Ragon.Core
     private readonly Dictionary<uint, Room> _socketByRooms;
     private readonly Thread _thread;
     private readonly Stopwatch _timer;
-
+    
     private RingBuffer<Event> _receiveBuffer = new RingBuffer<Event>(8192 + 8192);
     private RingBuffer<Event> _sendBuffer = new RingBuffer<Event>(8192 + 8192);
 
@@ -70,7 +70,7 @@ namespace Ragon.Core
             if (evnt.Type == EventType.DATA)
             {
               ReadOnlySpan<byte> data = evnt.Data.AsSpan();
-              var operation = (RagonOperation) ProtocolHeader.ReadUShort(ref data);
+              var operation = (RagonOperation) RagonHeader.ReadUShort(ref data);
               if (_socketByRooms.TryGetValue(evnt.PeerId, out var room))
               {
                 room.ProcessEvent(operation, evnt.PeerId, evnt.Data);
