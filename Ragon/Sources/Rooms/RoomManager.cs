@@ -94,9 +94,13 @@ namespace Ragon.Core
 
     public Room Join(uint peerId, ReadOnlySpan<byte> payload)
     {
-      var map = Encoding.UTF8.GetString(payload);
-      var min = 0;
-      var max = 0;
+      var minData = payload.Slice(0, 2);
+      var maxData = payload.Slice(2, 2);
+      var mapData = payload.Slice(4, payload.Length - 4);
+      
+      var map = Encoding.UTF8.GetString(mapData);
+      var min = RagonHeader.ReadUShort(ref minData);
+      var max = RagonHeader.ReadUShort(ref maxData);
       
       Room room = null;
       if (_rooms.Count > 0)

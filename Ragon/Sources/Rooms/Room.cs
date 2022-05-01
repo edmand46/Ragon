@@ -15,7 +15,7 @@ namespace Ragon.Core
     public int PlayersMin { get; private set; }
     public int PlayersMax { get; private set; }
     public int PlayersCount => _players.Count;
-
+    public string Id { get; private set; }
     public string Map { get; private set; } 
     
     private ILogger _logger = LogManager.GetCurrentClassLogger();
@@ -40,7 +40,8 @@ namespace Ragon.Core
       Map = map;
       PlayersMin = min;
       PlayersMax = max;
-
+      Id = Guid.NewGuid().ToString();
+      
       _logger.Info("Room created");
       _plugin.Attach(this);
     }
@@ -65,18 +66,23 @@ namespace Ragon.Core
       _allPlayers = _players.Select(p => p.Key).ToArray();
       
       {
-        Span<byte> data = stackalloc byte[18];
+        var idRaw = Encoding.UTF8.GetBytes(Id).AsSpan();
+        
+        Span<byte> data = stackalloc byte[idRaw.Length + 18];
         Span<byte> operationData = data.Slice(0, 2);
         Span<byte> peerData = data.Slice(2, 4);
         Span<byte> ownerData = data.Slice(4, 4);
         Span<byte> minData = data.Slice(10, 4);
         Span<byte> maxData = data.Slice(14, 4);
+        Span<byte> idData = data.Slice(18, idRaw.Length);
 
         RagonHeader.WriteUShort((ushort) RagonOperation.JOIN_ROOM, ref operationData);
         RagonHeader.WriteInt((int) peerId, ref peerData);
         RagonHeader.WriteInt((int) _owner, ref ownerData);
         RagonHeader.WriteInt(PlayersMin, ref minData);
         RagonHeader.WriteInt(PlayersMax, ref maxData);
+        
+        idRaw.CopyTo(idData);
 
         Send(peerId, data);
       }
