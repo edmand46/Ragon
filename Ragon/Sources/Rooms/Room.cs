@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using NetStack.Serialization;
 using NLog;
-using NLog.LayoutRenderers;
-using Ragon.Common.Protocol;
+using Ragon.Common;
 
 namespace Ragon.Core
 {
@@ -152,13 +149,9 @@ namespace Ragon.Core
             var props = _entities[entityId].Properties;
 
             if (props.ContainsKey(propertyId))
-            {
               props[propertyId] = payload;
-            }
             else
-            {
               props.Add(propertyId, payload);
-            }
 
             // Span<byte> sendData = MemoryMarshal.CreateSpan(ref MemoryMarshal.GetReference(rawData), rawData.Length);
 
@@ -251,7 +244,6 @@ namespace Ragon.Core
             Span<byte> entityStateData = sendData.Slice(10, entity.State.Length);
 
             RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref operationData);
-            ;
             RagonHeader.WriteInt(entity.EntityId, ref entityData);
             RagonHeader.WriteInt((int) entity.OwnerId, ref ownerData);
 

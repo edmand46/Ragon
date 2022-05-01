@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using NetStack.Buffers;
 
-namespace Ragon.Core
+namespace Ragon.Common
 {
   public static class RagonHeader
   {

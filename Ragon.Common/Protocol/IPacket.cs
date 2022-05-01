@@ -1,6 +1,6 @@
 using NetStack.Serialization;
 
-namespace Ragon.Core
+namespace Ragon.Common
 {
   public interface IPacket
   {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NLog;
-using Ragon.Common.Protocol;
+using Ragon.Common;
 
 namespace Ragon.Core
 {

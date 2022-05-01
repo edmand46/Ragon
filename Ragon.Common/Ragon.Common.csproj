@@ -8,14 +8,14 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <OutputPath>/Users/edmand46/UnityProjects/ragon-client/Assets/RagonSDK/</OutputPath>
+      <OutputPath>/Users/edmand46/UnityProjects/Ragon-Unity-SDK/Assets/RagonSDK/netstandard2.1/</OutputPath>
       <DebugSymbols>false</DebugSymbols>
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
       <DefineConstants>TRACE;NETSTACK_SPAN</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <OutputPath>/Users/edmand46/UnityProjects/ragon-client/Assets/RagonSDK/</OutputPath>
+      <OutputPath>/Users/edmand46/UnityProjects/Ragon-Unity-SDK/Assets/RagonSDK/netstandard2.1/</OutputPath>
       <DefineConstants>TRACE;NETSTACK_SPAN</DefineConstants>
     </PropertyGroup>
 

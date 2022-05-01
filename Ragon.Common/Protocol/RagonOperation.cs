@@ -1,4 +1,4 @@
-namespace Ragon.Common.Protocol
+namespace Ragon.Common
 {
   public enum RagonOperation: ushort
   {
