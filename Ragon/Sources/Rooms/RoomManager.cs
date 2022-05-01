@@ -23,7 +23,7 @@ namespace Ragon.Core
       _roomThread = roomThread;
       _factory = factory;
 
-      _manager = _factory.CreateManager(roomThread);
+      _manager = _factory.CreateManager(roomThread.Configuration);
       _rooms = new List<Room>();
       _peersByRoom = new Dictionary<uint, Room>();
     }
@@ -52,9 +52,9 @@ namespace Ragon.Core
       }
     }
 
-    public void OnAuthorize(uint peerId, byte[] payload)
+    public void OnAuthorize(uint peerId, ReadOnlySpan<byte> payload)
     {
-      if (_manager.OnAuthorize(peerId, payload))
+      if (_manager.OnAuthorize(peerId, ref payload))
       {
         Span<byte> data =  stackalloc byte[2];
         RagonHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_SUCCESS, ref data);
@@ -92,28 +92,38 @@ namespace Ragon.Core
       }
     }
 
-    public Room Join(uint peerId, byte[] payload)
+    public Room Join(uint peerId, ReadOnlySpan<byte> payload)
     {
       var map = Encoding.UTF8.GetString(payload);
+      var min = 0;
+      var max = 0;
+      
+      Room room = null;
       if (_rooms.Count > 0)
       {
-        var existsRoom = _rooms[0];
-        existsRoom.Joined(peerId, payload);
-        _peersByRoom.Add(peerId, existsRoom);
-        
-        return existsRoom;
+        foreach (var existRoom in _rooms)
+        {
+          if (existRoom.Map == map && existRoom.PlayersCount < existRoom.PlayersMax)
+          {
+            room = existRoom;
+            room.Joined(peerId, payload);
+            
+            _peersByRoom.Add(peerId, room);
+            
+            return room;            
+          }  
+        }
       }
 
       var plugin = _factory.CreatePlugin(map);
       if (plugin == null)
         throw new NullReferenceException($"Plugin for map {map} is null");
 
-      var room = new Room(_roomThread, plugin, map);
+      room = new Room(_roomThread, plugin, map, min, max);
       room.Joined(peerId, payload);
       room.Start();
       
       _peersByRoom.Add(peerId, room);
-
       _rooms.Add(room);
 
       return room;

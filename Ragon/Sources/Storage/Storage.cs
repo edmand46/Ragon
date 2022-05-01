@@ -15,7 +15,7 @@ public class Storage
   {
     var db = _connection.GetDatabase();
     
-    db.set("entity_", )
+    // db.set("entity_", )
   }
 
   public void UpdatePlayer()

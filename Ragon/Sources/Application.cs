@@ -26,7 +26,7 @@ namespace Ragon.Core
       
       for (var i = 0; i < threadsCount; i++)
       {
-        var roomThread = new RoomThread(factory);
+        var roomThread = new RoomThread(factory, configuration);
         _roomThreadCounter.Add(roomThread, 0);
         _roomThreads.Add(roomThread);
       }

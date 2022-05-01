@@ -64,19 +64,27 @@ namespace Ragon.Core
           if (data.Type == EventType.DATA)
           {
             var newPacket = new Packet();
-
             var packetFlags = PacketFlags.Instant;
+            byte channel = 1;
+
             if (data.Delivery == DeliveryType.Reliable)
+            {
               packetFlags = PacketFlags.Reliable;
+              channel = 0;
+            }
             else if (data.Delivery == DeliveryType.Unreliable)
+            {
+              channel = 1;
               packetFlags = PacketFlags.Instant;
-            
+            }
+
             newPacket.Create(data.Data, data.Data.Length, packetFlags);
-            _peers[data.PeerId].Send(0, ref newPacket);
+            _peers[data.PeerId].Send(channel, ref newPacket);
           }
           else if (data.Type == EventType.DISCONNECTED)
           {
             _peers[data.PeerId].DisconnectNow(0);
+            _receiveBuffer.Enqueue(data);
           }
         }
 
@@ -119,7 +127,7 @@ namespace Ragon.Core
             case ENet.EventType.Receive:
             {
               var data = new byte[_netEvent.Packet.Length];
-             
+
               _netEvent.Packet.CopyTo(data);
               _netEvent.Packet.Dispose();
 

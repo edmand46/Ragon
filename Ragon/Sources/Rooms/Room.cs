@@ -12,6 +12,12 @@ namespace Ragon.Core
 {
   public class Room : IDisposable
   {
+    public int PlayersMin { get; private set; }
+    public int PlayersMax { get; private set; }
+    public int PlayersCount => _players.Count;
+
+    public string Map { get; private set; } 
+    
     private ILogger _logger = LogManager.GetCurrentClassLogger();
     private Dictionary<uint, Player> _players = new();
     private Dictionary<int, Entity> _entities = new();
@@ -19,7 +25,6 @@ namespace Ragon.Core
 
     private readonly PluginBase _plugin;
     private readonly RoomThread _roomThread;
-    private readonly string _map;
     private ulong _ticks = 0;
 
     // Cache
@@ -27,17 +32,20 @@ namespace Ragon.Core
     private uint[] _allPlayers = Array.Empty<uint>();
     private Entity[] _entitiesAll = Array.Empty<Entity>();
 
-    public Room(RoomThread roomThread, PluginBase pluginBase, string map)
+    public Room(RoomThread roomThread, PluginBase pluginBase, string map, int min, int max)
     {
       _roomThread = roomThread;
       _plugin = pluginBase;
-      _map = map;
+
+      Map = map;
+      PlayersMin = min;
+      PlayersMax = max;
 
       _logger.Info("Room created");
       _plugin.Attach(this);
     }
 
-    public void Joined(uint peerId, byte[] payload)
+    public void Joined(uint peerId, ReadOnlySpan<byte> payload)
     {
       if (_players.Count == 0)
       {
@@ -54,24 +62,27 @@ namespace Ragon.Core
       };
 
       _players.Add(peerId, player);
-
       _allPlayers = _players.Select(p => p.Key).ToArray();
       
       {
-        Span<byte> data = stackalloc byte[10];
+        Span<byte> data = stackalloc byte[18];
         Span<byte> operationData = data.Slice(0, 2);
         Span<byte> peerData = data.Slice(2, 4);
         Span<byte> ownerData = data.Slice(4, 4);
+        Span<byte> minData = data.Slice(10, 4);
+        Span<byte> maxData = data.Slice(14, 4);
 
         RagonHeader.WriteUShort((ushort) RagonOperation.JOIN_ROOM, ref operationData);
         RagonHeader.WriteInt((int) peerId, ref peerData);
         RagonHeader.WriteInt((int) _owner, ref ownerData);
+        RagonHeader.WriteInt(PlayersMin, ref minData);
+        RagonHeader.WriteInt(PlayersMax, ref maxData);
 
         Send(peerId, data);
       }
 
       {
-        var sceneRawData = Encoding.UTF8.GetBytes(_map).AsSpan();
+        var sceneRawData = Encoding.UTF8.GetBytes(Map).AsSpan();
         Span<byte> data = stackalloc byte[sceneRawData.Length + 2];
         Span<byte> operationData = data.Slice(0, 2);
         Span<byte> sceneData = data.Slice(2, sceneRawData.Length);
@@ -287,8 +298,7 @@ namespace Ragon.Core
 
     public Player GetPlayerByPeerId(uint peerId) => _players[peerId];
     public Player GetOwner() => _players[_owner];
-    public int PlayersCount => _players.Count;
-
+    
     public void Send(uint peerId, RagonOperation operation, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
       Span<byte> data = stackalloc byte[2];
