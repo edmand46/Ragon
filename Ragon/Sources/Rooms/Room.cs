@@ -166,13 +166,15 @@ namespace Ragon.Core
         case RagonOperation.REPLICATE_EVENT:
         case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
-          Span<byte> data = stackalloc byte[rawData.Length];
-          
           var evntCodeData = rawData.Slice(2, 2);
           var evntId = RagonHeader.ReadUShort(ref evntCodeData);
+          
           if (_plugin.InternalHandle(peerId, evntId, ref rawData)) return;
           
+          Span<byte> data = stackalloc byte[rawData.Length];
+
           rawData.CopyTo(data);
+          
           Broadcast(_readyPlayers, data, DeliveryType.Reliable);
           break;
         }

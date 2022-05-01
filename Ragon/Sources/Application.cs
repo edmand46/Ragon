@@ -34,7 +34,7 @@ namespace Ragon.Core
 
     public void Start()
     {
-      _socketServer.Start(5000);
+      _socketServer.Start(_configuration.Server.Port);
       
       foreach (var roomThread in _roomThreads)
         roomThread.Start();

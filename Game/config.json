@@ -1,7 +1,7 @@
 {
   "apiKey": "123",
   "server": {
-    "port": 4444,
+    "port": 5000,
     "skipTimeout": 60
   },
   "blacklist": [
