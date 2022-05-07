@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using DisruptorUnity3d;
+using NLog;
 using Ragon.Common;
 
 namespace Ragon.Core
@@ -13,6 +14,7 @@ namespace Ragon.Core
     private readonly Dictionary<uint, Room> _socketByRooms;
     private readonly Thread _thread;
     private readonly Stopwatch _timer;
+    private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
     
     private RingBuffer<Event> _receiveBuffer = new RingBuffer<Event>(8192 + 8192);
     private RingBuffer<Event> _sendBuffer = new RingBuffer<Event>(8192 + 8192);
@@ -60,7 +62,6 @@ namespace Ragon.Core
           {
             if (evnt.Type == EventType.DISCONNECTED || evnt.Type == EventType.TIMEOUT)
             {
-              
               if (_socketByRooms.ContainsKey(evnt.PeerId))
               {
                 _roomManager.Disconnected(evnt.PeerId);
@@ -70,16 +71,23 @@ namespace Ragon.Core
 
             if (evnt.Type == EventType.DATA)
             {
-              ReadOnlySpan<byte> data = evnt.Data.AsSpan();
-              var operation = (RagonOperation) RagonHeader.ReadUShort(ref data);
+              var data = new ReadOnlySpan<byte>(evnt.Data);
+              var operationData = data.Slice(0, 2);
+              var operation = (RagonOperation) RagonHeader.ReadUShort(ref operationData);
               if (_socketByRooms.TryGetValue(evnt.PeerId, out var room))
               {
-                room.ProcessEvent(operation, evnt.PeerId, evnt.Data);
+                try
+                {
+                  room.ProcessEvent(operation, evnt.PeerId, data);
+                }
+                catch (Exception exception)
+                {
+                  _logger.Error(exception);
+                }
               }
               else
               {
-                var payload = new byte[evnt.Data.Length - 2];
-                Array.Copy(evnt.Data, 2, payload, 0, evnt.Data.Length - 2);
+                var payload = data.Slice(2, data.Length - 2);
                 _roomManager.ProcessEvent(operation, evnt.PeerId, payload);
               }
             }

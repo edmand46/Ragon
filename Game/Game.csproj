@@ -7,10 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Ragon\Ragon.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="NLog.config">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
@@ -20,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Source\Events" />
+      <ProjectReference Include="..\Ragon\Ragon.csproj" />
     </ItemGroup>
 
 </Project>

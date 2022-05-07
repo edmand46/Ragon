@@ -21,7 +21,7 @@ namespace Ragon.Core
       
       _logger.Info("==================================");
       _logger.Info("=                                =");
-      _logger.Info($"={"Yohoho Server".PadBoth(32)}=");
+      _logger.Info($"={"Ragon".PadBoth(32)}=");
       _logger.Info("=                                =");
       _logger.Info("==================================");
     }

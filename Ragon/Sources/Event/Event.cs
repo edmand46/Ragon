@@ -6,7 +6,7 @@ namespace Ragon.Core
   {
     public EventType Type;
     public DeliveryType Delivery;
-    public uint PeerId;
     public byte[] Data;
+    public uint PeerId;
   }
 }

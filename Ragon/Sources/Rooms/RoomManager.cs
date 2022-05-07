@@ -28,7 +28,7 @@ namespace Ragon.Core
       _peersByRoom = new Dictionary<uint, Room>();
     }
 
-    public void ProcessEvent(RagonOperation operation, uint peerId, byte[] payload)
+    public void ProcessEvent(RagonOperation operation, uint peerId, ReadOnlySpan<byte> payload)
     {
       switch (operation)
       {
@@ -56,29 +56,30 @@ namespace Ragon.Core
     {
       if (_manager.OnAuthorize(peerId, ref payload))
       {
-        Span<byte> data =  stackalloc byte[2];
+        var sendData = new byte[2];
+        Span<byte> data = sendData.AsSpan();
+        
         RagonHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_SUCCESS, ref data);
 
-        var bytes = data.ToArray();
         _roomThread.WriteOutEvent(new Event()
         {
           Delivery = DeliveryType.Reliable,
           Type = EventType.DATA,
-          Data = bytes,
+          Data = sendData,
           PeerId = peerId,
         });  
       }
       else
       {
-        Span<byte> data =  stackalloc byte[2];
+        var sendData =  new byte[2];
+        var data = sendData.AsSpan();
         RagonHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_FAILED, ref data);
 
-        var bytes = data.ToArray();
         _roomThread.WriteOutEvent(new Event()
         {
           Delivery = DeliveryType.Reliable,
           Type = EventType.DATA,
-          Data = bytes,
+          Data = sendData,
           PeerId = peerId,
         });
         
@@ -133,7 +134,7 @@ namespace Ragon.Core
       return room;
     }
 
-    public Room Left(uint peerId, byte[] payload)
+    public Room Left(uint peerId, ReadOnlySpan<byte> payload)
     {
       _peersByRoom.Remove(peerId, out var room); 
       

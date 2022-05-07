@@ -28,8 +28,10 @@ namespace Ragon.Core
     private Address _address;
     private ENet.Event _netEvent;
     private Peer[] _peers;
+
     private RingBuffer<Event> _receiveBuffer;
     private RingBuffer<Event> _sendBuffer;
+    
     public void WriteEvent(Event evnt) => _sendBuffer.Enqueue(evnt);
     public bool ReadEvent(out Event evnt) => _receiveBuffer.TryDequeue(out evnt);
 
@@ -48,7 +50,7 @@ namespace Ragon.Core
       _receiveBuffer = new RingBuffer<Event>(8192 + 8192);
 
       Status = Status.Listening;
-
+      
       _thread = new Thread(Execute);
       _thread.Name = "NetworkThread";
       _thread.Start();
@@ -77,7 +79,7 @@ namespace Ragon.Core
               channel = 1;
               packetFlags = PacketFlags.Instant;
             }
-
+            
             newPacket.Create(data.Data, data.Data.Length, packetFlags);
             _peers[data.PeerId].Send(channel, ref newPacket);
           }
@@ -127,11 +129,12 @@ namespace Ragon.Core
             case ENet.EventType.Receive:
             {
               var data = new byte[_netEvent.Packet.Length];
-
+              
               _netEvent.Packet.CopyTo(data);
               _netEvent.Packet.Dispose();
-
-              var @event = new Event {PeerId = _netEvent.Peer.ID, Type = EventType.DATA, Data = data};
+              
+              var @event = new Event {PeerId = _netEvent.Peer.ID, Type = EventType.DATA, Data = data };
+              
               _receiveBuffer.Enqueue(@event);
               break;
             }

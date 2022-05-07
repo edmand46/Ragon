@@ -1,134 +1,213 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using NetStack.Serialization;
+using NLog;
 using Ragon.Common;
 
 namespace Ragon.Core
 {
-    public class PluginBase
+  public class PluginBase: IDisposable
+  {
+    private delegate void SubscribeDelegate(Player player, ref ReadOnlySpan<byte> data);
+    private delegate void SubscribeEntityDelegate(Player player, Entity entity, ref ReadOnlySpan<byte> data);
+
+    private Dictionary<ushort, SubscribeDelegate> _globalEvents = new();
+    private Dictionary<int, Dictionary<ushort, SubscribeEntityDelegate>> _entityEvents = new();
+    private BitBuffer _buffer = new BitBuffer(8192);
+
+    protected Room Room { get; private set; }
+    protected ILogger _logger;
+    
+    public void Attach(Room room)
     {
-        private delegate void SubscribeDelegate(Player player, ref ReadOnlySpan<byte> data);
-        private Dictionary<ushort, SubscribeDelegate> _subscribes = new();
-        private BitBuffer _buffer = new BitBuffer(1024);
-        
-        protected Room Room { get; private set; }
-        
-        public void Attach(Room room) => Room = room;
-        public void Detach() => _subscribes.Clear();
-        
-        public void Subscribe<T>(ushort evntCode, Action<Player, T> action) where T: IPacket, new()
-        {
-            var data = new T();
-            _subscribes.Add(evntCode, (Player player, ref ReadOnlySpan<byte> raw) =>
-            {
-                _buffer.Clear();
-                _buffer.FromSpan(ref raw, raw.Length);
-                data.Deserialize(_buffer);
-                action.Invoke(player, data);
-            });
-        }
-        
-        // public void Subscribe<T>(RagonOperation operation, Action<Player, Span<byte> action) where T: IPacket, new()
-        // {
-        //     var data = new T();
-        //     _subscribes.Add(evntCode, (Player player, ref ReadOnlySpan<byte> raw) =>
-        //     {
-        //         _buffer.Clear();
-        //         _buffer.FromSpan(ref raw, raw.Length);
-        //         data.Deserialize(_buffer);
-        //         action.Invoke(player, data);
-        //     });
-        // }
-        public void UnsubscribeAll()
-        {
-            _subscribes.Clear();
-        }
-
-
-        public bool InternalHandle(uint peerId, ushort evntCode, ref ReadOnlySpan<byte> payload)
-        {
-            if (_subscribes.ContainsKey(evntCode))
-            {
-                var player = Room.GetPlayerByPeerId(peerId);
-                _subscribes[evntCode].Invoke(player, ref payload);
-                return true;
-            }
-
-            return false;
-        }
-
-        public void Send(Player player, RagonOperation operation, IPacket payload)
-        {
-            Send(player.PeerId, operation, payload);
-        }
-
-        public void Broadcast(Player[] players, RagonOperation operation, IPacket payload)
-        {
-            var ids = new uint[players.Length];
-            for (int i = 0; i < players.Length; i++)
-                ids[i] = players[i].PeerId;
-            
-            Broadcast(ids, operation, payload);
-        }
-        
-        public void Send(uint peerId, RagonOperation operation, IPacket payload)
-        {
-            _buffer.Clear();
-            
-            payload.Serialize(_buffer);
-            
-            Span<byte> data = stackalloc byte[_buffer.Length + 2];
-            Span<byte> bufferSpan = data.Slice(2, data.Length - 2);
-            
-            _buffer.ToSpan(ref bufferSpan);
-
-            RagonHeader.WriteUShort((ushort) operation, ref data);
-            
-            Room.Send(peerId, data);
-        }
-
-
-        public void Broadcast(uint[] peersIds, RagonOperation operation, IPacket payload)
-        {
-            _buffer.Clear();
-            payload.Serialize(_buffer);
-
-            Span<byte> data = stackalloc byte[_buffer.Length + 2];
-            Span<byte> bufferSpan = data.Slice(2, data.Length - 2);
-
-            _buffer.ToSpan(ref bufferSpan);
-
-            RagonHeader.WriteUShort((ushort) operation, ref data);
-
-            Room.Broadcast(peersIds, data);
-        }
-
-        #region VIRTUAL
-        
-        public virtual void OnRoomJoined()
-        {
-            
-        }
-
-        public virtual void OnRoomLeaved()
-        {
-            
-        }
-        
-        public virtual void OnStart()
-        {
-        }
-
-        public virtual void OnStop()
-        {
-        }
-
-        public virtual void OnTick(ulong ticks, float deltaTime)
-        {
-            
-        }
-
-        #endregion
+      _logger = LogManager.GetLogger($"Plugin<{GetType().Name}>");
+      
+      Room = room;
+      
+      _globalEvents.Clear();
+      _entityEvents.Clear();
     }
+    public void Dispose()
+    {
+      _globalEvents.Clear();
+      _entityEvents.Clear();
+    }
+    
+    public void Subscribe<T>(ushort evntCode, Action<Player, T> action) where T : IRagonSerializable, new()
+    {
+      if (_globalEvents.ContainsKey(evntCode))
+      {
+        _logger.Warn($"Event subscriber already added {evntCode}");
+        return;
+      }
+      
+      var data = new T();
+      _globalEvents.Add(evntCode, (Player player, ref ReadOnlySpan<byte> raw) =>
+      {
+        _buffer.Clear();
+        _buffer.FromSpan(ref raw, raw.Length);
+        data.Deserialize(_buffer);
+        action.Invoke(player, data);
+      });
+    }
+
+    public void Subscribe<T>(Entity entity, ushort evntCode, Action<Player, int, T> action) where T : IRagonSerializable, new()
+    {
+      if (_entityEvents.ContainsKey(evntCode))
+      {
+        _logger.Warn($"Event subscriber already added {evntCode}");
+        return;
+      }
+      
+      var data = new T();
+      _entityEvents[entity.EntityId][evntCode] = (Player player, Entity ent, ref ReadOnlySpan<byte> raw) =>
+      {
+        _buffer.Clear();
+        _buffer.FromSpan(ref raw, raw.Length);
+        data.Deserialize(_buffer);
+        action.Invoke(player, ent.EntityId, data);
+      };
+    }
+
+    public void UnsubscribeAll()
+    {
+      _globalEvents.Clear();
+      _entityEvents.Clear();
+    }
+
+    public bool InternalHandle(uint peerId, int entityId, ushort evntCode, ref ReadOnlySpan<byte> payload)
+    {
+      if (!_entityEvents.ContainsKey(entityId))
+        return false;
+
+      if (!_entityEvents[entityId].ContainsKey(evntCode))
+        return false;
+      
+      var player = Room.GetPlayerById(peerId);
+      var entity = Room.GetEntityById(entityId);
+      _entityEvents[entityId][evntCode].Invoke(player, entity, ref payload);
+
+      return true;
+    }
+
+    public bool InternalHandle(uint peerId, ushort evntCode, ref ReadOnlySpan<byte> payload)
+    {
+      if (_globalEvents.ContainsKey(evntCode))
+      {
+        var player = Room.GetPlayerById(peerId);
+        _globalEvents[evntCode].Invoke(player, ref payload);
+        return true;
+      }
+
+      return false;
+    }
+
+    public void SendEvent(Player player, uint eventCode, IRagonSerializable payload)
+    {
+      _buffer.Clear();
+      payload.Serialize(_buffer);
+
+      var sendData = new byte[_buffer.Length + 2];
+      Span<byte> data = sendData.AsSpan();
+      Span<byte> operationData = data.Slice(0, 2);
+      Span<byte> payloadData = data.Slice(2, data.Length - 2);
+
+      _buffer.ToSpan(ref payloadData);
+      
+      RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
+      
+      Room.Send(player.PeerId, sendData);
+    }
+    
+    public void SendEvent(ushort eventCode, IRagonSerializable payload)
+    {
+      _buffer.Clear();
+      payload.Serialize(_buffer);
+
+      var sendData = new byte[_buffer.Length + 4];
+      Span<byte> data = sendData.AsSpan();
+      Span<byte> operationData = data.Slice(0, 2);
+      Span<byte> eventCodeData = data.Slice(2, 2);
+      Span<byte> payloadData = data.Slice(4, _buffer.Length);
+      
+      RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT,ref operationData);
+      RagonHeader.WriteUShort( eventCode, ref eventCodeData);
+
+      _buffer.ToSpan(ref payloadData);
+      
+      Room.Broadcast(sendData);
+    }
+    
+    public void SendEntityEvent(Player player, Entity entity, IRagonSerializable payload)
+    {
+      _buffer.Clear();
+      payload.Serialize(_buffer);
+
+      var sendData = new byte[_buffer.Length + 6];
+      Span<byte> data = sendData.AsSpan();
+      Span<byte> operationData = data.Slice(0, 2);
+      Span<byte> entityData = data.Slice(2, 4);
+      
+      RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
+      RagonHeader.WriteInt(entity.EntityId, ref entityData);
+      
+      Room.Send(player.PeerId, sendData);
+    }
+     
+    public void SendEntityEvent(Entity entity, IRagonSerializable payload)
+    {
+      _buffer.Clear();
+      payload.Serialize(_buffer);
+
+      var sendData = new byte[_buffer.Length + 6];
+      Span<byte> data = sendData.AsSpan();
+      Span<byte> operationData = data.Slice(0, 2);
+      Span<byte> entityData = data.Slice(2, 4);
+      
+      RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
+      RagonHeader.WriteInt(entity.EntityId, ref entityData);
+      
+      Room.Broadcast(sendData);
+    }
+
+    
+    #region VIRTUAL
+
+    public virtual void OnPlayerJoined(Player player)
+    {
+    }
+
+    public virtual void OnPlayerLeaved(Player player)
+    {
+    }
+
+    public virtual void OnOwnerChanged(Player player)
+    {
+      
+    }
+    public virtual void OnEntityCreated(Player creator, Entity entity)
+    {
+      
+    }
+
+    public virtual void OnEntityDestroyed(Player destoyer, Entity entity)
+    {
+      
+    }
+
+    public virtual void OnStart()
+    {
+    }
+
+    public virtual void OnStop()
+    {
+    }
+
+    public virtual void OnTick(float deltaTime)
+    {
+    }
+
+    #endregion
+  }
 }

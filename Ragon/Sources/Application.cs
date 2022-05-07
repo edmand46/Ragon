@@ -14,6 +14,7 @@ namespace Ragon.Core
     private readonly Dictionary<RoomThread, int> _roomThreadCounter = new();
     private readonly Configuration _configuration;
     private readonly ENetServer _socketServer;
+    private int _roomThreadBalancer = 0;
     
     public Application(PluginFactory factory, Configuration configuration, int threadsCount)
     {
@@ -45,9 +46,13 @@ namespace Ragon.Core
         {
           if (evnt.Type == EventType.CONNECTED)
           {
-            var roomThread = _roomThreads.First();
+            if (_roomThreadBalancer >= _roomThreads.Count)
+              _roomThreadBalancer = 0;
+            
+            var roomThread = _roomThreads[_roomThreadBalancer];
             _roomThreadCounter[roomThread] += 1;
             _socketByRoomThreads.Add(evnt.PeerId, roomThread);
+            _roomThreadBalancer++;
           }
 
           if (_socketByRoomThreads.TryGetValue(evnt.PeerId, out var existsRoomThread))
