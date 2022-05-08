@@ -45,31 +45,105 @@ namespace Ragon.Core
       var data = new T();
       _globalEvents.Add(evntCode, (Player player, ref ReadOnlySpan<byte> raw) =>
       {
+        if (raw.Length == 0)
+        {
+          _logger.Warn($"Payload is empty for event {evntCode}");
+          return;
+        }
+        
         _buffer.Clear();
         _buffer.FromSpan(ref raw, raw.Length);
         data.Deserialize(_buffer);
         action.Invoke(player, data);
       });
     }
-
-    public void Subscribe<T>(Entity entity, ushort evntCode, Action<Player, int, T> action) where T : IRagonSerializable, new()
+    
+    public void Subscribe(ushort evntCode, Action<Player> action)
     {
-      if (_entityEvents.ContainsKey(evntCode))
+      if (_globalEvents.ContainsKey(evntCode))
       {
         _logger.Warn($"Event subscriber already added {evntCode}");
         return;
       }
       
-      var data = new T();
-      _entityEvents[entity.EntityId][evntCode] = (Player player, Entity ent, ref ReadOnlySpan<byte> raw) =>
+      _globalEvents.Add(evntCode, (Player player, ref ReadOnlySpan<byte> raw) =>
       {
-        _buffer.Clear();
-        _buffer.FromSpan(ref raw, raw.Length);
-        data.Deserialize(_buffer);
-        action.Invoke(player, ent.EntityId, data);
-      };
+        action.Invoke(player);
+      });
     }
 
+    public void Subscribe<T>(Entity entity, ushort evntCode, Action<Player, Entity, T> action) where T : IRagonSerializable, new()
+    {
+      if (_entityEvents.ContainsKey(entity.EntityId))
+      {
+        if (_entityEvents[entity.EntityId].ContainsKey(evntCode))
+        {
+          _logger.Warn($"Event subscriber already added {evntCode} for {entity.EntityId}");
+          return;
+        }   
+        
+        var data = new T();
+        _entityEvents[entity.EntityId].Add(evntCode, (Player player, Entity ent, ref ReadOnlySpan<byte> raw) =>
+        {
+          if (raw.Length == 0)
+          {
+            _logger.Warn($"Payload is empty for entity {ent.EntityId} event {evntCode}");
+            return;
+          }
+          
+          _buffer.Clear();
+          _buffer.FromSpan(ref raw, raw.Length);
+          data.Deserialize(_buffer);
+          action.Invoke(player, ent, data);
+        });
+        
+        return;
+      }
+
+      {
+        var data = new T();
+        _entityEvents.Add(entity.EntityId, new Dictionary<ushort, SubscribeEntityDelegate>());
+        _entityEvents[entity.EntityId].Add(evntCode, (Player player, Entity ent, ref ReadOnlySpan<byte> raw) =>
+        {
+          if (raw.Length == 0)
+          {
+            _logger.Warn($"Payload is empty for entity {ent.EntityId} event {evntCode}");
+            return;
+          }
+          _buffer.Clear();
+          _buffer.FromSpan(ref raw, raw.Length);
+          data.Deserialize(_buffer);
+          action.Invoke(player, ent.EntityId, data);
+        });
+      }
+    }
+
+    public void Subscribe(Entity entity, ushort evntCode, Action<Player, Entity> action) where T : IRagonSerializable, new()
+    {
+      if (_entityEvents.ContainsKey(entity.EntityId))
+      {
+        if (_entityEvents[entity.EntityId].ContainsKey(evntCode))
+        {
+          _logger.Warn($"Event subscriber already added {evntCode} for {entity.EntityId}");
+          return;
+        }   
+        
+        _entityEvents[entity.EntityId].Add(evntCode, (Player player, Entity ent, ref ReadOnlySpan<byte> raw) =>
+        {
+          action.Invoke(player, ent);
+        });
+        return;
+      }
+
+      {
+        _entityEvents.Add(entity.EntityId, new Dictionary<ushort, SubscribeEntityDelegate>());
+        _entityEvents[entity.EntityId].Add(evntCode, (Player player, Entity ent, ref ReadOnlySpan<byte> raw) =>
+        {
+          action.Invoke(player, ent);
+        });
+      }
+    }
+    
     public void UnsubscribeAll()
     {
       _globalEvents.Clear();
@@ -108,14 +182,16 @@ namespace Ragon.Core
       _buffer.Clear();
       payload.Serialize(_buffer);
 
-      var sendData = new byte[_buffer.Length + 2];
+      var sendData = new byte[_buffer.Length + 4];
       Span<byte> data = sendData.AsSpan();
       Span<byte> operationData = data.Slice(0, 2);
-      Span<byte> payloadData = data.Slice(2, data.Length - 2);
+      Span<byte> eventCodeData = data.Slice(2, 2);
+      Span<byte> payloadData = data.Slice(4, data.Length - 4);
 
       _buffer.ToSpan(ref payloadData);
       
       RagonHeader.WriteUShort((ushort) RagonOperation.REPLICATE_EVENT, ref operationData);
+      RagonHeader.WriteUShort((ushort) eventCode, ref eventCodeData);
       
       Room.Send(player.PeerId, sendData);
     }

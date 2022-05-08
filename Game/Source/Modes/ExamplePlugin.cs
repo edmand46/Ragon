@@ -12,6 +12,12 @@ namespace Game.Source
       _logger.Info("Plugin started");  
       
       Subscribe<TestEvent>(123, OnTestEvent);
+      Subscribe(500, OnTestEvent2);;
+    }
+
+    private void OnTestEvent2(Player obj)
+    {
+      _logger.Info("Event without data");
     }
 
     public override void OnStop()
@@ -27,7 +33,11 @@ namespace Game.Source
     public override void OnPlayerJoined(Player player)
     {
       _logger.Info("Player joined " + player.PlayerName);
-      SendEvent(player, 123, new TestEvent() { TestData =  "asdf"});
+      
+      SendEvent(player, 123, new TestEvent()
+      {
+        TestData =  "asdf"
+      });
 
       SendEvent(123, new TestEvent()
       {
@@ -51,7 +61,7 @@ namespace Game.Source
       
     }
     
-    private void OnEntityTestEvent(Player arg1, int arg2, TestEvent arg3)
+    private void OnEntityTestEvent(Player player, Entity entity, TestEvent data)
     {
       
     }

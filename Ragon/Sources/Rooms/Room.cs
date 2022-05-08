@@ -232,8 +232,8 @@ namespace Ragon.Core
           var data = new byte[entityPayloadData.Length + 12];
           var sendData = data.AsSpan();
           var operationData = sendData.Slice(0, 2);
-          var entityTypeData = sendData.Slice(2, 4);
-          var entityData = sendData.Slice(4, 4);
+          var entityTypeData = sendData.Slice(2, 2);
+          var entityIdData = sendData.Slice(4, 4);
           var peerData = sendData.Slice(8, 4);
           var payload = sendData.Slice(12, entityPayloadData.Length);
 
@@ -241,7 +241,7 @@ namespace Ragon.Core
 
           RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref operationData);
           RagonHeader.WriteUShort(entityType, ref entityTypeData);
-          RagonHeader.WriteInt(entity.EntityId, ref entityData);
+          RagonHeader.WriteInt(entity.EntityId, ref entityIdData);
           RagonHeader.WriteInt((int) peerId, ref peerData);
 
           Broadcast(_allPlayers, data, DeliveryType.Reliable);
