@@ -113,12 +113,12 @@ namespace Ragon.Core
           _buffer.Clear();
           _buffer.FromSpan(ref raw, raw.Length);
           data.Deserialize(_buffer);
-          action.Invoke(player, ent.EntityId, data);
+          action.Invoke(player, ent, data);
         });
       }
     }
 
-    public void Subscribe(Entity entity, ushort evntCode, Action<Player, Entity> action) where T : IRagonSerializable, new()
+    public void Subscribe(Entity entity, ushort evntCode, Action<Player, Entity> action)
     {
       if (_entityEvents.ContainsKey(entity.EntityId))
       {
