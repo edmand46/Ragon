@@ -16,15 +16,12 @@ Ragon is fully free high perfomance room based game server with plugin based arc
 - Free
 - Simple matchmaking
 - Flexiable API
-- Support client authoritative
-- Support server authoritative
 - Room based architecture
 - Extendable room logic via plugin
 - Custom authorization
 - No CCU limitations* 
-- Extentable rooms with plugin system
 - Fully multi-threaded
-- Engine agnostic 
+- Engine agnostic
 - Support any client architecture (OOP, ECS)
 - UDP
 
@@ -43,7 +40,7 @@ Ragon is fully free high perfomance room based game server with plugin based arc
 * RingBuffer-Unity3D
 
 ### License
-
+SSPL-1.0
 
 ### Tips
 * Limited to 4095 CCU by library ENet-Sharp
