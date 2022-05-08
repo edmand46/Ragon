@@ -11,8 +11,9 @@ namespace Game.Source
     {
       _logger.Info("Plugin started");  
       
-      Subscribe<TestEvent>(123, OnTestEvent);
-      Subscribe(500, OnTestEvent2);;
+      /*Subscribe<TestEvent>(123, OnTestEvent);
+      */
+      // Subscribe(500, OnTestEvent2);;
     }
 
     private void OnTestEvent2(Player obj)
@@ -53,7 +54,7 @@ namespace Game.Source
     public override void OnEntityCreated(Player creator, Entity entity)
     {
       // entity.
-      Subscribe<TestEvent>(entity, 123, OnEntityTestEvent);
+      // Subscribe(entity, 500, OnEntityTestEvent);
     }
     
     public override void OnEntityDestroyed(Player destoyer, Entity entity)
@@ -61,9 +62,9 @@ namespace Game.Source
       
     }
     
-    private void OnEntityTestEvent(Player player, Entity entity, TestEvent data)
-    {
-      
+    private void OnEntityTestEvent(Player player, Entity entity)
+    { 
+      _logger.Info("Entity event with empty payload");
     }
   }
 }

@@ -175,11 +175,15 @@ namespace Ragon.Core
         }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
+          
           var evntCodeData = rawData.Slice(2, 2);
           var entityIdData = rawData.Slice(4, 4);
           var evntId = RagonHeader.ReadUShort(ref evntCodeData);
           var entityId = RagonHeader.ReadInt(ref entityIdData);
-
+          
+          if (!_entities.ContainsKey(entityId))
+            return;
+          
           if (_entities[entityId].OwnerId != peerId)
             return;
 
