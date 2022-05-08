@@ -52,7 +52,11 @@ namespace Ragon.Core
             var roomThread = _roomThreads[_roomThreadBalancer];
             _roomThreadCounter[roomThread] += 1;
             _socketByRoomThreads.Add(evnt.PeerId, roomThread);
-            _roomThreadBalancer++;
+            
+            // TODO: Todo room manager matchmaking across all room threads
+            // TEMP_FIX: Remove this magical number
+            if (_roomThreadCounter[roomThread] > 20)
+              _roomThreadBalancer++;
           }
 
           if (_socketByRoomThreads.TryGetValue(evnt.PeerId, out var existsRoomThread))
