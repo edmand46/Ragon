@@ -281,19 +281,21 @@ namespace Ragon.Core
         }
         case RagonOperation.SCENE_IS_LOADED:
         {
-          Send(peerId, RagonOperation.RESTORE_BEGIN);
+          Send(peerId, RagonOperation.RESTORE_BEGIN, DeliveryType.Reliable);
           foreach (var entity in _entities.Values)
           {
             var entityState = entity.State.AsSpan();
-            var data = new byte[entity.State.Length + 10];
+            var data = new byte[entity.State.Length + 12];
             
             Span<byte> sendData = data.AsSpan();
             Span<byte> operationData = sendData.Slice(0, 2);
-            Span<byte> entityData = sendData.Slice(2, 4);
-            Span<byte> ownerData = sendData.Slice(6, 4);
-            Span<byte> entityStateData = sendData.Slice(10, entity.State.Length);
+            Span<byte> entityTypeData = sendData.Slice(2, 2);
+            Span<byte> entityData = sendData.Slice(4, 4);
+            Span<byte> ownerData = sendData.Slice(8, 4);
+            Span<byte> entityStateData = sendData.Slice(12, entity.State.Length);
 
             RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref operationData);
+            RagonHeader.WriteUShort(entity.EntityType, ref entityTypeData);
             RagonHeader.WriteInt(entity.EntityId, ref entityData);
             RagonHeader.WriteInt((int) entity.OwnerId, ref ownerData);
             
@@ -302,7 +304,7 @@ namespace Ragon.Core
             Send(peerId, data, DeliveryType.Reliable);
           }
 
-          Send(peerId, RagonOperation.RESTORE_END);
+          Send(peerId, RagonOperation.RESTORE_END, DeliveryType.Reliable);
           break;
         }
         case RagonOperation.RESTORED:
