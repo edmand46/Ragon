@@ -54,7 +54,7 @@ namespace Ragon.Core
       _thread = new Thread(Execute);
       _thread.Name = "NetworkThread";
       _thread.Start();
-      _logger.Info($"Socket Server Started at port {port}");
+      _logger.Info($"ENet Server Started at port {port}");
     }
 
     private void Execute()

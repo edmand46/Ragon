@@ -4,17 +4,17 @@ using Ragon.Core;
 
 namespace Game.Source;
 
-public class GameAuthorizer: AuthorizationManager
+public class AuthorizerByKey: AuthorizationManager
 {
   private Configuration _configuration;
-  public GameAuthorizer(Configuration configuration)
+  public AuthorizerByKey(Configuration configuration)
   {
     _configuration = configuration;
   }
 
   public override bool OnAuthorize(uint peerId, ref ReadOnlySpan<byte> payload)
   {
-    var apiKey = Encoding.UTF8.GetString(payload);
-    return _configuration.ApiKey == apiKey;
+    var key = Encoding.UTF8.GetString(payload);
+    return _configuration.Key == key;
   }
 }

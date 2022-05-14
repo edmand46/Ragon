@@ -3,17 +3,17 @@ using Ragon.Common;
 
 namespace Game.Source.Events;
 
-public class TestEvent: IRagonSerializable
+public class SimpleEvent: IRagonSerializable
 {
-  public string TestData;
+  public string Name;
   
   public void Serialize(BitBuffer buffer)
   {
-    buffer.AddString(TestData);
+    buffer.AddString(Name);
   }
 
   public void Deserialize(BitBuffer buffer)
   {
-    TestData = buffer.ReadString();
+    Name = buffer.ReadString();
   }
 }

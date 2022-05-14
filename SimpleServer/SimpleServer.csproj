@@ -6,6 +6,10 @@
         <RootNamespace>Game</RootNamespace>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
     <ItemGroup>
       <None Update="NLog.config">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -17,6 +21,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Ragon\Ragon.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Source\Managers" />
     </ItemGroup>
 
 </Project>
