@@ -9,7 +9,7 @@ namespace Ragon.Core
   public static class ConfigurationLoader
   {
     private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
-    private static readonly string _serverVersion = "2.0.0-preview";
+    private static readonly string _serverVersion = "1.0.0-rc";
 
     private static void CopyrightInfo()
     {

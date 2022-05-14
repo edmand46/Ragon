@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+    steps:
+      - name: Create release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: SimpleServer-${{ github.ref }}
+
+  build:
+    name: Release
+    needs: release
+    strategy:
+      matrix:
+        kind: ['linux', 'windows', 'macOS']
+        include:
+          - kind: linux
+            os: ubuntu-latest
+            target: linux-x64
+          - kind: windows
+            os: windows-latest
+            target: win-x64
+          - kind: macOS
+            os: macos-latest
+            target: osx-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Get Tag
+        shell: bash
+        run: |
+          echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+      - name: Build
+        shell: bash
+        run: |
+          release_name="SimpleServer-${{ env.TAG }}-${{ matrix.target }}"
+          
+          # Build everything
+          dotnet publish SimpleServer/SimpleServer.csproj -c Release --runtime "${{ matrix.target }}" -p:PublishSingleFile=true -o "$release_name"
+          
+          # Pack files        
+          7z a -tzip "${release_name}.zip" "./${release_name}/*"
+  
+          # Delete output directory
+          rm -r "$release_name"
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: SimpleServer-${{ env.TAG }}-${{ matrix.target }}.zip
+          asset_name: SimpleServer-${{ env.TAG }}-${{ matrix.target }}.zip
+          asset_content_type: application/zip

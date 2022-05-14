@@ -38,9 +38,9 @@ Ragon is fully free high perfomance room based game server with plugin based arc
 - OSX, Windows, Linux(Ubuntu, Debian)
 - .NET 6.0
 ### Dependencies
-* ENet-Sharp
-* NetStack
-* RingBuffer-Unity3D
+* ENet-Sharp v2.4.8
+* NetStack latest
+* RingBuffer-Unity3D latest
 
 ### License
 SSPL-1.0
