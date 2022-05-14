@@ -22,6 +22,7 @@ namespace Ragon.Core
     private Dictionary<uint, Player> _players = new();
     private Dictionary<int, Entity> _entities = new();
     private uint _owner;
+    private uint _ticks;
 
     private readonly PluginBase _plugin;
     private readonly RoomThread _roomThread;
@@ -69,7 +70,7 @@ namespace Ragon.Core
 
         var sendData = new byte[idRaw.Length + 18];
         var data = sendData.AsSpan();
-        
+
         Span<byte> operationData = data.Slice(0, 2);
         Span<byte> peerData = data.Slice(2, 4);
         Span<byte> ownerData = data.Slice(4, 4);
@@ -84,7 +85,7 @@ namespace Ragon.Core
         RagonHeader.WriteInt(PlayersMax, ref maxData);
 
         idRaw.CopyTo(idData);
-        
+
         Send(peerId, sendData);
       }
 
@@ -92,7 +93,7 @@ namespace Ragon.Core
         var sceneRawData = Encoding.UTF8.GetBytes(Map).AsSpan();
         var sendData = new byte[sceneRawData.Length + 2];
         var data = sendData.AsSpan();
-        
+
         Span<byte> operationData = data.Slice(0, 2);
         Span<byte> sceneData = data.Slice(2, sceneRawData.Length);
 
@@ -135,56 +136,33 @@ namespace Ragon.Core
         {
           var entityData = rawData.Slice(2, 4);
           var entityId = RagonHeader.ReadInt(ref entityData);
-          if (_entities.TryGetValue(entityId, out var ent) && ent.OwnerId == peerId)
+          if (_entities.TryGetValue(entityId, out var ent))
           {
-            ent.State = rawData.Slice(6, rawData.Length - 6).ToArray();
+            if (ent.State.Authority == RagonAuthority.OWNER_ONLY && ent.OwnerId != peerId)
+              return;
+
+            ent.State.Data = rawData.Slice(6, rawData.Length - 6).ToArray();
 
             var data = new byte[rawData.Length];
-            
+
             rawData.CopyTo(data);
-            
+
             Broadcast(_readyPlayers, data);
-          }
-
-          break;
-        }
-        case RagonOperation.REPLICATE_ENTITY_PROPERTY:
-        {
-          var entityData = rawData.Slice(2, 4);
-          var entityId = RagonHeader.ReadInt(ref entityData);
-          if (_entities.TryGetValue(entityId, out var ent) && ent.OwnerId == peerId)
-          {
-            var propertyData = rawData.Slice(6, 4);
-            var propertyId = RagonHeader.ReadInt(ref propertyData);
-            var payload = rawData.Slice(10, rawData.Length - 10).ToArray();
-            var props = _entities[entityId].Properties;
-
-            if (props.ContainsKey(propertyId))
-              props[propertyId] = payload;
-            else
-              props.Add(propertyId, payload);
-
-            var sendData = new byte[rawData.Length];
-            
-            rawData.CopyTo(sendData);
-
-            Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           }
 
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
-          
           var evntCodeData = rawData.Slice(2, 2);
           var entityIdData = rawData.Slice(4, 4);
           var evntId = RagonHeader.ReadUShort(ref evntCodeData);
           var entityId = RagonHeader.ReadInt(ref entityIdData);
-          
-          if (!_entities.ContainsKey(entityId))
+
+          if (!_entities.TryGetValue(entityId, out var ent))
             return;
-          
-          if (_entities[entityId].OwnerId != peerId)
+
+          if (ent.Authority == RagonAuthority.OWNER_ONLY && ent.OwnerId != peerId)
             return;
 
           var payload = rawData.Slice(8, rawData.Length - 8);
@@ -208,21 +186,23 @@ namespace Ragon.Core
             return;
 
           var data = new byte[rawData.Length];
-          
+
           rawData.CopyTo(data);
-          
+
           Broadcast(_readyPlayers, data, DeliveryType.Reliable);
           break;
         }
         case RagonOperation.CREATE_ENTITY:
         {
           var typeData = rawData.Slice(2, 2);
+          var authorityData = rawData.Slice(2, 2);
           var entityPayloadData = rawData.Slice(4, rawData.Length - 4);
 
           var entityType = RagonHeader.ReadUShort(ref typeData);
-          var entity = new Entity(peerId, entityType);
-          entity.State = entityPayloadData.ToArray();
-          entity.Properties = new Dictionary<int, byte[]>();
+          var stateAuthority = (RagonAuthority) authorityData[0];
+          var eventAuthority = (RagonAuthority) authorityData[1];
+          var entity = new Entity(peerId, entityType, stateAuthority, eventAuthority);
+          entity.State.Data = entityPayloadData.ToArray();
 
           var player = _players[peerId];
           player.Entities.Add(entity);
@@ -233,15 +213,19 @@ namespace Ragon.Core
 
           _plugin.OnEntityCreated(player, entity);
 
-          var data = new byte[entityPayloadData.Length + 12];
+          var data = new byte[entityPayloadData.Length + 14];
           var sendData = data.AsSpan();
           var operationData = sendData.Slice(0, 2);
           var entityTypeData = sendData.Slice(2, 2);
-          var entityIdData = sendData.Slice(4, 4);
-          var peerData = sendData.Slice(8, 4);
-          var payload = sendData.Slice(12, entityPayloadData.Length);
+          var authority = sendData.Slice(4, 2);
+          var entityIdData = sendData.Slice(6, 4);
+          var peerData = sendData.Slice(10, 4);
+          var payload = sendData.Slice(14, entityPayloadData.Length);
 
           entityPayloadData.CopyTo(payload);
+
+          authority[0] = authorityData[0];
+          authority[1] = authorityData[1];
 
           RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref operationData);
           RagonHeader.WriteUShort(entityType, ref entityTypeData);
@@ -257,24 +241,24 @@ namespace Ragon.Core
           var entityId = RagonHeader.ReadInt(ref entityData);
           if (_entities.TryGetValue(entityId, out var entity))
           {
-            if (entity.OwnerId == peerId)
-            {
-              var player = _players[peerId];
+            if (entity.Authority == RagonAuthority.OWNER_ONLY && entity.OwnerId != peerId)
+              return;
+            
+            var player = _players[peerId];
 
-              player.Entities.Remove(entity);
-              player.EntitiesIds.Remove(entity.EntityId);
+            player.Entities.Remove(entity);
+            player.EntitiesIds.Remove(entity.EntityId);
 
-              _entities.Remove(entityId);
-              _entitiesAll = _entities.Values.ToArray();
+            _entities.Remove(entityId);
+            _entitiesAll = _entities.Values.ToArray();
 
-              _plugin.OnEntityDestroyed(player, entity);
+            _plugin.OnEntityDestroyed(player, entity);
 
-              var data = new byte[rawData.Length];
-              Span<byte> sendData = data.AsSpan();
-              rawData.CopyTo(sendData);
-              
-              Broadcast(_readyPlayers, data, DeliveryType.Reliable);
-            }
+            var data = new byte[rawData.Length];
+            Span<byte> sendData = data.AsSpan();
+            rawData.CopyTo(sendData);
+
+            Broadcast(_readyPlayers, data, DeliveryType.Reliable);
           }
 
           break;
@@ -284,23 +268,27 @@ namespace Ragon.Core
           Send(peerId, RagonOperation.RESTORE_BEGIN, DeliveryType.Reliable);
           foreach (var entity in _entities.Values)
           {
-            var entityState = entity.State.AsSpan();
-            var data = new byte[entity.State.Length + 12];
-            
+            var entityState = entity.State.Data.AsSpan();
+            var data = new byte[entity.State.Data.Length + 12];
+
             Span<byte> sendData = data.AsSpan();
             Span<byte> operationData = sendData.Slice(0, 2);
             Span<byte> entityTypeData = sendData.Slice(2, 2);
-            Span<byte> entityData = sendData.Slice(4, 4);
-            Span<byte> ownerData = sendData.Slice(8, 4);
-            Span<byte> entityStateData = sendData.Slice(12, entity.State.Length);
+            Span<byte> authorityData = sendData.Slice(4, 2);
+            Span<byte> entityData = sendData.Slice(6, 4);
+            Span<byte> ownerData = sendData.Slice(10, 4);
+            Span<byte> entityStateData = sendData.Slice(14, entity.State.Data.Length);
 
             RagonHeader.WriteUShort((ushort) RagonOperation.CREATE_ENTITY, ref operationData);
             RagonHeader.WriteUShort(entity.EntityType, ref entityTypeData);
             RagonHeader.WriteInt(entity.EntityId, ref entityData);
             RagonHeader.WriteInt((int) entity.OwnerId, ref ownerData);
+
+            authorityData[0] = (byte) entity.State.Authority;
+            authorityData[1] = (byte) entity.Authority;
             
             entityState.CopyTo(entityStateData);
-            
+
             Send(peerId, data, DeliveryType.Reliable);
           }
 
@@ -320,7 +308,8 @@ namespace Ragon.Core
 
     public void Tick(float deltaTime)
     {
-      _plugin.OnTick(deltaTime);
+      _ticks++;
+      _plugin.OnTick(_ticks, deltaTime);
     }
 
     public void Start()
@@ -350,7 +339,7 @@ namespace Ragon.Core
     {
       var rawData = new byte[2];
       var rawDataSpan = new Span<byte>(rawData);
-      
+
       RagonHeader.WriteUShort((ushort) operation, ref rawDataSpan);
 
       _roomThread.WriteOutEvent(new Event()

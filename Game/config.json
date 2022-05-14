@@ -1,7 +1,0 @@
-{
-  "apiKey": "123",
-  "server": {
-    "port": 5000,
-    "skipTimeout": 60
-  }
-}

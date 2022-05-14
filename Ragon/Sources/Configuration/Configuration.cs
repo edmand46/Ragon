@@ -6,12 +6,13 @@ namespace Ragon.Core
   public struct Server 
   {
     public ushort Port;
+    public ushort TickRate;
   }
   
   [Serializable]
   public struct Configuration
   {
-    public string ApiKey;
+    public string Key;
     public Server Server;
   }
 }

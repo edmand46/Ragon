@@ -280,7 +280,7 @@ namespace Ragon.Core
     {
     }
 
-    public virtual void OnTick(float deltaTime)
+    public virtual void OnTick(ulong ticks, float deltaTime)
     {
     }
 

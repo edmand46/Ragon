@@ -34,6 +34,9 @@ Ragon is fully free high perfomance room based game server with plugin based arc
 - Docker support
 - Add additional API to plugin system
 
+### Requirements
+- OSX, Windows, Linux(Ubuntu, Debian)
+- .NET 6.0
 ### Dependencies
 * ENet-Sharp
 * NetStack

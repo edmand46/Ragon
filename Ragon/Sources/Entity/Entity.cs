@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using Ragon.Common;
 
 namespace Ragon.Core;
 
@@ -8,13 +8,15 @@ public class Entity
   public int EntityId { get; private set; }
   public uint OwnerId { get; private set; }
   public ushort EntityType { get; private set; }
-  public byte[] State { get; set; }
-  public Dictionary<int, byte[]> Properties { get; set; }
+  public RagonAuthority Authority { get; private set; }
+  public EntityState State { get; private set; }
   
-  public Entity(uint ownerId, ushort entityType)
+  public Entity(uint ownerId, ushort entityType, RagonAuthority stateAuthority, RagonAuthority eventAuthority)
   {
     OwnerId = ownerId;
     EntityType = entityType;
     EntityId = _idGenerator++;
+    State = new EntityState(stateAuthority);
+    Authority = eventAuthority;
   }
 }
