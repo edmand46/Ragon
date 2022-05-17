@@ -269,7 +269,7 @@ namespace Ragon.Core
           foreach (var entity in _entities.Values)
           {
             var entityState = entity.State.Data.AsSpan();
-            var data = new byte[entity.State.Data.Length + 12];
+            var data = new byte[entity.State.Data.Length + 14];
 
             Span<byte> sendData = data.AsSpan();
             Span<byte> operationData = sendData.Slice(0, 2);
