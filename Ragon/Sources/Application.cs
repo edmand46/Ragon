@@ -16,6 +16,8 @@ namespace Ragon.Core
     private readonly ENetServer _socketServer;
     private int _roomThreadBalancer = 0;
     
+    private Thread _thread;
+    
     public Application(PluginFactory factory, Configuration configuration, int threadsCount)
     {
       _socketServer = new ENetServer();
@@ -29,13 +31,8 @@ namespace Ragon.Core
       }
     }
 
-    public void Start()
+    private void Loop()
     {
-      _socketServer.Start(_configuration.Server.Port);
-      
-      foreach (var roomThread in _roomThreads)
-        roomThread.Start();
-
       while (true)
       {
         foreach (var roomThread in _roomThreads)
@@ -77,6 +74,17 @@ namespace Ragon.Core
 
         Thread.Sleep(1);
       }
+    }
+    
+    public void Start()
+    {
+      _socketServer.Start(_configuration.Server.Port);
+      
+      foreach (var roomThread in _roomThreads)
+        roomThread.Start();
+
+      _thread = new Thread(Loop);
+      _thread.Start();
     }
     
     public void Dispose()

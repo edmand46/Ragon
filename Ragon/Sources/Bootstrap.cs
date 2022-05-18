@@ -1,4 +1,7 @@
-﻿using NLog;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using NLog;
 
 namespace Ragon.Core
 {
@@ -9,7 +12,8 @@ namespace Ragon.Core
     public void Configure(PluginFactory factory)
     {
       _logger.Info("Configure application...");
-      var configuration = ConfigurationLoader.Load("config.json");
+      var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+      var configuration = ConfigurationLoader.Load(filePath);
       var app = new Application(factory, configuration, 2);
       app.Start();
     }

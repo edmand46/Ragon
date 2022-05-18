@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Images/logo.png" width="200" >
+  <img src="Images/ragon-logo.png" width="200" >
 </p>
 
 ## Ragon Server
@@ -37,6 +37,7 @@ Ragon is fully free high perfomance room based game server with plugin based arc
 ### Requirements
 - OSX, Windows, Linux(Ubuntu, Debian)
 - .NET 6.0
+
 ### Dependencies
 * ENet-Sharp v2.4.8
 * NetStack latest
