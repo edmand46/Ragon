@@ -11,13 +11,15 @@ public class EntityState
 
   public byte[] Data
   {
-    get => Data;
+    get => _data;
     set
     {
-      Data = value;
+      _data = value;
       isDirty = true;
     }
   }
+
+  private byte[] _data = Array.Empty<byte>();
   
   public EntityState(RagonAuthority ragonAuthority)
   {
