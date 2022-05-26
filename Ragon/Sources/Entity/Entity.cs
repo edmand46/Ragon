@@ -10,6 +10,7 @@ public class Entity
   public ushort EntityType { get; private set; }
   public RagonAuthority Authority { get; private set; }
   public EntityState State { get; private set; }
+  public EntityState Payload { get; private set; }
   
   public Entity(uint ownerId, ushort entityType, RagonAuthority stateAuthority, RagonAuthority eventAuthority)
   {
@@ -17,6 +18,7 @@ public class Entity
     EntityType = entityType;
     EntityId = _idGenerator++;
     State = new EntityState(stateAuthority);
+    Payload = new EntityState(stateAuthority);
     Authority = eventAuthority;
   }
 }
