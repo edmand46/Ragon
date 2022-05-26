@@ -16,8 +16,8 @@ namespace Ragon.Core
     private readonly Stopwatch _timer;
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
     private readonly float _deltaTime = 0.0f;
-    private RingBuffer<Event> _receiveBuffer = new RingBuffer<Event>(8192 + 8192);
-    private RingBuffer<Event> _sendBuffer = new RingBuffer<Event>(8192 + 8192);
+    private readonly RingBuffer<Event> _receiveBuffer = new(2048);
+    private readonly RingBuffer<Event> _sendBuffer = new(2048);
 
     public Configuration Configuration { get; private set; }
     public bool ReadOutEvent(out Event evnt) => _sendBuffer.TryDequeue(out evnt);
@@ -70,13 +70,14 @@ namespace Ragon.Core
           if (evnt.Type == EventType.DATA)
           {
             var data = new ReadOnlySpan<byte>(evnt.Data);
-            var operationData = data.Slice(0, 2);
-            var operation = (RagonOperation) RagonHeader.ReadUShort(ref operationData);
+            var operation = (RagonOperation) data[0];
+            var payload = data.Slice(1, data.Length - 1);
+            
             if (_socketByRooms.TryGetValue(evnt.PeerId, out var room))
             {
               try
               {
-                room.ProcessEvent(operation, evnt.PeerId, data);
+                room.ProcessEvent(operation, evnt.PeerId, payload);
               }
               catch (Exception exception)
               {
@@ -85,7 +86,6 @@ namespace Ragon.Core
             }
             else
             {
-              var payload = data.Slice(2, data.Length - 2);
               _roomManager.ProcessEvent(operation, evnt.PeerId, payload);
             }
           }

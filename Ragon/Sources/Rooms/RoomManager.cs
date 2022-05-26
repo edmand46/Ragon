@@ -14,7 +14,7 @@ namespace Ragon.Core
     private PluginFactory _factory;
     private AuthorizationManager _manager;
     private RoomThread _roomThread;
-
+    private RagonSerializer _serializer;
     public Action<(uint, Room)> OnJoined;
     public Action<(uint, Room)> OnLeaved;
 
@@ -23,6 +23,7 @@ namespace Ragon.Core
       _roomThread = roomThread;
       _factory = factory;
 
+      _serializer = new RagonSerializer();
       _manager = _factory.CreateManager(roomThread.Configuration);
       _rooms = new List<Room>();
       _peersByRoom = new Dictionary<uint, Room>();
@@ -37,9 +38,40 @@ namespace Ragon.Core
           OnAuthorize(peerId, payload);
           break;
         }
+        case RagonOperation.JOIN_OR_CREATE_ROOM:
+        {
+          var room = JoinOrCreate(peerId, payload);
+          if (room == null)
+          {
+            var sendData = new[] {(byte) RagonOperation.JOIN_FAILED};
+            _roomThread.WriteOutEvent(new Event()
+            {
+              Delivery = DeliveryType.Reliable,
+              Type = EventType.DATA,
+              Data = sendData,
+              PeerId = peerId,
+            });
+            return;
+          }
+          OnJoined?.Invoke((peerId, room));
+          break;
+        }
         case RagonOperation.JOIN_ROOM:
         {
           var room = Join(peerId, payload);
+          if (room == null)
+          {
+            var sendData = new[] {(byte) RagonOperation.JOIN_FAILED};
+            _roomThread.WriteOutEvent(new Event()
+            {
+              Delivery = DeliveryType.Reliable,
+              Type = EventType.DATA,
+              Data = sendData,
+              PeerId = peerId,
+            });
+            
+            return;
+          }
           OnJoined?.Invoke((peerId, room));
           break;
         }
@@ -56,25 +88,7 @@ namespace Ragon.Core
     {
       if (_manager.OnAuthorize(peerId, ref payload))
       {
-        var sendData = new byte[2];
-        Span<byte> data = sendData.AsSpan();
-        
-        RagonHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_SUCCESS, ref data);
-
-        _roomThread.WriteOutEvent(new Event()
-        {
-          Delivery = DeliveryType.Reliable,
-          Type = EventType.DATA,
-          Data = sendData,
-          PeerId = peerId,
-        });  
-      }
-      else
-      {
-        var sendData =  new byte[2];
-        var data = sendData.AsSpan();
-        RagonHeader.WriteUShort((ushort) RagonOperation.AUTHORIZED_FAILED, ref data);
-
+        var sendData = new[] {(byte) RagonOperation.AUTHORIZED_SUCCESS};
         _roomThread.WriteOutEvent(new Event()
         {
           Delivery = DeliveryType.Reliable,
@@ -82,7 +96,17 @@ namespace Ragon.Core
           Data = sendData,
           PeerId = peerId,
         });
-        
+      }
+      else
+      {
+        var sendData = new[] {(byte) RagonOperation.AUTHORIZED_FAILED};
+        _roomThread.WriteOutEvent(new Event()
+        {
+          Delivery = DeliveryType.Reliable,
+          Type = EventType.DATA,
+          Data = sendData,
+          PeerId = peerId,
+        });
         _roomThread.WriteOutEvent(new Event()
         {
           Delivery = DeliveryType.Reliable,
@@ -93,15 +117,36 @@ namespace Ragon.Core
       }
     }
 
-    public Room Join(uint peerId, ReadOnlySpan<byte> payload)
+    public Room? Join(uint peerId, ReadOnlySpan<byte> payload)
     {
-      var minData = payload.Slice(0, 2);
-      var maxData = payload.Slice(2, 2);
-      var mapData = payload.Slice(4, payload.Length - 4);
+      var roomId = Encoding.UTF8.GetString(payload);
       
-      var map = Encoding.UTF8.GetString(mapData);
-      var min = RagonHeader.ReadUShort(ref minData);
-      var max = RagonHeader.ReadUShort(ref maxData);
+      if (_rooms.Count > 0)
+      {
+        foreach (var existRoom in _rooms)
+        {
+          if (existRoom.Id == roomId && existRoom.PlayersCount < existRoom.PlayersMax)
+          {
+            existRoom.Joined(peerId, payload);
+
+            _peersByRoom.Add(peerId, existRoom);
+
+            return existRoom;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    public Room? JoinOrCreate(uint peerId, ReadOnlySpan<byte> payload)
+    {
+      _serializer.Clear();
+      _serializer.FromSpan(ref payload);
+
+      var min = _serializer.ReadUShort();
+      var max = _serializer.ReadUShort();
+      var map = _serializer.ReadString();
       
       Room room = null;
       if (_rooms.Count > 0)
@@ -112,11 +157,11 @@ namespace Ragon.Core
           {
             room = existRoom;
             room.Joined(peerId, payload);
-            
+
             _peersByRoom.Add(peerId, room);
-            
-            return room;            
-          }  
+
+            return room;
+          }
         }
       }
 
@@ -127,7 +172,7 @@ namespace Ragon.Core
       room = new Room(_roomThread, plugin, map, min, max);
       room.Joined(peerId, payload);
       room.Start();
-      
+
       _peersByRoom.Add(peerId, room);
       _rooms.Add(room);
 
@@ -136,8 +181,8 @@ namespace Ragon.Core
 
     public Room Left(uint peerId, ReadOnlySpan<byte> payload)
     {
-      _peersByRoom.Remove(peerId, out var room); 
-      
+      _peersByRoom.Remove(peerId, out var room);
+
       return room;
     }
 
@@ -147,10 +192,10 @@ namespace Ragon.Core
       if (room != null)
       {
         room.Leave(peerId);
-        if (room.PlayersCount <= 0)
+        if (room.PlayersCount <= 0 && room.PlayersMin > 0)
         {
           _rooms.Remove(room);
-          
+
           room.Stop();
           room.Dispose();
         }

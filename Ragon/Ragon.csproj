@@ -26,4 +26,8 @@
       <ProjectReference Include="..\Ragon.Common\Ragon.Common.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Sources\Utils" />
+    </ItemGroup>
+
 </Project>
