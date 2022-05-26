@@ -27,6 +27,7 @@ Ragon is fully free high perfomance room based game server with plugin based arc
 
 ### Roadmap:
 - Allow customize matchmaking
+- Refactoring some moments(a lot duplications of code, etc...)
 - Use native memory 
 - Reduce allocations
 - Dashboard for monitoring entities and players in realtime

@@ -5,6 +5,7 @@ namespace Ragon.Core
 {
   public class Player
   {
+    public string Id { get; set; }
     public uint PeerId { get; set; }
     public string PlayerName { get; set; }
     public bool IsLoaded { get; set; }
