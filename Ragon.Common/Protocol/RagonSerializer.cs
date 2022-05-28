@@ -24,6 +24,8 @@ namespace Ragon.Common
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteByte(byte value)
     {
+      ResizeIfNeed(1);
+      
       _data[_offset] = value;
       _offset += 1;
     }
@@ -39,6 +41,8 @@ namespace Ragon.Common
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteInt(int value)
     {
+      ResizeIfNeed(4);
+      
       _data[_offset] = (byte) (value & 0x00FF);
       _data[_offset + 1] = (byte) ((value & 0xFF00) >> 8);
       _data[_offset + 2] = (byte) ((value & 0xFF00) >> 16);
@@ -58,8 +62,9 @@ namespace Ragon.Common
     public void WriteString(string value)
     {
       var stringRaw = Encoding.UTF8.GetBytes(value).AsSpan();
+      ResizeIfNeed(2 + stringRaw.Length);
+      
       WriteUShort((ushort) stringRaw.Length);
-
       var data = _data.AsSpan().Slice(_offset, stringRaw.Length);
       stringRaw.CopyTo(data);
       _offset += stringRaw.Length;
@@ -88,6 +93,8 @@ namespace Ragon.Common
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteData(ref ReadOnlySpan<byte> payload)
     {
+      ResizeIfNeed(payload.Length);
+      
       var data = _data.AsSpan();
       var payloadData = data.Slice(_offset, payload.Length);
 
@@ -98,6 +105,8 @@ namespace Ragon.Common
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> GetWritableData(int lenght)
     {
+      ResizeIfNeed(lenght);
+      
       var data = _data.AsSpan();
       var payloadData = data.Slice(_offset, lenght);
 
@@ -108,6 +117,8 @@ namespace Ragon.Common
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteOperation(RagonOperation ragonOperation)
     {
+      ResizeIfNeed(1);
+      
       _data[_offset] = (byte) ragonOperation;
       _offset += 1;
     }
@@ -123,6 +134,8 @@ namespace Ragon.Common
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteUShort(ushort value)
     {
+      ResizeIfNeed(2);
+      
       _data[_offset] = (byte) (value & 0x00FF);
       _data[_offset + 1] = (byte) ((value & 0xFF00) >> 8);
       _offset += 2;
@@ -149,6 +162,14 @@ namespace Ragon.Common
       dataSpan.CopyTo(data);
     }
 
+    public void FromSpan(ref ReadOnlySpan<byte> data)
+    {
+      Clear();
+      var dataSpan = _data.AsSpan();
+      data.CopyTo(dataSpan);
+      _size = data.Length;
+    }
+    
     public byte[] ToArray()
     {
       var bytes = new byte[_offset];
@@ -156,12 +177,16 @@ namespace Ragon.Common
       return bytes;
     }
 
-    public void FromSpan(ref ReadOnlySpan<byte> data)
+    private void ResizeIfNeed(int lenght)
     {
-      Clear();
-      var dataSpan = _data.AsSpan();
-      data.CopyTo(dataSpan);
-      _size = data.Length;
+      if (_offset + lenght < _data.Length)
+        return;
+
+      Console.WriteLine("Resize: " + (_data.Length + 512));
+      
+      var newData = new byte[_data.Length * 2];
+      Buffer.BlockCopy(_data, 0, newData, 0, _data.Length);
+      _data = newData;
     }
   }
 }

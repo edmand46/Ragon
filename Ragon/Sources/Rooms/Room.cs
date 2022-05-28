@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using NLog;
 using Ragon.Common;
@@ -22,7 +23,7 @@ namespace Ragon.Core
 
     private readonly PluginBase _plugin;
     private readonly RoomThread _roomThread;
-    private readonly RagonSerializer _serializer = new(2048);
+    private readonly RagonSerializer _serializer = new(512);
 
     // Cache
     private uint[] _readyPlayers = Array.Empty<uint>();
@@ -106,6 +107,8 @@ namespace Ragon.Core
       if (_players.Remove(peerId, out var player))
       {
         _allPlayers = _players.Select(p => p.Key).ToArray();
+        _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
+        
         var isOwnershipChange = player.PeerId == _owner;
 
         {
@@ -176,7 +179,11 @@ namespace Ragon.Core
           if (ent.Authority == RagonAuthority.OWNER_ONLY && ent.OwnerId != peerId)
             return;
 
-          var payload = _serializer.ReadData(_serializer.Size);
+          Span<byte> payloadRaw = stackalloc byte[_serializer.Size];
+          ReadOnlySpan<byte> payload = payloadRaw;
+          var payloadData = _serializer.ReadData(_serializer.Size);
+          payloadData.CopyTo(payloadRaw);
+          
           if (_plugin.InternalHandle(peerId, entityId, evntId, ref payload))
             return;
 
