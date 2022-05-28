@@ -72,7 +72,7 @@ namespace Ragon.Core
         _serializer.WriteString(player.PlayerName);
 
         var sendData = _serializer.ToArray();
-        Broadcast(sendData, DeliveryType.Reliable);
+        Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
       }
       
       _players.Add(peerId, player);
@@ -123,7 +123,7 @@ namespace Ragon.Core
           }
 
           var sendData = _serializer.ToArray();
-          Broadcast(_allPlayers, sendData);
+          Broadcast(_readyPlayers, sendData);
         }
 
         if (_allPlayers.Length > 0 && isOwnershipChange)
@@ -139,7 +139,7 @@ namespace Ragon.Core
             _serializer.WriteString(newRoomOwner.Id);
 
             var sendData = _serializer.ToArray();
-            Broadcast(_allPlayers, sendData);
+            Broadcast(_readyPlayers, sendData);
           }
         }
       }
@@ -180,9 +180,14 @@ namespace Ragon.Core
           if (_plugin.InternalHandle(peerId, entityId, evntId, ref payload))
             return;
 
-          var data = new byte[rawData.Length];
-          rawData.CopyTo(data);
-          Broadcast(_readyPlayers, data, DeliveryType.Reliable);
+          _serializer.Clear();
+          _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
+          _serializer.WriteUShort(evntId);
+          _serializer.WriteInt(entityId);
+          _serializer.WriteData(ref payload);
+          var sendData = _serializer.ToArray();
+          
+          Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           break;
         }
         case RagonOperation.REPLICATE_EVENT:
@@ -236,7 +241,7 @@ namespace Ragon.Core
           }
           
           var sendData = _serializer.ToArray();
-          Broadcast(_allPlayers, sendData, DeliveryType.Reliable);
+          Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           break;
         }
         case RagonOperation.DESTROY_ENTITY:
@@ -274,17 +279,13 @@ namespace Ragon.Core
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.SNAPSHOT);
 
-          _serializer.WriteInt(_readyPlayers.Length + 1);
-          foreach (var playerPeerId in _readyPlayers)
+          _serializer.WriteInt(_allPlayers.Length);
+          foreach (var playerPeerId in _allPlayers)
           {
             _serializer.WriteString(_players[playerPeerId].Id);
             _serializer.WriteUShort((ushort) playerPeerId);
             _serializer.WriteString(_players[playerPeerId].PlayerName);
           }
-          
-          _serializer.WriteString(_players[peerId].Id);
-          _serializer.WriteUShort((ushort) peerId);
-          _serializer.WriteString(_players[peerId].PlayerName);
 
           _serializer.WriteInt(_entitiesAll.Length);
           foreach (var entity in _entitiesAll)
