@@ -165,6 +165,7 @@ namespace Ragon.Common
     public void FromSpan(ref ReadOnlySpan<byte> data)
     {
       Clear();
+      ResizeIfNeed(data.Length);
       var dataSpan = _data.AsSpan();
       data.CopyTo(dataSpan);
       _size = data.Length;
