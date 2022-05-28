@@ -181,8 +181,6 @@ namespace Ragon.Common
     {
       if (_offset + lenght < _data.Length)
         return;
-
-      Console.WriteLine("Resize: " + (_data.Length + 512));
       
       var newData = new byte[_data.Length * 2];
       Buffer.BlockCopy(_data, 0, newData, 0, _data.Length);
