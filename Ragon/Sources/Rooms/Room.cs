@@ -180,10 +180,10 @@ namespace Ragon.Core
             return;
 
           Span<byte> payloadRaw = stackalloc byte[_serializer.Size];
-          ReadOnlySpan<byte> payload = payloadRaw;
           var payloadData = _serializer.ReadData(_serializer.Size);
           payloadData.CopyTo(payloadRaw);
           
+          ReadOnlySpan<byte> payload = payloadRaw;
           if (_plugin.InternalHandle(peerId, entityId, evntId, ref payload))
             return;
 
@@ -200,13 +200,20 @@ namespace Ragon.Core
         case RagonOperation.REPLICATE_EVENT:
         {
           var evntId = _serializer.ReadUShort();
-          var payload = _serializer.ReadData(_serializer.Size);
+          
+          Span<byte> payloadRaw = stackalloc byte[_serializer.Size];
+          var payloadData = _serializer.ReadData(_serializer.Size);
+          payloadData.CopyTo(payloadRaw);
+          
+          ReadOnlySpan<byte> payload = payloadRaw;
           if (_plugin.InternalHandle(peerId, evntId, ref payload))
             return;
 
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
           _serializer.WriteUShort(evntId);
+          _serializer.WriteData(ref payload);
+          
           var sendData = _serializer.ToArray();
           Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           break;
