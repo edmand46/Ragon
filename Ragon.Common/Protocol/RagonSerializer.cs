@@ -183,7 +183,7 @@ namespace Ragon.Common
       if (_offset + lenght < _data.Length)
         return;
       
-      var newData = new byte[_data.Length * 2];
+      var newData = new byte[_data.Length * 2 + lenght];
       Buffer.BlockCopy(_data, 0, newData, 0, _data.Length);
       _data = newData;
     }
