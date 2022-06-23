@@ -22,7 +22,7 @@ namespace Ragon.Core
     private uint _ticks;
 
     private readonly PluginBase _plugin;
-    private readonly IGameThread _sender;
+    private readonly IGameThread _gameThread;
     private readonly RagonSerializer _serializer = new(512);
 
     // Cache
@@ -30,9 +30,9 @@ namespace Ragon.Core
     private uint[] _allPlayers = Array.Empty<uint>();
     private Entity[] _entitiesAll = Array.Empty<Entity>();
     
-    public GameRoom(IGameThread sender, PluginBase pluginBase, string map, int min, int max)
+    public GameRoom(IGameThread gameThread, PluginBase pluginBase, string map, int min, int max)
     {
-      _sender = sender;
+      _gameThread = gameThread;
       _plugin = pluginBase;
 
       Map = map;
@@ -367,40 +367,22 @@ namespace Ragon.Core
     
     public void Send(uint peerId, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
-      _sender.SendSocketEvent(new SocketEvent()
-      {
-        PeerId = peerId,
-        Data = rawData,
-        Type = EventType.DATA,
-        Delivery = deliveryType,
-      });
+      _gameThread.Server.Send(peerId, rawData, deliveryType);
     }
 
     public void Broadcast(uint[] peersIds, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
       foreach (var peer in peersIds)
       {
-        _sender.SendSocketEvent(new SocketEvent()
-        {
-          PeerId = peer,
-          Data = rawData,
-          Type = EventType.DATA,
-          Delivery = deliveryType,
-        });
+        _gameThread.Server.Send(peer, rawData, deliveryType);
       }
     }
 
     public void Broadcast(byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
-      foreach (var player in _players.Values.ToArray())
+      foreach (var peer in _allPlayers)
       {
-        _sender.SendSocketEvent(new SocketEvent()
-        {
-          PeerId = player.PeerId,
-          Data = rawData,
-          Type = EventType.DATA,
-          Delivery = deliveryType,
-        });
+        _gameThread.Server.Send(peer, rawData, deliveryType);
       }
     }
   }

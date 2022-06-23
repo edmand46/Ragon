@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using NLog.Targets;
 using Ragon.Common;
 
 namespace Ragon.Core;
@@ -25,9 +27,12 @@ public class AuthorizationManager : IAuthorizationManager
 
   public void OnAuthorization(uint peerId, string key, string name, byte protocol)
   {
-    var dispatcher = _gameThread.GetDispatcher();
+    var dispatcher = _gameThread.Dispatcher;
     _provider.OnAuthorizationRequest(key, name, protocol, Array.Empty<byte>(),
-      (playerId, playerName) => { dispatcher.Dispatch(() => Accepted(peerId, playerId, playerName)); },
+      (playerId, playerName) =>
+      {
+        dispatcher.Dispatch(() => Accepted(peerId, playerId, playerName));
+      },
       (errorCode) => { dispatcher.Dispatch(() => Rejected(peerId, errorCode)); });
   }
 
@@ -37,7 +42,7 @@ public class AuthorizationManager : IAuthorizationManager
     _serializer.WriteOperation(RagonOperation.AUTHORIZED_SUCCESS);
     _serializer.WriteString(playerId);
     _serializer.WriteString(playerName);
-
+    
     var player = new Player()
     {
       Id = playerId,
@@ -52,7 +57,7 @@ public class AuthorizationManager : IAuthorizationManager
     _playersByPeers.Add(peerId, player);
     
     var sendData = _serializer.ToArray();
-    _gameThread.SendSocketEvent(new SocketEvent() {Data = sendData, PeerId = peerId, Type = EventType.DATA, Delivery = DeliveryType.Reliable});
+    _gameThread.Server.Send(peerId, sendData, DeliveryType.Reliable);
   }
 
   public void Rejected(uint peerId, uint code)
@@ -62,9 +67,8 @@ public class AuthorizationManager : IAuthorizationManager
     _serializer.WriteInt((int) code);
 
     var sendData = _serializer.ToArray();
-    _gameThread.SendSocketEvent(new SocketEvent() {Data = sendData, PeerId = peerId, Type = EventType.DATA, Delivery = DeliveryType.Reliable});
-    var emtpyData = Array.Empty<byte>();
-    _gameThread.SendSocketEvent(new SocketEvent() {Data = emtpyData, PeerId = peerId, Type = EventType.DISCONNECTED, Delivery = DeliveryType.Reliable});
+    _gameThread.Server.Send(peerId, sendData, DeliveryType.Reliable);
+    _gameThread.Server.Disconnect(peerId, 0);
   }
 
   public void Cleanup(uint peerId)

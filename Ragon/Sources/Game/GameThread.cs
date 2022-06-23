@@ -2,36 +2,41 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using ENet;
 using NLog;
 
 namespace Ragon.Core
 {
-  public class GameThread : IGameThread
+  public class GameThread : IGameThread, IHandler
   {
     private readonly Dictionary<uint, GameRoom> _socketByRooms;
     private readonly RoomManager _roomManager;
-    private readonly ENetServer _socketServer;
+    private readonly ISocketServer _server;
     private readonly Thread _thread;
     private readonly Server _serverConfiguration;
     private readonly Stopwatch _gameLoopTimer;
     private readonly Lobby _lobby;
-    private readonly IDispatcher _dispatcher;
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
     private readonly float _deltaTime = 0.0f;
-    
-    private int _packets = 0;
     private readonly Stopwatch _packetsTimer;
+    private int _packets = 0;
+    
+    public IDispatcher Dispatcher { get; private set; }
+    public ISocketServer Server { get; private set; }
+    
     public GameThread(PluginFactory factory, Configuration configuration)
     {
       var authorizationProvider = factory.CreateAuthorizationProvider(configuration);
-
+      
+      Dispatcher = new Dispatcher();
+      Server = new ENetServer(this);
+      
       _serverConfiguration = configuration.Server;
       _deltaTime = 1000.0f / configuration.TickRate;
-
-      _dispatcher = new Dispatcher();
+      
       _roomManager = new RoomManager(factory, this);
       _lobby = new Lobby(authorizationProvider, _roomManager, this);
-      _socketServer = new ENetServer();
+      
       _gameLoopTimer = new Stopwatch();
       _packetsTimer = new Stopwatch();
       _socketByRooms = new Dictionary<uint, GameRoom>();
@@ -43,18 +48,19 @@ namespace Ragon.Core
 
     public void Start()
     {
+      Server.Start(_serverConfiguration.Port);
+      
       _gameLoopTimer.Start();
       _packetsTimer.Start();
-      
-      _socketServer.Start(_serverConfiguration.Port);
       _thread.Start();
     }
 
     public void Stop()
     {
+      Server.Stop();
+      
       _gameLoopTimer.Stop();
       _packetsTimer.Stop();
-      _socketServer.Stop();
       _thread.Interrupt();
     }
 
@@ -62,41 +68,9 @@ namespace Ragon.Core
     {
       while (true)
       {
-        _dispatcher.Process();
+        Server.Process();
+        Dispatcher.Process();
         
-        while (_socketServer.ReceiveBuffer.TryDequeue(out var evnt))
-        {
-          if (evnt.Type == EventType.DISCONNECTED || evnt.Type == EventType.TIMEOUT)
-          {
-            if (_socketByRooms.Remove(evnt.PeerId, out var room))
-              room.Leave(evnt.PeerId);
-
-            _lobby.OnDisconnected(evnt.PeerId);
-          }
-
-          if (evnt.Type == EventType.DATA)
-          {
-            _packets += 1;
-            try
-            {
-              var peerId = evnt.PeerId;
-              var data = new ReadOnlySpan<byte>(evnt.Data);
-              if (_socketByRooms.TryGetValue(evnt.PeerId, out var room))
-              {
-                room.ProcessEvent(peerId, data);
-              }
-              else
-              {
-                _lobby.ProcessEvent(peerId, data);
-              }
-            }
-            catch (Exception exception)
-            {
-              _logger.Error(exception);
-            }
-          }
-        }
-
         var elapsedMilliseconds = _gameLoopTimer.ElapsedMilliseconds;
         if (elapsedMilliseconds > _deltaTime)
         {
@@ -125,14 +99,40 @@ namespace Ragon.Core
       _socketByRooms.Remove(peerId);
     }
 
-    public void SendSocketEvent(SocketEvent socketEvent)
+    public void OnEvent(Event evnt)
     {
-      _socketServer.SendBuffer.Enqueue(socketEvent);
-    }
+      if (evnt.Type == ENet.EventType.Timeout || evnt.Type == ENet.EventType.Disconnect)
+      {
+        if (_socketByRooms.Remove(evnt.Peer.ID, out var room))
+          room.Leave(evnt.Peer.ID);
 
-    public IDispatcher GetDispatcher()
-    {
-      return _dispatcher;
+        _lobby.OnDisconnected(evnt.Peer.ID);
+      }
+
+      if (evnt.Type == ENet.EventType.Receive)
+      {
+        _packets += 1;
+        try
+        {
+          var peerId = evnt.Peer.ID;
+          var dataRaw = new byte[evnt.Packet.Length];
+          evnt.Packet.CopyTo(dataRaw);
+          
+          var data = new ReadOnlySpan<byte>(dataRaw);
+          if (_socketByRooms.TryGetValue(peerId, out var room))
+          {
+            room.ProcessEvent(peerId, data);
+          }
+          else
+          {
+            _lobby.ProcessEvent(peerId, data);
+          }
+        }
+        catch (Exception exception)
+        {
+          _logger.Error(exception);
+        }
+      }
     }
   }
 }

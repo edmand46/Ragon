@@ -17,12 +17,12 @@ namespace Game.Source
     public override void OnPlayerJoined(Player player)
     {
       
-      _logger.Info($"Player({player.PlayerName}) joined to Room({GameRoom.Id})");
+      // _logger.Info($"Player({player.PlayerName}) joined to Room({GameRoom.Id})");
     }
 
     public override void OnPlayerLeaved(Player player)
     {
-      _logger.Info($"Player({player.PlayerName}) left from Room({GameRoom.Id})");
+      // _logger.Info($"Player({player.PlayerName}) left from Room({GameRoom.Id})");
     }
   }
 }

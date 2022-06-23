@@ -11,26 +11,25 @@ namespace Ragon.Core
   {
     private readonly Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly GameThread _gameThread;
-
+    private readonly ENetServer _netServer;
     public Application(PluginFactory factory, Configuration configuration)
     {
-      ThreadPool.SetMinThreads(1, 1);
-      
       _gameThread = new GameThread(factory, configuration);
     }
     
     public void Start()
     {
       Library.Initialize();
-      
       _gameThread.Start();
+      _logger.Info("Started");
     }
 
     public void Stop()
     {
       _gameThread.Stop();
-      
       Library.Deinitialize();
+      _logger.Info("Stopped");
+      
     }
   }
 }
