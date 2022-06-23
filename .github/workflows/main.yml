@@ -69,6 +69,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: SimpleServer-${{ env.TAG }}-${{ matrix.target }}.zip
-          asset_name: SimpleServer-${{ env.TAG }}-${{ matrix.target }}.zip
+          asset_path: Ragon.SimpleServer-${{ env.TAG }}-${{ matrix.target }}.zip
+          asset_name: Ragon.SimpleServer-${{ env.TAG }}-${{ matrix.target }}.zip
           asset_content_type: application/zip
