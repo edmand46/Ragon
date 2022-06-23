@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using DisruptorUnity3d;
@@ -18,7 +17,7 @@ namespace Ragon.Core
     Connected
   }
 
-  public class ENetServer : IDisposable
+  public class ENetServer
   {
     public Status Status { get; private set; }
 
@@ -28,17 +27,13 @@ namespace Ragon.Core
     private Address _address;
     private ENet.Event _netEvent;
     private Peer[] _peers;
-
-    private RingBuffer<Event> _receiveBuffer;
-    private RingBuffer<Event> _sendBuffer;
+    private int _seconds = 0;
+    private Stopwatch _packetsTimer;
+    public RingBuffer<SocketEvent> SendBuffer;
+    public RingBuffer<SocketEvent> ReceiveBuffer;
     
-    public void WriteEvent(Event evnt) => _sendBuffer.Enqueue(evnt);
-    public bool ReadEvent(out Event evnt) => _receiveBuffer.TryDequeue(out evnt);
-
     public void Start(ushort port)
     {
-      Library.Initialize();
-
       _address = default;
       _address.Port = port;
 
@@ -46,22 +41,24 @@ namespace Ragon.Core
       _host.Create(_address, 4095, 2, 0, 0, 1024 * 1024);
 
       _peers = new Peer[4095];
-      _sendBuffer = new RingBuffer<Event>(8192 + 8192);
-      _receiveBuffer = new RingBuffer<Event>(8192 + 8192);
+      
+      ReceiveBuffer = new RingBuffer<SocketEvent>(8192 + 8192);
+      SendBuffer = new RingBuffer<SocketEvent>(8192 + 8192);
 
       Status = Status.Listening;
-      
+      _packetsTimer = new Stopwatch();
       _thread = new Thread(Execute);
       _thread.Name = "NetworkThread";
       _thread.Start();
-      _logger.Info($"ENet Server Started at port {port}");
+      _logger.Info($"Network listening on {port}");
     }
 
     private void Execute()
     {
+      _packetsTimer.Start();
       while (true)
       {
-        while (_sendBuffer.TryDequeue(out var data))
+        while (SendBuffer.TryDequeue(out var data))
         {
           if (data.Type == EventType.DATA)
           {
@@ -86,16 +83,16 @@ namespace Ragon.Core
           else if (data.Type == EventType.DISCONNECTED)
           {
             _peers[data.PeerId].DisconnectNow(0);
-            _receiveBuffer.Enqueue(data);
+            ReceiveBuffer.Enqueue(data);
           }
         }
-
+      
         bool polled = false;
         while (!polled)
         {
           if (_host.CheckEvents(out _netEvent) <= 0)
           {
-            if (_host.Service(16, out _netEvent) <= 0)
+            if (_host.Service(15, out _netEvent) <= 0)
               break;
 
             polled = true;
@@ -109,21 +106,21 @@ namespace Ragon.Core
 
             case ENet.EventType.Connect:
             {
-              var @event = new Event {PeerId = _netEvent.Peer.ID, Type = EventType.CONNECTED};
+              var @event = new SocketEvent {PeerId = _netEvent.Peer.ID, Type = EventType.CONNECTED};
               _peers[_netEvent.Peer.ID] = _netEvent.Peer;
-              _receiveBuffer.Enqueue(@event);
+              ReceiveBuffer.Enqueue(@event);
               break;
             }
             case ENet.EventType.Disconnect:
             {
-              var @event = new Event {PeerId = _netEvent.Peer.ID, Type = EventType.DISCONNECTED};
-              _receiveBuffer.Enqueue(@event);
+              var @event = new SocketEvent {PeerId = _netEvent.Peer.ID, Type = EventType.DISCONNECTED};
+              ReceiveBuffer.Enqueue(@event);
               break;
             }
             case ENet.EventType.Timeout:
             {
-              var @event = new Event {PeerId = _netEvent.Peer.ID, Type = EventType.TIMEOUT};
-              _receiveBuffer.Enqueue(@event);
+              var @event = new SocketEvent {PeerId = _netEvent.Peer.ID, Type = EventType.TIMEOUT};
+              ReceiveBuffer.Enqueue(@event);
               break;
             }
             case ENet.EventType.Receive:
@@ -133,20 +130,23 @@ namespace Ragon.Core
               _netEvent.Packet.CopyTo(data);
               _netEvent.Packet.Dispose();
               
-              var @event = new Event {PeerId = _netEvent.Peer.ID, Type = EventType.DATA, Data = data };
-              
-              _receiveBuffer.Enqueue(@event);
+              var @event = new SocketEvent {PeerId = _netEvent.Peer.ID, Type = EventType.DATA, Data = data };
+              ReceiveBuffer.Enqueue(@event);
               break;
             }
           }
         }
+
+        if (_packetsTimer.Elapsed.Seconds > 5)
+        {
+          Console.WriteLine($"Connections: {_host.PeersCount}");
+          _packetsTimer.Restart();
+        }
       }
     }
 
-    public void Dispose()
+    public void Stop()
     {
-      Library.Deinitialize();
-
       _host?.Dispose();
     }
   }

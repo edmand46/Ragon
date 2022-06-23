@@ -19,7 +19,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: SimpleServer-${{ github.ref }}
+          release_name: Ragon.SimpleServer-${{ github.ref }}
           prerelease: true
 
   build:
@@ -53,10 +53,10 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          release_name="SimpleServer-${{ env.TAG }}-${{ matrix.target }}"
+          release_name="Ragon.SimpleServer-${{ env.TAG }}-${{ matrix.target }}"
           
           # Build everything
-          dotnet publish SimpleServer/SimpleServer.csproj -c Release --runtime "${{ matrix.target }}" -p:PublishSingleFile=true -o "$release_name"
+          dotnet publish Ragon.SimpleServer/Ragon.SimpleServer.csproj -c Release --runtime "${{ matrix.target }}" -p:PublishSingleFile=true -o "$release_name"
           
           # Pack files        
           7z a -tzip "${release_name}.zip" "./${release_name}/*"

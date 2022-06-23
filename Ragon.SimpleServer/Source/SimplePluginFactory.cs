@@ -5,16 +5,14 @@ namespace Game.Source
 {
   public class SimplePluginFactory : PluginFactory
   {
-    public string PluginName { get; set; }  = "SimplePlugin";
     public PluginBase CreatePlugin(string map)
     {
-      
       return new SimplePlugin();
     }
-
-    public AuthorizationManager CreateManager(Configuration configuration)
+    
+    public IAuthorizationProvider CreateAuthorizationProvider(Configuration configuration)
     {
-      return new AuthorizerByKey(configuration);
+      return new AuthorizationProviderByKey(configuration);
     }
   }
 }

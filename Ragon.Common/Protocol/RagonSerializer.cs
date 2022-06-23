@@ -14,7 +14,7 @@ namespace Ragon.Common
     public int Lenght => _offset;
     public int Size => _size - _offset;
     
-    public RagonSerializer(int capacity = 2048)
+    public RagonSerializer(int capacity = 256)
     {
       _data = new byte[capacity];
       _offset = 0;
@@ -31,7 +31,7 @@ namespace Ragon.Common
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int ReadByte()
+    public byte ReadByte()
     {
       var value = _data[_offset];
       _offset += 1;
@@ -171,6 +171,15 @@ namespace Ragon.Common
       _size = data.Length;
     }
     
+    public void FromArray(byte[] data)
+    {
+      Clear();
+      ResizeIfNeed(data.Length);
+      Buffer.BlockCopy(data, 0, _data, 0, _offset);
+      _size = data.Length;
+    }
+
+    
     public byte[] ToArray()
     {
       var bytes = new byte[_offset];
@@ -183,7 +192,7 @@ namespace Ragon.Common
       if (_offset + lenght < _data.Length)
         return;
       
-      var newData = new byte[_data.Length * 2 + lenght];
+      var newData = new byte[_data.Length * 4 + lenght];
       Buffer.BlockCopy(_data, 0, newData, 0, _data.Length);
       _data = newData;
     }

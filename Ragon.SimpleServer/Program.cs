@@ -9,9 +9,10 @@ namespace SimpleServer
         static void Main(string[] args)
         {
             var bootstrap = new Bootstrap();
-            bootstrap.Configure(new SimplePluginFactory());
-            
+            var app = bootstrap.Configure(new SimplePluginFactory());
+            app.Start();
             Console.Read();
+            app.Stop();
         }
     }
 }

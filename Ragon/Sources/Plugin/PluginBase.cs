@@ -7,7 +7,7 @@ using Ragon.Common;
 
 namespace Ragon.Core
 {
-  public class PluginBase : IDisposable
+  public class PluginBase 
   {
     private delegate void SubscribeDelegate(Player player, ref ReadOnlySpan<byte> data);
 
@@ -18,20 +18,20 @@ namespace Ragon.Core
     private readonly BitBuffer _buffer = new();
     private readonly RagonSerializer _serializer = new();
 
-    protected Room Room { get; private set; }
+    protected IGameRoom GameRoom { get; private set; }
     protected ILogger _logger;
 
-    public void Attach(Room room)
+    public void Attach(GameRoom gameRoom)
     {
       _logger = LogManager.GetLogger($"Plugin<{GetType().Name}>");
 
-      Room = room;
+      GameRoom = gameRoom;
 
       _globalEvents.Clear();
       _entityEvents.Clear();
     }
 
-    public void Dispose()
+    public void Detach()
     {
       _globalEvents.Clear();
       _entityEvents.Clear();
@@ -153,8 +153,8 @@ namespace Ragon.Core
       if (!_entityEvents[entityId].ContainsKey(evntCode))
         return false;
 
-      var player = Room.GetPlayerById(peerId);
-      var entity = Room.GetEntityById(entityId);
+      var player = GameRoom.GetPlayerById(peerId);
+      var entity = GameRoom.GetEntityById(entityId);
       _entityEvents[entityId][evntCode].Invoke(player, entity, ref payload);
 
       return true;
@@ -164,7 +164,7 @@ namespace Ragon.Core
     {
       if (_globalEvents.ContainsKey(evntCode))
       {
-        var player = Room.GetPlayerById(peerId);
+        var player = GameRoom.GetPlayerById(peerId);
         _globalEvents[evntCode].Invoke(player, ref payload);
         return true;
       }
@@ -184,7 +184,7 @@ namespace Ragon.Core
       _buffer.ToSpan(ref payloadData);
 
       var sendData = _serializer.ToArray();
-      Room.Send(player.PeerId, sendData);
+      GameRoom.Send(player.PeerId, sendData);
     }
 
     public void BroadcastEvent(ushort eventCode, IRagonSerializable payload)
@@ -199,7 +199,7 @@ namespace Ragon.Core
       _buffer.ToSpan(ref payloadData);
 
       var sendData = _serializer.ToArray();
-      Room.Broadcast(sendData, DeliveryType.Reliable);
+      GameRoom.Broadcast(sendData, DeliveryType.Reliable);
     }
 
     public void SendEntityEvent(Player player, Entity entity, IRagonSerializable payload)
@@ -215,7 +215,7 @@ namespace Ragon.Core
       _buffer.ToSpan(ref payloadData);
 
       var sendData = _serializer.ToArray();
-      Room.Send(player.PeerId, sendData, DeliveryType.Reliable);
+      GameRoom.Send(player.PeerId, sendData, DeliveryType.Reliable);
     }
 
     public void BroadcastEntityEvent(Entity entity, IRagonSerializable payload)
@@ -231,7 +231,7 @@ namespace Ragon.Core
       _buffer.ToSpan(ref payloadData);
 
       var sendData = _serializer.ToArray();
-      Room.Broadcast(sendData);
+      GameRoom.Broadcast(sendData);
     }
 
 

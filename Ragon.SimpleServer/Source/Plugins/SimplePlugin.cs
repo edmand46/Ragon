@@ -1,8 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Game.Source.Events;
-using NLog;
-using Ragon.Common;
-using Ragon.Core;
+﻿using Ragon.Core;
 
 namespace Game.Source
 {
@@ -20,12 +16,13 @@ namespace Game.Source
    
     public override void OnPlayerJoined(Player player)
     {
-      _logger.Info("Player joined " + player.PlayerName);
+      
+      _logger.Info($"Player({player.PlayerName}) joined to Room({GameRoom.Id})");
     }
 
     public override void OnPlayerLeaved(Player player)
     {
-      _logger.Info("Player leaved " + player.PlayerName);
+      _logger.Info($"Player({player.PlayerName}) left from Room({GameRoom.Id})");
     }
   }
 }

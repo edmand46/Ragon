@@ -1,0 +1,8 @@
+{
+  "key": "defaultkey",
+  "tickRate": 30,
+  "skipTimeout": 60,
+  "server": {
+    "port": 4444
+  }
+}

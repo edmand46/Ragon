@@ -2,97 +2,35 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using ENet;
 using NLog;
 
 namespace Ragon.Core
 {
-  public class Application : IDisposable
+  public class Application
   {
     private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-    private readonly List<RoomThread> _roomThreads = new();
-    private readonly Dictionary<uint, RoomThread> _socketByRoomThreads = new();
-    private readonly Dictionary<RoomThread, int> _roomThreadCounter = new();
-    private readonly Configuration _configuration;
-    private readonly ENetServer _socketServer;
-    private int _roomThreadBalancer = 0;
-    
-    private Thread _thread;
-    
-    public Application(PluginFactory factory, Configuration configuration, int threadsCount)
+    private readonly GameThread _gameThread;
+
+    public Application(PluginFactory factory, Configuration configuration)
     {
-      _socketServer = new ENetServer();
-      _configuration = configuration;
+      ThreadPool.SetMinThreads(1, 1);
       
-      for (var i = 0; i < threadsCount; i++)
-      {
-        var roomThread = new RoomThread(factory, configuration);
-        _roomThreadCounter.Add(roomThread, 0);
-        _roomThreads.Add(roomThread);
-      }
-    }
-
-    private void Loop()
-    {
-      while (true)
-      {
-        foreach (var roomThread in _roomThreads)
-          while (roomThread.ReadOutEvent(out var evnt))
-            _socketServer.WriteEvent(evnt);
-        
-        while (_socketServer.ReadEvent(out var evnt))
-        {
-          if (evnt.Type == EventType.CONNECTED)
-          {
-            if (_roomThreadBalancer >= _roomThreads.Count)
-              _roomThreadBalancer = 0;
-            
-            var roomThread = _roomThreads[_roomThreadBalancer];
-            _roomThreadCounter[roomThread] += 1;
-            _socketByRoomThreads.Add(evnt.PeerId, roomThread);
-            
-            // TODO: Todo room manager matchmaking across all room threads
-            // TEMP_FIX: Remove this magical number
-            if (_roomThreadCounter[roomThread] > 20)
-              _roomThreadBalancer++;
-          }
-
-          if (_socketByRoomThreads.TryGetValue(evnt.PeerId, out var existsRoomThread))
-            existsRoomThread.WriteInEvent(evnt);
-
-          if (evnt.Type == EventType.DISCONNECTED)
-          {
-            _socketByRoomThreads.Remove(evnt.PeerId, out var roomThread);
-            _roomThreadCounter[roomThread] =- 1;
-          }
-
-          if (evnt.Type == EventType.TIMEOUT)
-          {
-            _socketByRoomThreads.Remove(evnt.PeerId, out var roomThread);
-            _roomThreadCounter[roomThread] =- 1;
-          }
-        }
-
-        Thread.Sleep(1);
-      }
+      _gameThread = new GameThread(factory, configuration);
     }
     
     public void Start()
     {
-      _socketServer.Start(_configuration.Server.Port);
+      Library.Initialize();
       
-      foreach (var roomThread in _roomThreads)
-        roomThread.Start();
-
-      _thread = new Thread(Loop);
-      _thread.Start();
+      _gameThread.Start();
     }
-    
-    public void Dispose()
+
+    public void Stop()
     {
-      foreach (var roomThread in _roomThreads)
-        roomThread.Dispose();
+      _gameThread.Stop();
       
-      _roomThreads.Clear();
+      Library.Deinitialize();
     }
   }
 }

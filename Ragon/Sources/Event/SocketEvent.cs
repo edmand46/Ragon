@@ -2,7 +2,7 @@ using System;
 
 namespace Ragon.Core
 {
-  public struct Event
+  public struct SocketEvent
   {
     public EventType Type;
     public DeliveryType Delivery;
