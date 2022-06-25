@@ -86,9 +86,9 @@ namespace Stress
                   {
                     ragonSerializer.Clear();
                     ragonSerializer.WriteOperation(RagonOperation.JOIN_OR_CREATE_ROOM);
-                    ragonSerializer.WriteInt(2);
-                    ragonSerializer.WriteInt(20);
                     ragonSerializer.WriteString("map");
+                    ragonSerializer.WriteInt(1);
+                    ragonSerializer.WriteInt(5);
                     
                     var sendData = ragonSerializer.ToArray();
                     var packet = new Packet();
@@ -139,7 +139,7 @@ namespace Stress
                     break;
                   }
                 }
-                Console.WriteLine(op);
+                // Console.WriteLine(op);
                 // Console.WriteLine("Packet received from server - Channel ID: " + netEvent.ChannelID + ", Data length: " + netEvent.Packet.Length);
                 netEvent.Packet.Dispose();
                 break;
@@ -165,7 +165,7 @@ namespace Stress
           }
         }
 
-        Thread.Sleep(16);
+        Thread.Sleep(33);
       }
     }
 
@@ -192,65 +192,13 @@ namespace Stress
     {
       Library.Initialize();
    
-      
+      for (var i = 0; i < 80; i ++)  
       {
         var thread = new SimulationThread();
-        thread.Start("127.0.0.1", 4444, 250);
+        thread.Start("127.0.0.1", 4444, 50);
+        Thread.Sleep(1000);
       }
       
-      Thread.Sleep(3000);
-      
-      {
-        var thread = new SimulationThread();
-        thread.Start("127.0.0.1", 4444, 250);
-      }
-      
-      Thread.Sleep(3000);
-      
-      
-      {
-        var thread = new SimulationThread();
-        thread.Start("127.0.0.1", 4444, 250);
-      }
-      
-      Thread.Sleep(3000);
-      
-      {
-        var thread = new SimulationThread();
-        thread.Start("127.0.0.1", 4444, 250);
-      }
-      
-      Thread.Sleep(3000);
-      
-      {
-        var thread = new SimulationThread();
-        thread.Start("127.0.0.1", 4444, 250);
-      }
-      
-      Thread.Sleep(3000);
-      
-      {
-        var thread = new SimulationThread();
-        thread.Start("127.0.0.1", 4444, 250);
-      }
-      
-      Thread.Sleep(3000);
-      
-      {
-        var thread = new SimulationThread();
-        thread.Start("127.0.0.1", 4444, 250);
-      }
-      
-      Thread.Sleep(3000);
-      
-      {
-        var thread = new SimulationThread();
-        thread.Start("127.0.0.1", 4444, 250);
-      }
-      
-      Thread.Sleep(3000);
-      
-
       Console.ReadKey();
       Library.Deinitialize();
     }

@@ -1,8 +1,10 @@
 {
   "key": "defaultkey",
-  "tickRate": 30,
+  "statisticsInterval": 5,
+  "sendRate": 30,
+  "port": 4444,
   "skipTimeout": 60,
-  "server": {
-    "port": 4444
-  }
+  "maxConnections": 4095,
+  "maxPlayersPerRoom": 20,
+  "maxRooms": 200
 }

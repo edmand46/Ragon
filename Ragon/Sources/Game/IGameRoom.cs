@@ -11,6 +11,7 @@ public interface IGameRoom
   public Player GetPlayerById(uint peerId);
   public Entity GetEntityById(int entityId);
   public Player GetOwner();
+  public IDispatcher GetThreadDispatcher();
   
   public void Send(uint peerId, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable);
   public void Broadcast(uint[] peersIds, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable);

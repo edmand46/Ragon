@@ -3,16 +3,15 @@
 namespace Ragon.Core
 {
   [Serializable]
-  public struct Server 
-  {
-    public ushort Port;
-  }
-  
-  [Serializable]
   public struct Configuration
   {
     public string Key;
-    public ushort TickRate;
-    public Server Server;
+    public int StatisticsInterval;
+    public ushort SendRate;
+    public ushort Port;
+    public int SkipTimeout;
+    public int MaxConnections;
+    public int MaxPlayersPerRoom;
+    public int MaxRooms;
   }
 }

@@ -27,7 +27,7 @@ public class AuthorizationManager : IAuthorizationManager
 
   public void OnAuthorization(uint peerId, string key, string name, byte protocol)
   {
-    var dispatcher = _gameThread.Dispatcher;
+    var dispatcher = _gameThread.ThreadDispatcher;
     _provider.OnAuthorizationRequest(key, name, protocol, Array.Empty<byte>(),
       (playerId, playerName) =>
       {
@@ -77,9 +77,12 @@ public class AuthorizationManager : IAuthorizationManager
       _playersByIds.Remove(player.Id);
   }
 
-  public Player GetPlayer(uint peerId)
+  public Player? GetPlayer(uint peerId)
   {
-    return _playersByPeers[peerId];
+    if (_playersByPeers.TryGetValue(peerId, out var player))
+      return player;
+    
+    return null;
   }
   
   public Player GetPlayer(string playerId)

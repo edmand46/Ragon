@@ -6,17 +6,16 @@ namespace Game.Source
   {
     public override void OnStart()
     {
-      _logger.Info("Plugin started");
+      // _logger.Info("Plugin started");
     }
 
     public override void OnStop()
     {
-      _logger.Info("Plugin stopped");
+      // _logger.Info("Plugin stopped");
     }
    
     public override void OnPlayerJoined(Player player)
     {
-      
       // _logger.Info($"Player({player.PlayerName}) joined to Room({GameRoom.Id})");
     }
 

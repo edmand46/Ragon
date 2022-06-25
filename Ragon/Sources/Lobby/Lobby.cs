@@ -1,19 +1,21 @@
 using System;
 using System.Collections.Generic;
 using Ragon.Common;
+
 namespace Ragon.Core;
 
-public class Lobby
+public class Lobby : ILobby
 {
   private readonly RagonSerializer _serializer;
-  private readonly AuthorizationManager _authorizationManager;
   private readonly RoomManager _roomManager;
+
+  public AuthorizationManager AuthorizationManager { get; private set; }
 
   public Lobby(IAuthorizationProvider provider, RoomManager manager, IGameThread gameThread)
   {
     _roomManager = manager;
     _serializer = new RagonSerializer();
-    _authorizationManager = new AuthorizationManager(provider, gameThread, this, _serializer);
+    AuthorizationManager = new AuthorizationManager(provider, gameThread, this, _serializer);
   }
 
   public void ProcessEvent(uint peerId, ReadOnlySpan<byte> data)
@@ -31,14 +33,15 @@ public class Lobby
         var key = _serializer.ReadString();
         var playerName = _serializer.ReadString();
         var protocol = _serializer.ReadByte();
-        _authorizationManager.OnAuthorization(peerId, key, playerName, protocol);
+        AuthorizationManager.OnAuthorization(peerId, key, playerName, protocol);
         break;
       }
       case RagonOperation.JOIN_ROOM:
       {
         var roomId = _serializer.ReadString();
-        var player = _authorizationManager.GetPlayer(peerId);
-        _roomManager.Join(player, roomId, Array.Empty<byte>());
+        var player = AuthorizationManager.GetPlayer(peerId);
+        if (player != null)
+          _roomManager.Join(player, roomId, Array.Empty<byte>());
         break;
       }
       case RagonOperation.JOIN_OR_CREATE_ROOM:
@@ -46,14 +49,16 @@ public class Lobby
         var map = _serializer.ReadString();
         var min = _serializer.ReadInt();
         var max = _serializer.ReadInt();
-        var player = _authorizationManager.GetPlayer(peerId);
-        _roomManager.JoinOrCreate(player, map, min, max, Array.Empty<byte>());
+        var player = AuthorizationManager.GetPlayer(peerId);
+        if (player != null)
+          _roomManager.JoinOrCreate(player, map, min, max, Array.Empty<byte>());
         break;
       }
       case RagonOperation.LEAVE_ROOM:
       {
-        var player = _authorizationManager.GetPlayer(peerId);
-        _roomManager.Left(player, Array.Empty<byte>());
+        var player = AuthorizationManager.GetPlayer(peerId);
+        if (player != null)
+          _roomManager.Left(player, Array.Empty<byte>());
         break;
       }
     }
@@ -61,6 +66,6 @@ public class Lobby
 
   public void OnDisconnected(uint peerId)
   {
-    _authorizationManager.Cleanup(peerId);
+    AuthorizationManager.Cleanup(peerId);
   }
 }

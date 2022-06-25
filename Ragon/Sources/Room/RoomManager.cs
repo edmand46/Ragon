@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,14 +11,19 @@ public class RoomManager
   private readonly IGameThread _gameThread;
   private readonly PluginFactory _factory;
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-  private List<GameRoom> _rooms = new List<GameRoom>();
+  private readonly List<GameRoom> _rooms = new List<GameRoom>();
+  private readonly Dictionary<uint, GameRoom> _roomsBySocket;
+
+  public IReadOnlyDictionary<uint, GameRoom> RoomsBySocket => _roomsBySocket;
+  public IReadOnlyList<GameRoom> Rooms => _rooms;
 
   public RoomManager(PluginFactory factory, IGameThread gameThread)
   {
     _gameThread = gameThread;
     _factory = factory;
-  } 
-  
+    _roomsBySocket = new Dictionary<uint, GameRoom>();
+  }
+
   public void Join(Player player, string roomId, byte[] payload)
   {
     if (_rooms.Count > 0)
@@ -29,7 +33,7 @@ public class RoomManager
         if (existRoom.Id == roomId && existRoom.PlayersCount < existRoom.PlayersMax)
         {
           existRoom.Joined(player, payload);
-          _gameThread.Attach(player.PeerId, existRoom);
+          _roomsBySocket.Add(player.PeerId, existRoom);
           break;
         }
       }
@@ -45,8 +49,7 @@ public class RoomManager
         if (existRoom.Map == map && existRoom.PlayersCount < existRoom.PlayersMax)
         {
           existRoom.Joined(player, payload);
-          _gameThread.Attach(player.PeerId, existRoom);
-          
+          _roomsBySocket.Add(player.PeerId, existRoom);
           return;
         }
       }
@@ -56,17 +59,25 @@ public class RoomManager
     if (plugin == null)
       throw new NullReferenceException($"Plugin for map {map} is null");
 
-    var room = new GameRoom(_gameThread, plugin, map, min, max); 
+    var room = new GameRoom(_gameThread, plugin, map, min, max);
     room.Joined(player, payload);
     room.Start();
 
-    _gameThread.Attach(player.PeerId, room);
+    _roomsBySocket.Add(player.PeerId, room);
     _rooms.Add(room);
   }
 
   public void Left(Player player, byte[] payload)
   {
-    
+    if (_roomsBySocket.Remove(player.PeerId, out var room))
+    {
+      room.Leave(player.PeerId);
+      if (room.PlayersCount < room.PlayersMin)
+      {
+        room.Stop();
+        _rooms.Remove(room);
+      }
+    }
   }
 
   public void Tick(float deltaTime)

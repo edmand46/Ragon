@@ -11,7 +11,7 @@ namespace Ragon.Core
   {
     private readonly Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly GameThread _gameThread;
-    private readonly ENetServer _netServer;
+    
     public Application(PluginFactory factory, Configuration configuration)
     {
       _gameThread = new GameThread(factory, configuration);

@@ -4,34 +4,31 @@
 
 ## Ragon Server
 
-Ragon is fully free high perfomance room based game server with plugin based architecture.
-
+Ragon is fully free, small and high perfomance room based game server with plugin based architecture.
 
 <a href="">Documentation</a>
 <br>
 <a href="">Get started</a>
 
-
 ### Features:
+- Effective
 - Free
 - Simple matchmaking
 - Flexiable API
 - Room based architecture
 - Extendable room logic via plugin
 - Custom authorization
-- No CCU limitations* 
-- Multi-threaded
+- No CCU limitations*
 - Engine agnostic
 - Support any client architecture (MonoBehaviors, ECS)
-- UDP
+- RUDP 
 
 ### Roadmap:
-- Allow customize matchmaking
-- Refactoring some moments(a lot duplications of code, etc...)
 - Use native memory 
 - Reduce allocations
 - Dashboard for monitoring entities and players in realtime
 - Statistics for monitoring state of server, cpu, memory
+- Horizontal Scaling
 - Docker support
 - Add additional API to plugin system
 
@@ -40,9 +37,8 @@ Ragon is fully free high perfomance room based game server with plugin based arc
 - .NET 6.0
 
 ### Dependencies
-* ENet-Sharp v2.4.8
-* NetStack latest
-* RingBuffer-Unity3D latest
+* ENet-Sharp [v2.4.8]
+* NetStack [latest]
 
 ### License
 SSPL-1.0

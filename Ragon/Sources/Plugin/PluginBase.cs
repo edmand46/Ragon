@@ -18,12 +18,12 @@ namespace Ragon.Core
     private readonly BitBuffer _buffer = new();
     private readonly RagonSerializer _serializer = new();
 
-    protected IGameRoom GameRoom { get; private set; }
-    protected ILogger _logger;
+    protected IGameRoom GameRoom { get; private set; } = null!;
+    protected ILogger Logger = null!;
 
     public void Attach(GameRoom gameRoom)
     {
-      _logger = LogManager.GetLogger($"Plugin<{GetType().Name}>");
+      Logger = LogManager.GetLogger($"Plugin<{GetType().Name}>");
 
       GameRoom = gameRoom;
 
@@ -41,7 +41,7 @@ namespace Ragon.Core
     {
       if (_globalEvents.ContainsKey(evntCode))
       {
-        _logger.Warn($"Event subscriber already added {evntCode}");
+        Logger.Warn($"Event subscriber already added {evntCode}");
         return;
       }
 
@@ -50,7 +50,7 @@ namespace Ragon.Core
       {
         if (raw.Length == 0)
         {
-          _logger.Warn($"Payload is empty for event {evntCode}");
+          Logger.Warn($"Payload is empty for event {evntCode}");
           return;
         }
 
@@ -65,7 +65,7 @@ namespace Ragon.Core
     {
       if (_globalEvents.ContainsKey(evntCode))
       {
-        _logger.Warn($"Event subscriber already added {evntCode}");
+        Logger.Warn($"Event subscriber already added {evntCode}");
         return;
       }
 
@@ -78,7 +78,7 @@ namespace Ragon.Core
       {
         if (_entityEvents[entity.EntityId].ContainsKey(evntCode))
         {
-          _logger.Warn($"Event subscriber already added {evntCode} for {entity.EntityId}");
+          Logger.Warn($"Event subscriber already added {evntCode} for {entity.EntityId}");
           return;
         }
 
@@ -87,7 +87,7 @@ namespace Ragon.Core
         {
           if (raw.Length == 0)
           {
-            _logger.Warn($"Payload is empty for entity {ent.EntityId} event {evntCode}");
+            Logger.Warn($"Payload is empty for entity {ent.EntityId} event {evntCode}");
             return;
           }
 
@@ -107,7 +107,7 @@ namespace Ragon.Core
         {
           if (raw.Length == 0)
           {
-            _logger.Warn($"Payload is empty for entity {ent.EntityId} event {evntCode}");
+            Logger.Warn($"Payload is empty for entity {ent.EntityId} event {evntCode}");
             return;
           }
 
@@ -125,7 +125,7 @@ namespace Ragon.Core
       {
         if (_entityEvents[entity.EntityId].ContainsKey(evntCode))
         {
-          _logger.Warn($"Event subscriber already added {evntCode} for {entity.EntityId}");
+          Logger.Warn($"Event subscriber already added {evntCode} for {entity.EntityId}");
           return;
         }
 
@@ -265,7 +265,7 @@ namespace Ragon.Core
     {
     }
 
-    public virtual void OnTick(ulong ticks, float deltaTime)
+    public virtual void OnTick(float deltaTime)
     {
     }
 

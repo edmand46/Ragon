@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using DisruptorUnity3d;
 using ENet;
 using NLog;
 
@@ -33,14 +30,14 @@ namespace Ragon.Core
       _handler = handler;
     }
 
-    public void Start(ushort port)
+    public void Start(ushort port, int connections)
     {
       _address = default;
       _address.Port = port;
-      _peers = new Peer[2048];
+      _peers = new Peer[connections];
 
       _host = new Host();
-      _host.Create(_address, 2048, 2, 0, 0, 1024 * 1024);
+      _host.Create(_address, connections, 2, 0, 0, 1024 * 1024);
 
       Status = Status.Listening;
       _logger.Info($"Network listening on {port}");
@@ -87,27 +84,27 @@ namespace Ragon.Core
 
         switch (_netEvent.Type)
         {
-          case ENet.EventType.None:
+          case EventType.None:
             Console.WriteLine("None event");
             break;
 
-          case ENet.EventType.Connect:
+          case EventType.Connect:
           {
             _peers[_netEvent.Peer.ID] = _netEvent.Peer;
             _handler.OnEvent(_netEvent);
             break;
           }
-          case ENet.EventType.Disconnect:
+          case EventType.Disconnect:
           {
             _handler.OnEvent(_netEvent);
             break;
           }
-          case ENet.EventType.Timeout:
+          case EventType.Timeout:
           {
             _handler.OnEvent(_netEvent);
             break;
           }
-          case ENet.EventType.Receive:
+          case EventType.Receive:
           {
             _handler.OnEvent(_netEvent);
             _netEvent.Packet.Dispose();

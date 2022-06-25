@@ -19,7 +19,6 @@ namespace Ragon.Core
     private Dictionary<uint, Player> _players = new();
     private Dictionary<int, Entity> _entities = new();
     private uint _owner;
-    private uint _ticks;
 
     private readonly PluginBase _plugin;
     private readonly IGameThread _gameThread;
@@ -40,7 +39,6 @@ namespace Ragon.Core
       PlayersMax = max;
       Id = Guid.NewGuid().ToString();
 
-      _logger.Info($"Room created with plugin: {_plugin.GetType().Name}");
       _plugin.Attach(this);
     }
 
@@ -119,7 +117,9 @@ namespace Ragon.Core
         {
           var newRoomOwnerId = _allPlayers[0];
           var newRoomOwner = _players[newRoomOwnerId];
-
+          
+          _owner = newRoomOwnerId;
+          
           {
             _plugin.OnOwnershipChanged(newRoomOwner);
 
@@ -323,8 +323,7 @@ namespace Ragon.Core
     
     public void Tick(float deltaTime)
     {
-      _ticks++;
-      _plugin.OnTick(_ticks, deltaTime);
+      _plugin.OnTick(deltaTime);
 
       foreach (var entity in _entitiesAll)
       {
@@ -347,15 +346,12 @@ namespace Ragon.Core
 
     public void Start()
     {
-      _logger.Info("Room started");
       _plugin.OnStart();
     }
 
     public void Stop()
     {
-      _logger.Info("Room stopped");
       _plugin.OnStop();
-      
       _plugin.Detach();
     }
 
@@ -365,6 +361,8 @@ namespace Ragon.Core
     
     public Player GetOwner() => _players[_owner];
     
+    public IDispatcher GetThreadDispatcher() =>  _gameThread.ThreadDispatcher;
+
     public void Send(uint peerId, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
       _gameThread.Server.Send(peerId, rawData, deliveryType);
