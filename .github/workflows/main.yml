@@ -20,7 +20,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Ragon.SimpleServer-${{ github.ref }}
-          prerelease: false
+          prerelease: true
 
   build:
     name: Release
