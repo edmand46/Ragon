@@ -76,7 +76,7 @@ namespace Ragon.Core
       {
         if (_host.CheckEvents(out _netEvent) <= 0)
         {
-          if (_host.Service(0, out _netEvent) <= 0)
+          if (_host.Service(15, out _netEvent) <= 0)
             break;
 
           polled = true;

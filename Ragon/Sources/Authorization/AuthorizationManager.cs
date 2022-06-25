@@ -33,7 +33,10 @@ public class AuthorizationManager : IAuthorizationManager
       {
         dispatcher.Dispatch(() => Accepted(peerId, playerId, playerName));
       },
-      (errorCode) => { dispatcher.Dispatch(() => Rejected(peerId, errorCode)); });
+      (errorCode) =>
+      {
+        dispatcher.Dispatch(() => Rejected(peerId, errorCode));
+      });
   }
 
   public void Accepted(uint peerId, string playerId, string playerName)

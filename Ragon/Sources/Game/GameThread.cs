@@ -85,8 +85,6 @@ namespace Ragon.Core
           _logger.Trace($"Rooms: {_roomManager.Rooms.Count} Clients: {_roomManager.RoomsBySocket.Count}");
           _statisticsTimer.Restart();
         }
-
-        Thread.Sleep(15);
       }
     }
 
