@@ -264,11 +264,7 @@ namespace Ragon.Core
     public virtual void OnStop()
     {
     }
-
-    public virtual void OnTick(float deltaTime)
-    {
-    }
-
+    
     #endregion
   }
 }

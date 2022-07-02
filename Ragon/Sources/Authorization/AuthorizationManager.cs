@@ -14,7 +14,7 @@ public class AuthorizationManager : IAuthorizationManager
   private RagonSerializer _serializer;
   private readonly Dictionary<uint, Player> _playersByPeers;
   private readonly Dictionary<string, Player> _playersByIds;
-  
+
   public AuthorizationManager(IAuthorizationProvider provider, IGameThread gameThread, Lobby lobby, RagonSerializer serializer)
   {
     _serializer = serializer;
@@ -28,15 +28,10 @@ public class AuthorizationManager : IAuthorizationManager
   public void OnAuthorization(uint peerId, string key, string name, byte protocol)
   {
     var dispatcher = _gameThread.ThreadDispatcher;
+    
     _provider.OnAuthorizationRequest(key, name, protocol, Array.Empty<byte>(),
-      (playerId, playerName) =>
-      {
-        dispatcher.Dispatch(() => Accepted(peerId, playerId, playerName));
-      },
-      (errorCode) =>
-      {
-        dispatcher.Dispatch(() => Rejected(peerId, errorCode));
-      });
+      (playerId, playerName) => { dispatcher.Dispatch(() => Accepted(peerId, playerId, playerName)); },
+      (errorCode) => { dispatcher.Dispatch(() => Rejected(peerId, errorCode)); });
   }
 
   public void Accepted(uint peerId, string playerId, string playerName)
@@ -45,7 +40,7 @@ public class AuthorizationManager : IAuthorizationManager
     _serializer.WriteOperation(RagonOperation.AUTHORIZED_SUCCESS);
     _serializer.WriteString(playerId);
     _serializer.WriteString(playerName);
-    
+
     var player = new Player()
     {
       Id = playerId,
@@ -55,10 +50,10 @@ public class AuthorizationManager : IAuthorizationManager
       Entities = new List<Entity>(),
       EntitiesIds = new List<int>(),
     };
-    
+
     _playersByIds.Add(playerId, player);
     _playersByPeers.Add(peerId, player);
-    
+
     var sendData = _serializer.ToArray();
     _gameThread.Server.Send(peerId, sendData, DeliveryType.Reliable);
   }
@@ -84,10 +79,10 @@ public class AuthorizationManager : IAuthorizationManager
   {
     if (_playersByPeers.TryGetValue(peerId, out var player))
       return player;
-    
+
     return null;
   }
-  
+
   public Player GetPlayer(string playerId)
   {
     return _playersByIds[playerId];

@@ -10,6 +10,7 @@ namespace Ragon.Core
     public ushort SendRate;
     public ushort Port;
     public int SkipTimeout;
+    public int ReconnectTimeout;
     public int MaxConnections;
     public int MaxPlayersPerRoom;
     public int MaxRooms;

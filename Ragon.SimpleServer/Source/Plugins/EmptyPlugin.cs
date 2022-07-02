@@ -4,6 +4,7 @@ namespace Game.Source
 {
   public class SimplePlugin: PluginBase
   {
+    
     public override void OnStart()
     {
       // _logger.Info("Plugin started");

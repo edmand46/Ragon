@@ -195,7 +195,7 @@ namespace Stress
       for (var i = 0; i < 80; i ++)  
       {
         var thread = new SimulationThread();
-        thread.Start("127.0.0.1", 4444, 50);
+        thread.Start("49.12.70.233", 4444, 50);
         Thread.Sleep(300);
       }
       

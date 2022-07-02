@@ -20,8 +20,9 @@ namespace Ragon.Core
     private Dictionary<int, Entity> _entities = new();
     private uint _owner;
 
-    private readonly PluginBase _plugin;
+    private readonly IScheduler _scheduler;
     private readonly IGameThread _gameThread;
+    private readonly PluginBase _plugin;
     private readonly RagonSerializer _serializer = new(512);
 
     // Cache
@@ -33,6 +34,7 @@ namespace Ragon.Core
     {
       _gameThread = gameThread;
       _plugin = pluginBase;
+      _scheduler = new Scheduler();
 
       Map = map;
       PlayersMin = min;
@@ -162,6 +164,7 @@ namespace Ragon.Core
         case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
           var evntId = _serializer.ReadUShort();
+          var evntMode = _serializer.ReadByte();
           var entityId = _serializer.ReadInt();
 
           if (!_entities.TryGetValue(entityId, out var ent))
@@ -181,6 +184,8 @@ namespace Ragon.Core
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
           _serializer.WriteUShort(evntId);
+          _serializer.WriteUShort((ushort) peerId);
+          _serializer.WriteByte(evntMode);
           _serializer.WriteInt(entityId);
           _serializer.WriteData(ref payload);
           var sendData = _serializer.ToArray();
@@ -191,7 +196,7 @@ namespace Ragon.Core
         case RagonOperation.REPLICATE_EVENT:
         {
           var evntId = _serializer.ReadUShort();
-          
+          var evntMode = _serializer.ReadByte();
           Span<byte> payloadRaw = stackalloc byte[_serializer.Size];
           var payloadData = _serializer.ReadData(_serializer.Size);
           payloadData.CopyTo(payloadRaw);
@@ -202,6 +207,8 @@ namespace Ragon.Core
 
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
+          _serializer.WriteUShort((ushort) peerId);
+          _serializer.WriteByte(evntMode);
           _serializer.WriteUShort(evntId);
           _serializer.WriteData(ref payload);
           
@@ -323,8 +330,8 @@ namespace Ragon.Core
     
     public void Tick(float deltaTime)
     {
-      _plugin.OnTick(deltaTime);
-
+      _scheduler.Tick(deltaTime);
+      
       foreach (var entity in _entitiesAll)
       {
         if (entity.State.isDirty)
@@ -351,6 +358,9 @@ namespace Ragon.Core
 
     public void Stop()
     {
+      foreach (var peerId in _allPlayers)
+        _gameThread.Server.Disconnect(peerId, 0);
+      
       _plugin.OnStop();
       _plugin.Detach();
     }
@@ -362,6 +372,8 @@ namespace Ragon.Core
     public Player GetOwner() => _players[_owner];
     
     public IDispatcher GetThreadDispatcher() =>  _gameThread.ThreadDispatcher;
+
+    public IScheduler GetScheduler() => _scheduler;
 
     public void Send(uint peerId, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
