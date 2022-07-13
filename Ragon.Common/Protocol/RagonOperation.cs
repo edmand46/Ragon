@@ -20,6 +20,7 @@ namespace Ragon.Common
     PLAYER_LEAVED,
     
     CREATE_ENTITY,
+    CREATE_STATIC_ENTITY,
     DESTROY_ENTITY,
     
     SNAPSHOT,

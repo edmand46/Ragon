@@ -43,6 +43,28 @@ namespace Ragon.Core
       _logger.Info($"Network listening on {port}");
     }
 
+    public void Broadcast(uint[] peersIds, byte[] data, DeliveryType type)
+    {
+      var newPacket = new Packet();
+      var packetFlags = PacketFlags.Instant;
+      byte channel = 1;
+
+      if (type == DeliveryType.Reliable)
+      {
+        packetFlags = PacketFlags.Reliable;
+        channel = 0;
+      }
+      else if (type == DeliveryType.Unreliable)
+      {
+        channel = 1;
+        packetFlags = PacketFlags.None;
+      }
+
+      newPacket.Create(data, data.Length, packetFlags);
+      foreach (var peerId in peersIds)
+        _peers[peerId].Send(channel, ref newPacket);
+    }
+    
     public void Send(uint peerId, byte[] data, DeliveryType type)
     {
       var newPacket = new Packet();
