@@ -41,7 +41,7 @@ Ragon is fully free, small and high perfomance room based game server with plugi
 * NetStack [latest]
 
 ### License
-SSPL-1.0
+MIT
 
 ### Tips
 \* Limited to 4095 CCU by library ENet-Sharp
