@@ -14,23 +14,12 @@ Ragon is fully free, small and high perfomance room based game server with plugi
 - Effective
 - Free
 - Simple matchmaking
-- Flexiable API
 - Room based architecture
-- Extendable room logic via plugin
-- Custom authorization
+- Сustomizable authorization
+- Сustomizable server-side logic via plugins with flexible API
 - No CCU limitations*
-- Engine agnostic
-- Support any client architecture (MonoBehaviors, ECS)
-- RUDP 
-
-### Roadmap:
-- Use native memory 
-- Reduce allocations
-- Dashboard for monitoring entities and players in realtime
-- Statistics for monitoring state of server, cpu, memory
-- Horizontal Scaling
-- Docker support
-- Add additional API to plugin system
+- No Room count limitations
+- Reliable UDP 
 
 ### Requirements
 - OSX, Windows, Linux(Ubuntu, Debian)
