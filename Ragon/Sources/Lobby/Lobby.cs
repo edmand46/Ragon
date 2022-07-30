@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NetStack.Serialization;
 using NLog;
 using Ragon.Common;
 
@@ -9,6 +10,7 @@ public class Lobby : ILobby
 {
   private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
   private readonly RagonSerializer _serializer;
+  private readonly BitBuffer _buffer;
   private readonly RoomManager _roomManager;
   private readonly AuthorizationManager _authorizationManager;
 
@@ -17,6 +19,7 @@ public class Lobby : ILobby
   public Lobby(IAuthorizationProvider provider, RoomManager manager, IGameThread gameThread)
   {
     _roomManager = manager;
+    _buffer = new BitBuffer();
     _serializer = new RagonSerializer();
     _authorizationManager = new AuthorizationManager(provider, gameThread, this, _serializer);
   }
@@ -52,31 +55,43 @@ public class Lobby : ILobby
           _roomManager.Left(player, Array.Empty<byte>());
 
         _roomManager.Join(player, roomId, Array.Empty<byte>());
-
         break;
       }
       case RagonOperation.CREATE_ROOM:
       {
-        var min = _serializer.ReadUShort();
-        var max = _serializer.ReadUShort();
-        var map = _serializer.ReadString();
+        var roomId = Guid.NewGuid().ToString();
+        var custom = _serializer.ReadBool();
+        if (custom)
+          roomId = _serializer.ReadString();
+
+        var propertiesPayload = _serializer.ReadData(_serializer.Size);
+        _buffer.Clear();
+        _buffer.FromSpan(ref propertiesPayload, propertiesPayload.Length);
+        
+        var roomProperties = new RagonRoomParameters();
+        roomProperties.Deserialize(_buffer);
 
         if (_roomManager.RoomsBySocket.ContainsKey(peerId))
           _roomManager.Left(player, Array.Empty<byte>());
-        
-        _roomManager.Create(player, map, min, max, Array.Empty<byte>());
+
+        _roomManager.Create(player, roomId, roomProperties, Array.Empty<byte>());
         break;
       }
       case RagonOperation.JOIN_OR_CREATE_ROOM:
       {
-        var min = _serializer.ReadUShort();
-        var max = _serializer.ReadUShort();
-        var map = _serializer.ReadString();
+        var roomId = Guid.NewGuid().ToString();
+        var roomProperties = new RagonRoomParameters();
+        var propertiesPayload = _serializer.ReadData(_serializer.Size);
+        
+        _buffer.Clear();
+        _buffer.FromSpan(ref propertiesPayload, propertiesPayload.Length);
+        
+        roomProperties.Deserialize(_buffer);
 
         if (_roomManager.RoomsBySocket.ContainsKey(peerId))
           _roomManager.Left(player, Array.Empty<byte>());
 
-        _roomManager.JoinOrCreate(player, map, min, max, Array.Empty<byte>());
+        _roomManager.JoinOrCreate(player, roomId, roomProperties, Array.Empty<byte>());
         break;
       }
       case RagonOperation.LEAVE_ROOM:

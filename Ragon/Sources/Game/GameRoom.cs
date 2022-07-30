@@ -29,7 +29,7 @@ namespace Ragon.Core
     private uint[] _allPlayers = Array.Empty<uint>();
     private Entity[] _entitiesAll = Array.Empty<Entity>();
 
-    public GameRoom(IGameThread gameThread, PluginBase pluginBase, string map, int min, int max)
+    public GameRoom(IGameThread gameThread, PluginBase pluginBase, string roomId, string map, int min, int max)
     {
       _gameThread = gameThread;
       _plugin = pluginBase;
@@ -38,7 +38,7 @@ namespace Ragon.Core
       Map = map;
       PlayersMin = min;
       PlayersMax = max;
-      Id = Guid.NewGuid().ToString();
+      Id = roomId;
 
       _plugin.Attach(this);
     }
