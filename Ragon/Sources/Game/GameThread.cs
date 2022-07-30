@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using Ragon.Common;
 using ENet;
 using NLog;
 
@@ -29,10 +29,10 @@ namespace Ragon.Core
       var authorizationProvider = factory.CreateAuthorizationProvider(configuration);
       var dispatcher = new Dispatcher();
       _dispatcherInternal = dispatcher;
-      
+
       ThreadDispatcher = dispatcher;
       Server = new ENetServer(this);
-      
+
       _deltaTime = 1000.0f / configuration.SendRate;
 
       _roomManager = new RoomManager(factory, this);
@@ -69,7 +69,7 @@ namespace Ragon.Core
       while (true)
       {
         Server.Process();
-        
+
         _dispatcherInternal.Process();
 
         var elapsedMilliseconds = _gameLoopTimer.ElapsedMilliseconds;
@@ -109,14 +109,13 @@ namespace Ragon.Core
           evnt.Packet.CopyTo(dataRaw);
 
           var data = new ReadOnlySpan<byte>(dataRaw);
+          var operation = (RagonOperation) data[0];
+          var payload = data.Slice(1, data.Length - 1);
+          
           if (_roomManager.RoomsBySocket.TryGetValue(peerId, out var room))
-          {
-            room.ProcessEvent(peerId, data);
-          }
-          else
-          {
-            _lobby.ProcessEvent(peerId, data);
-          }
+            room.ProcessEvent(peerId, operation, payload);
+          
+          _lobby.ProcessEvent(peerId, operation, payload);
         }
         catch (Exception exception)
         {

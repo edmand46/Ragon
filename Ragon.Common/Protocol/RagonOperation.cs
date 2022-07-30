@@ -7,6 +7,7 @@ namespace Ragon.Common
     AUTHORIZED_FAILED,
     
     JOIN_OR_CREATE_ROOM,
+    CREATE_ROOM,
     JOIN_ROOM,
     LEAVE_ROOM,
     OWNERSHIP_CHANGED,

@@ -40,6 +40,20 @@ public class RoomManager
     }
   }
 
+  public void Create(Player player, string map, int min, int max, byte[] payload)
+  {
+    var plugin = _factory.CreatePlugin(map);
+    if (plugin == null)
+      throw new NullReferenceException($"Plugin for map {map} is null");
+
+    var room = new GameRoom(_gameThread, plugin, map, min, max);
+    room.Joined(player, payload);
+    room.Start();
+
+    _roomsBySocket.Add(player.PeerId, room);
+    _rooms.Add(room);
+  }
+
   public void JoinOrCreate(Player player, string map, int min, int max, byte[] payload)
   {
     if (_rooms.Count > 0)
@@ -77,6 +91,8 @@ public class RoomManager
         room.Stop();
         _rooms.Remove(room);
       }
+      
+      _gameThread.Server.Send(player.PeerId, new byte[] { (byte) RagonOperation.LEAVE_ROOM }, DeliveryType.Reliable);
     }
   }
 
