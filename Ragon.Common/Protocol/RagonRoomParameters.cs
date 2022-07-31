@@ -1,4 +1,3 @@
-using NetStack.Serialization;
 
 namespace Ragon.Common
 {
@@ -8,14 +7,14 @@ namespace Ragon.Common
     public int Min { get; set; } 
     public int Max { get; set; } 
     
-    public void Serialize(BitBuffer buffer)
+    public void Serialize(RagonSerializer buffer)
     {
-      buffer.AddString(Map);
-      buffer.AddInt(Min);
-      buffer.AddInt(Max);
+      buffer.WriteString(Map);
+      buffer.WriteInt(Min);
+      buffer.WriteInt(Max);
     }
 
-    public void Deserialize(BitBuffer buffer)
+    public void Deserialize(RagonSerializer buffer)
     {
       Map = buffer.ReadString();
       Min = buffer.ReadInt();

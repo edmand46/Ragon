@@ -348,7 +348,6 @@ namespace Ragon.Core
             _serializer.WriteUShort((ushort) entity.OwnerId);
             _serializer.WriteUShort((ushort) payload.Length);
             _serializer.WriteData(ref payload);
-            _serializer.WriteUShort((ushort) state.Length);
             _serializer.WriteData(ref state);
           }
 
@@ -367,7 +366,6 @@ namespace Ragon.Core
             _serializer.WriteUShort((ushort) entity.OwnerId);
             _serializer.WriteUShort((ushort) payload.Length);
             _serializer.WriteData(ref payload);
-            _serializer.WriteUShort((ushort) state.Length);
             _serializer.WriteData(ref state);
           }
 

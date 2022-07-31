@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using NetStack.Serialization;
 using NLog;
 using Ragon.Common;
 
@@ -15,7 +13,6 @@ namespace Ragon.Core
 
     private Dictionary<ushort, SubscribeDelegate> _globalEvents = new();
     private Dictionary<int, Dictionary<ushort, SubscribeEntityDelegate>> _entityEvents = new();
-    private readonly BitBuffer _buffer = new();
     private readonly RagonSerializer _serializer = new();
 
     protected IGameRoom GameRoom { get; private set; } = null!;
@@ -54,9 +51,9 @@ namespace Ragon.Core
           return;
         }
 
-        _buffer.Clear();
-        _buffer.FromSpan(ref raw, raw.Length);
-        data.Deserialize(_buffer);
+        _serializer.Clear();
+        _serializer.FromSpan(ref raw);
+        data.Deserialize(_serializer);
         action.Invoke(player, data);
       });
     }
@@ -91,9 +88,9 @@ namespace Ragon.Core
             return;
           }
 
-          _buffer.Clear();
-          _buffer.FromSpan(ref raw, raw.Length);
-          data.Deserialize(_buffer);
+          _serializer.Clear();
+          _serializer.FromSpan(ref raw);
+          data.Deserialize(_serializer);
           action.Invoke(player, ent, data);
         });
 
@@ -111,9 +108,9 @@ namespace Ragon.Core
             return;
           }
 
-          _buffer.Clear();
-          _buffer.FromSpan(ref raw, raw.Length);
-          data.Deserialize(_buffer);
+          _serializer.Clear();
+          _serializer.FromSpan(ref raw);
+          data.Deserialize(_serializer);
           action.Invoke(player, ent, data);
         });
       }
@@ -177,12 +174,8 @@ namespace Ragon.Core
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
       
-      _buffer.Clear();
-      payload.Serialize(_buffer);
+      payload.Serialize(_serializer);
       
-      var payloadData = _serializer.GetWritableData(_buffer.Length);
-      _buffer.ToSpan(ref payloadData);
-
       var sendData = _serializer.ToArray();
       GameRoom.Send(player.PeerId, sendData);
     }
@@ -192,11 +185,7 @@ namespace Ragon.Core
       _serializer.Clear();
       _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
       
-      _buffer.Clear();
-      payload.Serialize(_buffer);
-      
-      var payloadData = _serializer.GetWritableData(_buffer.Length);
-      _buffer.ToSpan(ref payloadData);
+      payload.Serialize(_serializer);
 
       var sendData = _serializer.ToArray();
       GameRoom.Broadcast(sendData, DeliveryType.Reliable);
@@ -208,11 +197,7 @@ namespace Ragon.Core
       _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       _serializer.WriteInt(entity.EntityId);
 
-      _buffer.Clear();
-      payload.Serialize(_buffer);
-      
-      var payloadData = _serializer.GetWritableData(_buffer.Length);
-      _buffer.ToSpan(ref payloadData);
+      payload.Serialize(_serializer);
 
       var sendData = _serializer.ToArray();
       GameRoom.Send(player.PeerId, sendData, DeliveryType.Reliable);
@@ -224,11 +209,7 @@ namespace Ragon.Core
       _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       _serializer.WriteInt(entity.EntityId);
 
-      _buffer.Clear();
-      payload.Serialize(_buffer);
-      
-      var payloadData = _serializer.GetWritableData(_buffer.Length);
-      _buffer.ToSpan(ref payloadData);
+      payload.Serialize(_serializer);
 
       var sendData = _serializer.ToArray();
       GameRoom.Broadcast(sendData);

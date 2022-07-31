@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using NetStack.Serialization;
 using NLog;
 using Ragon.Common;
 
@@ -11,7 +9,6 @@ public class Lobby : ILobby
 {
   private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
   private readonly RagonSerializer _serializer;
-  private readonly BitBuffer _buffer;
   private readonly RoomManager _roomManager;
   private readonly AuthorizationManager _authorizationManager;
   private readonly IGameThread _gameThread;
@@ -22,7 +19,6 @@ public class Lobby : ILobby
   {
     _roomManager = manager;
     _gameThread = gameThread;
-    _buffer = new BitBuffer();
     _serializer = new RagonSerializer();
     _authorizationManager = new AuthorizationManager(provider, gameThread, this, _serializer);
   }
@@ -53,7 +49,6 @@ public class Lobby : ILobby
       case RagonOperation.JOIN_ROOM:
       {
         var roomId = _serializer.ReadString();
-        roomId = _serializer.ReadString();
         var exists = _roomManager.Rooms.Any(r => r.Id == roomId);
         if (!exists)
         {
@@ -90,13 +85,9 @@ public class Lobby : ILobby
             return;
           }
         }
-
-        var propertiesPayload = _serializer.ReadData(_serializer.Size);
-        _buffer.Clear();
-        _buffer.FromSpan(ref propertiesPayload, propertiesPayload.Length);
         
         var roomProperties = new RagonRoomParameters();
-        roomProperties.Deserialize(_buffer);
+        roomProperties.Deserialize(_serializer);
 
         if (_roomManager.RoomsBySocket.ContainsKey(peerId))
           _roomManager.Left(player, Array.Empty<byte>());
@@ -108,12 +99,7 @@ public class Lobby : ILobby
       {
         var roomId = Guid.NewGuid().ToString();
         var roomProperties = new RagonRoomParameters();
-        var propertiesPayload = _serializer.ReadData(_serializer.Size);
-        
-        _buffer.Clear();
-        _buffer.FromSpan(ref propertiesPayload, propertiesPayload.Length);
-        
-        roomProperties.Deserialize(_buffer);
+        roomProperties.Deserialize(_serializer);
 
         if (_roomManager.RoomsBySocket.ContainsKey(peerId))
           _roomManager.Left(player, Array.Empty<byte>());

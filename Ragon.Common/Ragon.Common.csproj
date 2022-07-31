@@ -18,8 +18,4 @@
       <OutputPath></OutputPath>
       <DefineConstants>TRACE;NETSTACK_SPAN</DefineConstants>
     </PropertyGroup>
-
-    <ItemGroup>
-      <Folder Include="External" />
-    </ItemGroup>
 </Project>
