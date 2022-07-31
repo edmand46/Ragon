@@ -29,7 +29,7 @@ namespace Ragon.Core
     private uint[] _allPlayers = Array.Empty<uint>();
     private Entity[] _entitiesAll = Array.Empty<Entity>();
 
-    public GameRoom(IGameThread gameThread, PluginBase pluginBase, string map, int min, int max)
+    public GameRoom(IGameThread gameThread, PluginBase pluginBase, string roomId, string map, int min, int max)
     {
       _gameThread = gameThread;
       _plugin = pluginBase;
@@ -38,7 +38,7 @@ namespace Ragon.Core
       Map = map;
       PlayersMin = min;
       PlayersMax = max;
-      Id = Guid.NewGuid().ToString();
+      Id = roomId;
 
       _plugin.Attach(this);
     }
@@ -94,8 +94,6 @@ namespace Ragon.Core
         _allPlayers = _players.Select(p => p.Key).ToArray();
         _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
 
-        var isOwnershipChange = player.PeerId == _owner;
-
         {
           _plugin.OnPlayerLeaved(player);
 
@@ -114,34 +112,12 @@ namespace Ragon.Core
           Broadcast(_readyPlayers, sendData);
         }
 
-        if (_allPlayers.Length > 0 && isOwnershipChange)
-        {
-          var newRoomOwnerId = _allPlayers[0];
-          var newRoomOwner = _players[newRoomOwnerId];
-
-          _owner = newRoomOwnerId;
-
-          {
-            _plugin.OnOwnershipChanged(newRoomOwner);
-
-            _serializer.Clear();
-            _serializer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
-            _serializer.WriteString(newRoomOwner.Id);
-
-            var sendData = _serializer.ToArray();
-            Broadcast(_readyPlayers, sendData);
-          }
-        }
-
         _entitiesAll = _entities.Values.ToArray();
       }
     }
 
-    public void ProcessEvent(uint peerId, ReadOnlySpan<byte> rawData)
+    public void ProcessEvent(uint peerId, RagonOperation operation, ReadOnlySpan<byte> payloadRawData)
     {
-      var operation = (RagonOperation) rawData[0];
-      var payloadRawData = rawData.Slice(1, rawData.Length - 1);
-
       _serializer.Clear();
       _serializer.FromSpan(ref payloadRawData);
 
@@ -191,6 +167,21 @@ namespace Ragon.Core
           var sendData = _serializer.ToArray();
 
           Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+          break;
+        }
+        case RagonOperation.LOAD_SCENE:
+        {
+          var sceneName = _serializer.ReadString();
+          _readyPlayers = Array.Empty<uint>();
+          _entitiesAll = Array.Empty<Entity>();
+          _entities.Clear();
+          
+          _serializer.Clear();
+          _serializer.WriteOperation(RagonOperation.LOAD_SCENE);
+          _serializer.WriteString(sceneName);
+          
+          var sendData = _serializer.ToArray();
+          Broadcast(_allPlayers, sendData, DeliveryType.Reliable);
           break;
         }
         case RagonOperation.REPLICATE_EVENT:

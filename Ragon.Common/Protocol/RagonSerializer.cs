@@ -39,6 +39,24 @@ namespace Ragon.Common
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteBool(bool value)
+    {
+      ResizeIfNeed(1);
+      
+      _data[_offset] = value ? (byte) 1 : (byte) 0;
+      _offset += 1;
+    }
+
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool ReadBool()
+    {
+      var value = _data[_offset];
+      _offset += 1;
+      return value == 1;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteInt(int value)
     {
       ResizeIfNeed(4);
