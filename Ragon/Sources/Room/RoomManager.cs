@@ -11,12 +11,12 @@ public class RoomManager
   private readonly IGameThread _gameThread;
   private readonly PluginFactory _factory;
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-  private readonly List<GameRoom> _rooms = new List<GameRoom>();
+  private readonly List<GameRoom> _rooms = new();
   private readonly Dictionary<uint, GameRoom> _roomsBySocket;
 
   public IReadOnlyDictionary<uint, GameRoom> RoomsBySocket => _roomsBySocket;
   public IReadOnlyList<GameRoom> Rooms => _rooms;
-
+  
   public RoomManager(PluginFactory factory, IGameThread gameThread)
   {
     _gameThread = gameThread;
@@ -83,7 +83,7 @@ public class RoomManager
       }
     }
 
-    _logger.Trace($"Player ({player.PlayerName}|{player.Id}) create room with Id {roomId} and params ({map}|{min}|{max})");
+    _logger.Trace($"Room not found for Player ({player.PlayerName}|{player.Id}), create room with Id {roomId} and params ({map}|{min}|{max})");
     
     var plugin = _factory.CreatePlugin(map);
     if (plugin == null)
