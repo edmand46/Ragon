@@ -28,6 +28,7 @@ namespace Ragon.Core
     private uint[] _readyPlayers = Array.Empty<uint>();
     private uint[] _allPlayers = Array.Empty<uint>();
     private Entity[] _entitiesAll = Array.Empty<Entity>();
+    private List<uint> _peersCache = new List<uint>();
 
     public GameRoom(IGameThread gameThread, PluginBase pluginBase, string roomId, string map, int min, int max)
     {
@@ -93,7 +94,7 @@ namespace Ragon.Core
       {
         _allPlayers = _players.Select(p => p.Key).ToArray();
         _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
-
+        
         {
           _plugin.OnPlayerLeaved(player);
 
@@ -141,8 +142,9 @@ namespace Ragon.Core
         {
           var evntId = _serializer.ReadUShort();
           var evntMode = _serializer.ReadByte();
+          var targetMode = (RagonTarget) _serializer.ReadByte();
           var entityId = _serializer.ReadInt();
-
+    
           if (!_entities.TryGetValue(entityId, out var ent))
             return;
 
@@ -166,7 +168,29 @@ namespace Ragon.Core
           _serializer.WriteData(ref payload);
           var sendData = _serializer.ToArray();
 
-          Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+          switch (targetMode)
+          {
+            case RagonTarget.OWNER:
+            {
+              Send(ent.OwnerId, sendData, DeliveryType.Reliable);
+              break;
+            }
+            case RagonTarget.EXCEPT_OWNER:
+            {
+              _peersCache.Clear();
+              foreach (var playerPeerId in _readyPlayers)
+                if (playerPeerId != ent.OwnerId)
+                  _peersCache.Add(playerPeerId);
+
+              Broadcast(_peersCache.ToArray(), sendData, DeliveryType.Reliable);
+              break;
+            }
+            case RagonTarget.ALL:
+            {
+              Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+              break;
+            }
+          }
           break;
         }
         case RagonOperation.LOAD_SCENE:
@@ -175,11 +199,11 @@ namespace Ragon.Core
           _readyPlayers = Array.Empty<uint>();
           _entitiesAll = Array.Empty<Entity>();
           _entities.Clear();
-          
+
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.LOAD_SCENE);
           _serializer.WriteString(sceneName);
-          
+
           var sendData = _serializer.ToArray();
           Broadcast(_allPlayers, sendData, DeliveryType.Reliable);
           break;
@@ -188,6 +212,8 @@ namespace Ragon.Core
         {
           var evntId = _serializer.ReadUShort();
           var evntMode = _serializer.ReadByte();
+          var targetMode = (RagonTarget) _serializer.ReadByte();
+
           Span<byte> payloadRaw = stackalloc byte[_serializer.Size];
           var payloadData = _serializer.ReadData(_serializer.Size);
           payloadData.CopyTo(payloadRaw);
@@ -204,7 +230,29 @@ namespace Ragon.Core
           _serializer.WriteData(ref payload);
 
           var sendData = _serializer.ToArray();
-          Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+          switch (targetMode)
+          {
+            case RagonTarget.OWNER:
+            {
+              Send(_owner, sendData, DeliveryType.Reliable);
+              break;
+            }
+            case RagonTarget.EXCEPT_OWNER:
+            {
+              _peersCache.Clear();
+              foreach (var playerPeerId in _readyPlayers)
+                if (playerPeerId != _owner)
+                  _peersCache.Add(playerPeerId);
+              
+              Broadcast(_peersCache.ToArray(), sendData, DeliveryType.Reliable);
+              break;
+            }
+            case RagonTarget.ALL:
+            {
+              Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+              break;
+            }
+          }
           break;
         }
         case RagonOperation.CREATE_STATIC_ENTITY:
@@ -374,7 +422,6 @@ namespace Ragon.Core
 
           _players[peerId].IsLoaded = true;
           _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
-
           _plugin.OnPlayerJoined(_players[peerId]);
           break;
         }
