@@ -1,11 +1,22 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 
 namespace Ragon.Common
 {
-
+  [StructLayout(LayoutKind.Explicit)]
+  internal struct ValueConverter
+  {
+    [FieldOffset(0)] public int Int;
+    [FieldOffset(0)] public float Float;
+    [FieldOffset(0)] public byte Byte0;
+    [FieldOffset(1)] public byte Byte1;
+    [FieldOffset(2)] public byte Byte2;
+    [FieldOffset(3)] public byte Byte3;
+  }
+  
   public class RagonSerializer
   {
     private byte[] _data;
@@ -20,6 +31,13 @@ namespace Ragon.Common
       _offset = 0;
       _size = 0;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Reset()
+    {
+      _size = _offset;
+      _offset = 0;
+    }    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteByte(byte value)
@@ -56,23 +74,40 @@ namespace Ragon.Common
       return value == 1;
     }
     
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteInt(int value)
     {
       ResizeIfNeed(4);
-      
-      _data[_offset] = (byte) (value & 0x00FF);
-      _data[_offset + 1] = (byte) ((value & 0xFF00) >> 8);
-      _data[_offset + 2] = (byte) ((value & 0xFF00) >> 16);
-      _data[_offset + 3] = (byte) ((value & 0xFF00) >> 24);
+      var converter = new ValueConverter() { Int = value };
+      _data[_offset] = converter.Byte0;
+      _data[_offset + 1] = converter.Byte1;
+      _data[_offset + 2] = converter.Byte2;
+      _data[_offset + 3] = converter.Byte3;
       _offset += 4;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int ReadInt()
     {
-      var value = _data[_offset] + (_data[_offset + 1] << 8) + (_data[_offset + 2] << 16) + (_data[_offset + 3] << 24);
+      var converter = new ValueConverter() { Byte0 = _data[_offset], Byte1 = _data[_offset + 1], Byte2 = _data[_offset + 2], Byte3 = _data[_offset + 3] };
       _offset += 4;
+      return converter.Int;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteFloat(float value)
+    {
+      var converter = new ValueConverter() {Float = value};
+      WriteInt(converter.Int);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float ReadFloat()
+    {
+      var rawValue = ReadInt();
+      var converter = new ValueConverter() {Int = rawValue};
+      var value = converter.Float;
       return value;
     }
 
