@@ -138,16 +138,14 @@ namespace Ragon.Core
           if (_entities.TryGetValue(entityId, out var ent))
           {
             var mask = _serializer.ReadLong();
-            for (var i = 0; i < 31; i++)
+            for (var i = 0; i < ent.Properties.Length; i++)
             {
-              if (mask == 1 << i)
+              if (((mask >> i) & 1) == 1)
               {
-                _logger.Trace($"Index: {i} is dirty");
                 var propertyPayload = _serializer.ReadData(ent.Properties[i].Size);
                 ent.Properties[i].Write(ref propertyPayload);
               }  
             }
-
             if (_entitiesDirtySet.Add(ent))
             {
               _entitiesDirty.Add(ent);
@@ -275,44 +273,47 @@ namespace Ragon.Core
         }
         case RagonOperation.CREATE_STATIC_ENTITY:
         {
-          // var entityType = _serializer.ReadUShort();
-          // var staticId = _serializer.ReadUShort();
-          // var stateAuthority = (RagonAuthority) _serializer.ReadByte();
-          // var eventAuthority = (RagonAuthority) _serializer.ReadByte();
-          // var entity = new Entity(peerId, entityType, staticId, stateAuthority, eventAuthority);
-          //
-          // {
-          //   var entityPayload = _serializer.ReadData(_serializer.Size);
-          //   entity.Payload.Write(ref entityPayload);
-          // }
-          //
-          // var player = _players[peerId];
-          // player.Entities.Add(entity);
-          // player.EntitiesIds.Add(entity.EntityId);
-          //
-          // var ownerId = (ushort) peerId;
-          //
-          // _entities.Add(entity.EntityId, entity);
-          // _entitiesAll = _entities.Values.ToArray();
-          //
-          // _plugin.OnEntityCreated(player, entity);
-          //
-          // _serializer.Clear();
-          // _serializer.WriteOperation(RagonOperation.CREATE_STATIC_ENTITY);
-          // _serializer.WriteUShort(entityType);
-          // _serializer.WriteUShort(staticId);
-          // _serializer.WriteByte((byte) stateAuthority);
-          // _serializer.WriteByte((byte) eventAuthority);
-          // _serializer.WriteInt(entity.EntityId);
-          // _serializer.WriteUShort(ownerId);
-          //
-          // {
-          //   var entityPayload = entity.Payload.Read();
-          //   _serializer.WriteData(ref entityPayload);
-          // }
-          //
-          // var sendData = _serializer.ToArray();
-          // Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+          var entityType = _serializer.ReadUShort();
+          var staticId = _serializer.ReadUShort();
+          var propertiesCount = _serializer.ReadUShort();
+          var entity = new Entity(peerId, entityType, staticId, RagonAuthority.ALL, RagonAuthority.OWNER_ONLY, propertiesCount);
+          for (var i = 0; i < propertiesCount; i++)
+          {
+            var propertySize = _serializer.ReadUShort();
+            entity.Properties[i] = new EntityProperty(propertySize);
+            _logger.Trace($"Static Property: {i} {propertySize}");  
+          }
+          
+          {
+            var entityPayload = _serializer.ReadData(_serializer.Size);
+            entity.Payload = entityPayload.ToArray();
+          }
+          
+          var player = _players[peerId];
+          player.Entities.Add(entity);
+          player.EntitiesIds.Add(entity.EntityId);
+          
+          var ownerId = (ushort) peerId;
+          
+          _entities.Add(entity.EntityId, entity);
+          _entitiesAll = _entities.Values.ToArray();
+          
+          _plugin.OnEntityCreated(player, entity);
+          
+          _serializer.Clear();
+          _serializer.WriteOperation(RagonOperation.CREATE_STATIC_ENTITY);
+          _serializer.WriteUShort(entityType);
+          _serializer.WriteUShort(entity.EntityId);
+          _serializer.WriteUShort(staticId);
+          _serializer.WriteUShort(ownerId);
+          
+          {
+            ReadOnlySpan<byte> entityPayload = entity.Payload.AsSpan();
+            _serializer.WriteData(ref entityPayload);
+          }
+          
+          var sendData = _serializer.ToArray();
+          Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           break;
         }
         case RagonOperation.CREATE_ENTITY:
@@ -329,10 +330,10 @@ namespace Ragon.Core
           
           _logger.Trace($"Created object with type: {entityType} {propertiesCount}");
           
-          // {
-          //   var entityPayload = _serializer.ReadData(_serializer.Size);
-          //   entity.Payload.Write(ref entityPayload);
-          // }
+          {
+            var entityPayload = _serializer.ReadData(_serializer.Size);
+            entity.Payload = entityPayload.ToArray();
+          }
 
           var player = _players[peerId];
           player.Entities.Add(entity);
@@ -350,12 +351,12 @@ namespace Ragon.Core
           _serializer.WriteUShort(entityType);
           _serializer.WriteUShort(entity.EntityId);
           _serializer.WriteUShort(ownerId);
-          //
-          // {
-          //   var entityPayload = entity.Payload.Read();
-          //   _serializer.WriteData(ref entityPayload);
-          // }
-          //
+          
+          {
+            ReadOnlySpan<byte> entityPayload = entity.Payload.AsSpan();
+            _serializer.WriteData(ref entityPayload);
+          }
+          
           var sendData = _serializer.ToArray();
           Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           break;
@@ -407,42 +408,32 @@ namespace Ragon.Core
           _serializer.WriteUShort((ushort)dynamicEntities.Length);
           foreach (var entity in dynamicEntities)
           {
-            // var payload = entity.Payload.Read();
-            // var state = entity.State.Read();
+            ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
 
             _serializer.WriteUShort(entity.EntityType);
             _serializer.WriteUShort(entity.EntityId);
             _serializer.WriteUShort((ushort) entity.OwnerId);
-            // _serializer.WriteByte((byte) entity.State.Authority);
-            // _serializer.WriteByte((byte) entity.Authority);
-            // _serializer.WriteUShort((ushort) payload.Length);
-            // _serializer.WriteData(ref payload);
-            // _serializer.WriteData(ref state);
+            _serializer.WriteUShort((ushort) payload.Length);
+            _serializer.WriteData(ref payload);
           }
           
-          _serializer.WriteInt(0);
-          //
-          // var staticCount = _entitiesAll.Where(e => e.StaticId != -1).ToArray();
-          // _serializer.WriteInt(staticCount.Length);
-          // foreach (var entity in staticCount)
-          // {
-          //   var payload = entity.Payload.Read();
-          //   var state = entity.State.Read();
-          //
-          //   _serializer.WriteInt(entity.EntityId);
-          //   _serializer.WriteUShort((ushort) entity.StaticId);
-          //   _serializer.WriteByte((byte) entity.State.Authority);
-          //   _serializer.WriteByte((byte) entity.Authority);
-          //   _serializer.WriteUShort(entity.EntityType);
-          //   _serializer.WriteUShort((ushort) entity.OwnerId);
-          //   _serializer.WriteUShort((ushort) payload.Length);
-          //   _serializer.WriteData(ref payload);
-          //   _serializer.WriteData(ref state);
-          // }
-          //
+          var staticCount = _entitiesAll.Where(e => e.StaticId != 0).ToArray();
+          _serializer.WriteUShort((ushort)staticCount.Length);
+          foreach (var entity in staticCount)
+          {
+            ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
+
+            _serializer.WriteUShort(entity.EntityType);
+            _serializer.WriteInt(entity.EntityId);
+            _serializer.WriteUShort((ushort) entity.StaticId);
+            _serializer.WriteUShort((ushort) entity.OwnerId);
+            _serializer.WriteUShort((ushort) payload.Length);
+            _serializer.WriteData(ref payload);
+          }
+          
           var sendData = _serializer.ToArray();
           Send(peerId, sendData, DeliveryType.Reliable);
-          //
+          
           _players[peerId].IsLoaded = true;
           _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
           _plugin.OnPlayerJoined(_players[peerId]);

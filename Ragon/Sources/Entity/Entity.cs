@@ -11,7 +11,7 @@ public class Entity
   public uint OwnerId { get; private set; }
   public RagonAuthority Authority { get; private set; }
   public EntityProperty[] Properties { get; private set; }
-  public byte[] Payload { get; private set; }
+  public byte[] Payload { get; set; }
   
   public Entity(uint ownerId, ushort entityType, ushort staticId, RagonAuthority stateAuthority, RagonAuthority eventAuthority, int props)
   {
