@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using NLog;
 
@@ -16,5 +17,6 @@ namespace Ragon.Core
       var app = new Application(factory, configuration);
       return app;
     }
+
   }
 }
