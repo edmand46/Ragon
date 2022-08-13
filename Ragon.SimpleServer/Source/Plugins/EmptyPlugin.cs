@@ -16,7 +16,7 @@ namespace Game.Source
     }
    
     public override void OnPlayerJoined(Player player)
-    {
+    { 
       // _logger.Info($"Player({player.PlayerName}) joined to Room({GameRoom.Id})");
     }
 

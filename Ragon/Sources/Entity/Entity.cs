@@ -4,23 +4,23 @@ namespace Ragon.Core;
 
 public class Entity
 {
-  private static int _idGenerator = 0;
-  public int EntityId { get; private set; }
-  public int StaticId { get; private set; }
-  public uint OwnerId { get; private set; }
+  private static ushort _idGenerator = 0;
+  public ushort EntityId { get; private set; }
+  public ushort StaticId { get; private set; }
   public ushort EntityType { get; private set; }
+  public uint OwnerId { get; private set; }
   public RagonAuthority Authority { get; private set; }
-  public EntityState State { get; private set; }
-  public EntityState Payload { get; private set; }
+  public EntityProperty[] Properties { get; private set; }
+  public byte[] Payload { get; set; }
   
-  public Entity(uint ownerId, ushort entityType, int staticId, RagonAuthority stateAuthority, RagonAuthority eventAuthority)
+  public Entity(uint ownerId, ushort entityType, ushort staticId, RagonAuthority stateAuthority, RagonAuthority eventAuthority, int props)
   {
     OwnerId = ownerId;
     StaticId = staticId;
     EntityType = entityType;
     EntityId = _idGenerator++;
-    State = new EntityState(stateAuthority);
-    Payload = new EntityState(stateAuthority);
+    Properties = new EntityProperty[props];
+    Payload = new byte[1024];
     Authority = eventAuthority;
   }
 }
