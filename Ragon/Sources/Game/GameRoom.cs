@@ -97,7 +97,7 @@ namespace Ragon.Core
       {
         _allPlayers = _players.Select(p => p.Key).ToArray();
         _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
-        
+
         {
           _plugin.OnPlayerLeaved(player);
 
@@ -160,7 +160,7 @@ namespace Ragon.Core
           var evntMode = _serializer.ReadByte();
           var targetMode = (RagonTarget) _serializer.ReadByte();
           var entityId = _serializer.ReadInt();
-    
+
           if (!_entities.TryGetValue(entityId, out var ent))
             return;
 
@@ -207,6 +207,7 @@ namespace Ragon.Core
               break;
             }
           }
+
           break;
         }
         case RagonOperation.LOAD_SCENE:
@@ -281,37 +282,37 @@ namespace Ragon.Core
           {
             var propertySize = _serializer.ReadUShort();
             entity.Properties[i] = new EntityProperty(propertySize);
-            _logger.Trace($"Static Property: {i} {propertySize}");  
+            _logger.Trace($"Static Property: {i} {propertySize}");
           }
-          
+
           {
             var entityPayload = _serializer.ReadData(_serializer.Size);
             entity.Payload = entityPayload.ToArray();
           }
-          
+
           var player = _players[peerId];
           player.Entities.Add(entity);
           player.EntitiesIds.Add(entity.EntityId);
-          
+
           var ownerId = (ushort) peerId;
-          
+
           _entities.Add(entity.EntityId, entity);
           _entitiesAll = _entities.Values.ToArray();
-          
+
           _plugin.OnEntityCreated(player, entity);
-          
+
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.CREATE_STATIC_ENTITY);
           _serializer.WriteUShort(entityType);
           _serializer.WriteUShort(entity.EntityId);
           _serializer.WriteUShort(staticId);
           _serializer.WriteUShort(ownerId);
-          
+
           {
             ReadOnlySpan<byte> entityPayload = entity.Payload.AsSpan();
             _serializer.WriteData(ref entityPayload);
           }
-          
+
           var sendData = _serializer.ToArray();
           Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           break;
@@ -325,11 +326,11 @@ namespace Ragon.Core
           {
             var propertySize = _serializer.ReadUShort();
             entity.Properties[i] = new EntityProperty(propertySize);
-            _logger.Trace($"Property: {i} {propertySize}");  
+            _logger.Trace($"Property: {i} {propertySize}");
           }
-          
+
           _logger.Trace($"Created object with type: {entityType} {propertiesCount}");
-          
+
           {
             var entityPayload = _serializer.ReadData(_serializer.Size);
             entity.Payload = entityPayload.ToArray();
@@ -338,25 +339,25 @@ namespace Ragon.Core
           var player = _players[peerId];
           player.Entities.Add(entity);
           player.EntitiesIds.Add(entity.EntityId);
-          
+
           var ownerId = (ushort) peerId;
-          
+
           _entities.Add(entity.EntityId, entity);
           _entitiesAll = _entities.Values.ToArray();
-          
+
           _plugin.OnEntityCreated(player, entity);
-          
+
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.CREATE_ENTITY);
           _serializer.WriteUShort(entityType);
           _serializer.WriteUShort(entity.EntityId);
           _serializer.WriteUShort(ownerId);
-          
+
           {
             ReadOnlySpan<byte> entityPayload = entity.Payload.AsSpan();
             _serializer.WriteData(ref entityPayload);
           }
-          
+
           var sendData = _serializer.ToArray();
           Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           break;
@@ -395,7 +396,7 @@ namespace Ragon.Core
         {
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.SNAPSHOT);
-          
+
           _serializer.WriteUShort((ushort) _allPlayers.Length);
           foreach (var playerPeerId in _allPlayers)
           {
@@ -405,7 +406,7 @@ namespace Ragon.Core
           }
 
           var dynamicEntities = _entitiesAll.Where(e => e.StaticId == 0).ToArray();
-          _serializer.WriteUShort((ushort)dynamicEntities.Length);
+          _serializer.WriteUShort((ushort) dynamicEntities.Length);
           foreach (var entity in dynamicEntities)
           {
             ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
@@ -416,9 +417,9 @@ namespace Ragon.Core
             _serializer.WriteUShort((ushort) payload.Length);
             _serializer.WriteData(ref payload);
           }
-          
+
           var staticCount = _entitiesAll.Where(e => e.StaticId != 0).ToArray();
-          _serializer.WriteUShort((ushort)staticCount.Length);
+          _serializer.WriteUShort((ushort) staticCount.Length);
           foreach (var entity in staticCount)
           {
             ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
@@ -430,10 +431,10 @@ namespace Ragon.Core
             _serializer.WriteUShort((ushort) payload.Length);
             _serializer.WriteData(ref payload);
           }
-          
+
           var sendData = _serializer.ToArray();
           Send(peerId, sendData, DeliveryType.Reliable);
-          
+
           _players[peerId].IsLoaded = true;
           _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
           _plugin.OnPlayerJoined(_players[peerId]);
@@ -450,8 +451,6 @@ namespace Ragon.Core
       {
         _serializer.Clear();
         _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
-
-        _logger.Trace((ushort) _entitiesDirty.Count);
         _serializer.WriteUShort((ushort) _entitiesDirty.Count);
         for (var entityIndex = 0; entityIndex < _entitiesDirty.Count; entityIndex++)
         {
@@ -459,10 +458,10 @@ namespace Ragon.Core
           var mask = 0L;
 
           _serializer.WriteUShort(entity.EntityId);
-          
+
           var offset = _serializer.Lenght;
           _serializer.WriteLong(mask);
-          
+
           for (int propertyIndex = 0; propertyIndex < entity.Properties.Length; propertyIndex++)
           {
             var property = entity.Properties[propertyIndex];
