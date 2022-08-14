@@ -278,6 +278,12 @@ namespace Ragon.Core
           var entityType = _serializer.ReadUShort();
           var staticId = _serializer.ReadUShort();
           var propertiesCount = _serializer.ReadUShort();
+          if (propertiesCount > 63)
+          {
+            _logger.Warn($"Allowed only 64 properties per entity. EntityType(Static) {entityType}");
+            return;
+          }
+
           var entity = new Entity(peerId, entityType, staticId, RagonAuthority.ALL, RagonAuthority.OWNER_ONLY, propertiesCount);
           for (var i = 0; i < propertiesCount; i++)
           {
@@ -322,6 +328,12 @@ namespace Ragon.Core
           var entityType = _serializer.ReadUShort();
           var propertiesCount = _serializer.ReadUShort();
           var entity = new Entity(peerId, entityType, 0, RagonAuthority.ALL, RagonAuthority.ALL, propertiesCount);
+          if (propertiesCount > 63)
+          {
+            _logger.Warn($"Allowed only 64 properties per entity. EntityType(Static) {entityType}");
+            return;
+          }
+
           for (var i = 0; i < propertiesCount; i++)
           {
             var propertySize = _serializer.ReadUShort();

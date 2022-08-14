@@ -157,6 +157,30 @@ namespace Ragon.Common
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteString(string value, ushort size)
+    {
+      var stringRaw = Encoding.UTF8.GetBytes(value).AsSpan();
+      ResizeIfNeed(2 + size);
+      
+      WriteUShort((ushort) stringRaw.Length);
+      
+      var data = _data.AsSpan().Slice(_offset, size);
+      stringRaw.CopyTo(data);
+      _offset += stringRaw.Length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string ReadString(ushort size)
+    {
+      var lenght = ReadUShort();
+      var stringRaw = _data.AsSpan().Slice(_offset, size);
+      var strData = stringRaw.Slice(0, lenght);
+      var str = Encoding.UTF8.GetString(strData);
+      _offset += size;
+      return str;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteString(string value)
     {
       var stringRaw = Encoding.UTF8.GetBytes(value).AsSpan();
