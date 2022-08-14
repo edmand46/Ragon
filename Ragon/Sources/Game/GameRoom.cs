@@ -120,11 +120,11 @@ namespace Ragon.Core
       }
     }
 
-    public void ProcessEvent(uint peerId, RagonOperation operation, ReadOnlySpan<byte> payloadRawData)
+    public void ProcessEvent(ushort peerId, RagonOperation operation, ReadOnlySpan<byte> payloadRawData)
     {
       _serializer.Clear();
       _serializer.FromSpan(ref payloadRawData);
-      
+
       switch (operation)
       {
         case RagonOperation.REPLICATE_ENTITY_STATE:
@@ -137,7 +137,7 @@ namespace Ragon.Core
               _logger.Warn($"Not owner can't change properties of object {entityId}");
               return;
             }
-            
+
             var mask = _serializer.ReadLong();
             for (var i = 0; i < ent.Properties.Length; i++)
             {
@@ -145,9 +145,9 @@ namespace Ragon.Core
               {
                 var propertyPayload = _serializer.ReadData(ent.Properties[i].Size);
                 ent.Properties[i].Write(ref propertyPayload);
-              }  
+              }
             }
-            
+
             if (_entitiesDirtySet.Add(ent))
               _entitiesDirty.Add(ent);
           }
@@ -260,7 +260,7 @@ namespace Ragon.Core
               foreach (var playerPeerId in _readyPlayers)
                 if (playerPeerId != _owner)
                   _peersCache.Add(playerPeerId);
-              
+
               Broadcast(_peersCache.ToArray(), sendData, DeliveryType.Reliable);
               break;
             }
@@ -270,6 +270,7 @@ namespace Ragon.Core
               break;
             }
           }
+
           break;
         }
         case RagonOperation.CREATE_STATIC_ENTITY:
@@ -282,7 +283,6 @@ namespace Ragon.Core
           {
             var propertySize = _serializer.ReadUShort();
             entity.Properties[i] = new EntityProperty(propertySize);
-            _logger.Trace($"Static Property: {i} {propertySize}");
           }
 
           {
@@ -326,10 +326,7 @@ namespace Ragon.Core
           {
             var propertySize = _serializer.ReadUShort();
             entity.Properties[i] = new EntityProperty(propertySize);
-            _logger.Trace($"Property: {i} {propertySize}");
           }
-
-          _logger.Trace($"Created object with type: {entityType} {propertiesCount}");
 
           {
             var entityPayload = _serializer.ReadData(_serializer.Size);
@@ -425,9 +422,9 @@ namespace Ragon.Core
             ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
 
             _serializer.WriteUShort(entity.EntityType);
-            _serializer.WriteInt(entity.EntityId);
-            _serializer.WriteUShort((ushort) entity.StaticId);
-            _serializer.WriteUShort((ushort) entity.OwnerId);
+            _serializer.WriteUShort(entity.EntityId);
+            _serializer.WriteUShort(entity.StaticId);
+            _serializer.WriteUShort(entity.OwnerId);
             _serializer.WriteUShort((ushort) payload.Length);
             _serializer.WriteData(ref payload);
           }

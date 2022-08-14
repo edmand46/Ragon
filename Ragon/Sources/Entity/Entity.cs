@@ -8,12 +8,12 @@ public class Entity
   public ushort EntityId { get; private set; }
   public ushort StaticId { get; private set; }
   public ushort EntityType { get; private set; }
-  public uint OwnerId { get; private set; }
+  public ushort OwnerId { get; private set; }
   public RagonAuthority Authority { get; private set; }
   public EntityProperty[] Properties { get; private set; }
   public byte[] Payload { get; set; }
   
-  public Entity(uint ownerId, ushort entityType, ushort staticId, RagonAuthority stateAuthority, RagonAuthority eventAuthority, int props)
+  public Entity(ushort ownerId, ushort entityType, ushort staticId, RagonAuthority stateAuthority, RagonAuthority eventAuthority, int props)
   {
     OwnerId = ownerId;
     StaticId = staticId;

@@ -23,7 +23,7 @@ public class Lobby : ILobby
     _authorizationManager = new AuthorizationManager(provider, gameThread, this, _serializer);
   }
 
-  public void ProcessEvent(uint peerId, RagonOperation op, ReadOnlySpan<byte> payload)
+  public void ProcessEvent(ushort peerId, RagonOperation op, ReadOnlySpan<byte> payload)
   {
     _serializer.Clear();
     _serializer.FromSpan(ref payload);

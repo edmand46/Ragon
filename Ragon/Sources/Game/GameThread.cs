@@ -104,7 +104,7 @@ namespace Ragon.Core
       {
         try
         {
-          var peerId = evnt.Peer.ID;
+          var peerId = (ushort) evnt.Peer.ID;
           var dataRaw = new byte[evnt.Packet.Length];
           evnt.Packet.CopyTo(dataRaw);
 
