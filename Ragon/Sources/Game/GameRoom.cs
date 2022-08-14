@@ -159,7 +159,7 @@ namespace Ragon.Core
           var evntId = _serializer.ReadUShort();
           var evntMode = _serializer.ReadByte();
           var targetMode = (RagonTarget) _serializer.ReadByte();
-          var entityId = _serializer.ReadInt();
+          var entityId = _serializer.ReadUShort();
 
           if (!_entities.TryGetValue(entityId, out var ent))
             return;
@@ -180,7 +180,7 @@ namespace Ragon.Core
           _serializer.WriteUShort(evntId);
           _serializer.WriteUShort((ushort) peerId);
           _serializer.WriteByte(evntMode);
-          _serializer.WriteInt(entityId);
+          _serializer.WriteUShort(entityId);
           _serializer.WriteData(ref payload);
           var sendData = _serializer.ToArray();
 
