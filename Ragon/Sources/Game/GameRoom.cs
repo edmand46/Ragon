@@ -124,11 +124,6 @@ namespace Ragon.Core
     {
       _serializer.Clear();
       _serializer.FromSpan(ref payloadRawData);
-
-      if (operation != RagonOperation.REPLICATE_ENTITY_STATE)
-      {
-        _logger.Trace(operation);
-      }
       
       switch (operation)
       {
@@ -137,6 +132,12 @@ namespace Ragon.Core
           var entityId = _serializer.ReadUShort();
           if (_entities.TryGetValue(entityId, out var ent))
           {
+            if (ent.OwnerId != peerId)
+            {
+              _logger.Warn($"Not owner can't change properties of object {entityId}");
+              return;
+            }
+            
             var mask = _serializer.ReadLong();
             for (var i = 0; i < ent.Properties.Length; i++)
             {
@@ -146,10 +147,9 @@ namespace Ragon.Core
                 ent.Properties[i].Write(ref propertyPayload);
               }  
             }
+            
             if (_entitiesDirtySet.Add(ent))
-            {
               _entitiesDirty.Add(ent);
-            }
           }
 
           break;
