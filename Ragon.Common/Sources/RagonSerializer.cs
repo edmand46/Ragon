@@ -43,14 +43,20 @@ namespace Ragon.Common
       _size = _offset;
       _offset = 0;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddOffset(int offset)
+    {
+      _offset += offset;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteByte(byte value)
+    public int WriteByte(byte value)
     {
       ResizeIfNeed(1);
-
       _data[_offset] = value;
       _offset += 1;
+      return 1;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -62,12 +68,12 @@ namespace Ragon.Common
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteBool(bool value)
+    public int WriteBool(bool value)
     {
       ResizeIfNeed(1);
-
       _data[_offset] = value ? (byte) 1 : (byte) 0;
       _offset += 1;
+      return 1;
     }
 
 
@@ -81,7 +87,7 @@ namespace Ragon.Common
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteInt(int value)
+    public int WriteInt(int value)
     {
       ResizeIfNeed(4);
       var converter = new ValueConverter() {Int = value};
@@ -90,6 +96,19 @@ namespace Ragon.Common
       _data[_offset + 2] = converter.Byte2;
       _data[_offset + 3] = converter.Byte3;
       _offset += 4;
+      return 4;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int WriteInt(int value, int offset)
+    {
+      ResizeIfNeed(4);
+      var converter = new ValueConverter() {Int = value};
+      _data[offset] = converter.Byte0;
+      _data[offset + 1] = converter.Byte1;
+      _data[offset + 2] = converter.Byte2;
+      _data[offset + 3] = converter.Byte3;
+      return 4;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -109,7 +128,7 @@ namespace Ragon.Common
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteLong(long value, int offset)
+    public int WriteLong(long value, int offset)
     {
       var converter = new ValueConverter() {Long = value};
       _data[offset] = converter.Byte0;
@@ -120,6 +139,7 @@ namespace Ragon.Common
       _data[offset + 5] = converter.Byte5;
       _data[offset + 6] = converter.Byte6;
       _data[offset + 7] = converter.Byte7;
+      return 8;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -141,10 +161,11 @@ namespace Ragon.Common
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteFloat(float value)
+    public int WriteFloat(float value)
     {
       var converter = new ValueConverter() {Float = value};
       WriteInt(converter.Int);
+      return 4;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -157,39 +178,16 @@ namespace Ragon.Common
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteString(string value, ushort size)
+    public int WriteString(string value)
     {
-      var stringRaw = Encoding.UTF8.GetBytes(value).AsSpan();
-      ResizeIfNeed(2 + size);
-      
-      WriteUShort((ushort) stringRaw.Length);
-      
-      var data = _data.AsSpan().Slice(_offset, size);
-      stringRaw.CopyTo(data);
-      _offset += stringRaw.Length;
-    }
+      var rawData = Encoding.UTF8.GetBytes(value).AsSpan();
+      ResizeIfNeed(2 + rawData.Length);
+      WriteUShort((ushort) rawData.Length);
+      var data = _data.AsSpan().Slice(_offset, rawData.Length);
+      rawData.CopyTo(data);
+      _offset += rawData.Length;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ReadString(ushort size)
-    {
-      var lenght = ReadUShort();
-      var stringRaw = _data.AsSpan().Slice(_offset, size);
-      var strData = stringRaw.Slice(0, lenght);
-      var str = Encoding.UTF8.GetString(strData);
-      _offset += size;
-      return str;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteString(string value)
-    {
-      var stringRaw = Encoding.UTF8.GetBytes(value).AsSpan();
-      ResizeIfNeed(2 + stringRaw.Length);
-
-      WriteUShort((ushort) stringRaw.Length);
-      var data = _data.AsSpan().Slice(_offset, stringRaw.Length);
-      stringRaw.CopyTo(data);
-      _offset += stringRaw.Length;
+      return rawData.Length + 2;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -213,7 +211,7 @@ namespace Ragon.Common
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteData(ref ReadOnlySpan<byte> payload)
+    public int WriteData(ref ReadOnlySpan<byte> payload)
     {
       ResizeIfNeed(payload.Length);
 
@@ -222,6 +220,7 @@ namespace Ragon.Common
 
       payload.CopyTo(payloadData);
       _offset += payload.Length;
+      return payload.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -237,12 +236,14 @@ namespace Ragon.Common
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteOperation(RagonOperation ragonOperation)
+    public int WriteOperation(RagonOperation ragonOperation)
     {
       ResizeIfNeed(1);
 
       _data[_offset] = (byte) ragonOperation;
       _offset += 1;
+
+      return 1;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -254,13 +255,24 @@ namespace Ragon.Common
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteUShort(ushort value)
+    public int WriteUShort(ushort value)
     {
       ResizeIfNeed(2);
 
       _data[_offset] = (byte) (value & 0x00FF);
       _data[_offset + 1] = (byte) ((value & 0xFF00) >> 8);
       _offset += 2;
+
+      return 2;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int WriteUShort(ushort value, int offset)
+    {
+      ResizeIfNeed(2);
+      _data[offset] = (byte) (value & 0x00FF);
+      _data[offset + 1] = (byte) ((value & 0xFF00) >> 8);
+      return 2;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

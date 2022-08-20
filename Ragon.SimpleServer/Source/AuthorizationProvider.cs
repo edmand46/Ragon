@@ -12,7 +12,7 @@ public class AuthorizationProviderByKey: IAuthorizationProvider
     _configuration = configuration;
   }
   
-  public async Task OnAuthorizationRequest(string key, string name, byte protocol, byte[] additionalData, Action<string, string> accept, Action<uint> reject)
+  public async Task OnAuthorizationRequest(string key, string name, byte[] additionalData, Action<string, string> accept, Action<uint> reject)
   {
     if (key == _configuration.Key)
     {

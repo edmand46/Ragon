@@ -5,5 +5,5 @@ namespace Ragon.Core;
 
 public interface  IAuthorizationProvider
 {
-  Task OnAuthorizationRequest(string key, string playerName, byte protocol, byte[] additionalData, Action<string, string> Accept, Action<uint> Reject);
+  Task OnAuthorizationRequest(string key, string playerName, byte[] additionalData, Action<string, string> Accept, Action<uint> Reject);
 }

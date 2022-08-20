@@ -12,6 +12,7 @@ namespace Ragon.Core
     public int PlayersMin { get; private set; }
     public int PlayersMax { get; private set; }
     public int PlayersCount => _players.Count;
+    public int EntitiesCount => _entities.Count;
     public string Id { get; private set; }
     public string Map { get; private set; }
 
@@ -116,6 +117,20 @@ namespace Ragon.Core
           Broadcast(_readyPlayers, sendData);
         }
 
+        if (_allPlayers.Length > 0)
+        {
+          var nextOwnerId = _allPlayers[0];
+          _owner = nextOwnerId;
+          var nextOwner = _players[nextOwnerId];
+          
+          _serializer.Clear();
+          _serializer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
+          _serializer.WriteString(nextOwner.Id);
+
+          var sendData = _serializer.ToArray();
+          Broadcast(_readyPlayers, sendData);
+        }
+        
         _entitiesAll = _entities.Values.ToArray();
       }
     }
@@ -129,29 +144,40 @@ namespace Ragon.Core
       {
         case RagonOperation.REPLICATE_ENTITY_STATE:
         {
-          var entityId = _serializer.ReadUShort();
-          if (_entities.TryGetValue(entityId, out var ent))
+          var entitiesCount = _serializer.ReadUShort();
+          for (var entityIndex = 0; entityIndex < entitiesCount; entityIndex++)
           {
-            if (ent.OwnerId != peerId)
+            var entityId = _serializer.ReadUShort();
+            if (_entities.TryGetValue(entityId, out var ent))
             {
-              _logger.Warn($"Not owner can't change properties of object {entityId}");
-              return;
-            }
-
-            var mask = _serializer.ReadLong();
-            for (var i = 0; i < ent.Properties.Length; i++)
-            {
-              if (((mask >> i) & 1) == 1)
+              if (ent.OwnerId != peerId)
               {
-                var propertyPayload = _serializer.ReadData(ent.Properties[i].Size);
-                ent.Properties[i].Write(ref propertyPayload);
+                _logger.Warn($"Not owner can't change properties of object {entityId}");
+                return;
               }
+              
+              for (var i = 0; i < ent.Properties.Length; i++)
+              {
+                if (_serializer.ReadBool())
+                {
+                  var property = ent.Properties[i];
+                  if (!property.IsFixed)
+                    property.Size = _serializer.ReadUShort();
+                  
+                  var propertyPayload = _serializer.ReadData(property.Size);
+                  property.Write(ref propertyPayload);
+                }
+              }
+
+              if (_entitiesDirtySet.Add(ent))
+                _entitiesDirty.Add(ent);
             }
-
-            if (_entitiesDirtySet.Add(ent))
-              _entitiesDirty.Add(ent);
+            else
+            {
+              _logger.Error($"Entity with Id {entityId} not found, replication interrupted");
+              break;
+            }
           }
-
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
@@ -182,6 +208,7 @@ namespace Ragon.Core
           _serializer.WriteByte(evntMode);
           _serializer.WriteUShort(entityId);
           _serializer.WriteData(ref payload);
+          
           var sendData = _serializer.ToArray();
 
           switch (targetMode)
@@ -273,22 +300,18 @@ namespace Ragon.Core
 
           break;
         }
-        case RagonOperation.CREATE_STATIC_ENTITY:
+        case RagonOperation.CREATE_SCENE_ENTITY:
         {
           var entityType = _serializer.ReadUShort();
           var staticId = _serializer.ReadUShort();
           var propertiesCount = _serializer.ReadUShort();
-          if (propertiesCount > 63)
-          {
-            _logger.Warn($"Allowed only 64 properties per entity. EntityType(Static) {entityType}");
-            return;
-          }
 
           var entity = new Entity(peerId, entityType, staticId, RagonAuthority.ALL, RagonAuthority.OWNER_ONLY, propertiesCount);
           for (var i = 0; i < propertiesCount; i++)
           {
+            var propertyType = _serializer.ReadBool();
             var propertySize = _serializer.ReadUShort();
-            entity.Properties[i] = new EntityProperty(propertySize);
+            entity.Properties[i] = new EntityProperty(propertySize, propertyType);
           }
 
           {
@@ -308,7 +331,7 @@ namespace Ragon.Core
           _plugin.OnEntityCreated(player, entity);
 
           _serializer.Clear();
-          _serializer.WriteOperation(RagonOperation.CREATE_STATIC_ENTITY);
+          _serializer.WriteOperation(RagonOperation.CREATE_SCENE_ENTITY);
           _serializer.WriteUShort(entityType);
           _serializer.WriteUShort(entity.EntityId);
           _serializer.WriteUShort(staticId);
@@ -328,16 +351,13 @@ namespace Ragon.Core
           var entityType = _serializer.ReadUShort();
           var propertiesCount = _serializer.ReadUShort();
           var entity = new Entity(peerId, entityType, 0, RagonAuthority.ALL, RagonAuthority.ALL, propertiesCount);
-          if (propertiesCount > 63)
-          {
-            _logger.Warn($"Allowed only 64 properties per entity. EntityType(Static) {entityType}");
-            return;
-          }
-
+          // _logger.Trace("Created entity with properties: " + propertiesCount);
           for (var i = 0; i < propertiesCount; i++)
           {
+            var propertyType = _serializer.ReadBool();
             var propertySize = _serializer.ReadUShort();
-            entity.Properties[i] = new EntityProperty(propertySize);
+            entity.Properties[i] = new EntityProperty(propertySize, propertyType);
+            // _logger.Trace($"Property: {i} Size: {propertySize} IsFixed: {propertyType}");
           }
 
           {
@@ -461,38 +481,35 @@ namespace Ragon.Core
         _serializer.Clear();
         _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
         _serializer.WriteUShort((ushort) _entitiesDirty.Count);
+        
         for (var entityIndex = 0; entityIndex < _entitiesDirty.Count; entityIndex++)
         {
           var entity = _entitiesDirty[entityIndex];
-          var mask = 0L;
-
           _serializer.WriteUShort(entity.EntityId);
-
-          var offset = _serializer.Lenght;
-          _serializer.WriteLong(mask);
-
+          
           for (int propertyIndex = 0; propertyIndex < entity.Properties.Length; propertyIndex++)
           {
             var property = entity.Properties[propertyIndex];
             if (property.IsDirty)
             {
-              mask |= (uint) (1 << propertyIndex);
-
+              _serializer.WriteBool(true);
               var span = _serializer.GetWritableData(property.Size);
               var data = property.Read();
               data.CopyTo(span);
               property.Clear();
             }
+            else
+            {
+              _serializer.WriteBool(false);
+            }
           }
-
-          _serializer.WriteLong(mask, offset);
         }
 
         _entitiesDirty.Clear();
         _entitiesDirtySet.Clear();
 
         var sendData = _serializer.ToArray();
-        Broadcast(_readyPlayers, sendData, DeliveryType.Unreliable);
+        Broadcast(_readyPlayers, sendData);
       }
     }
 

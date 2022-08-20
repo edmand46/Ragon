@@ -6,6 +6,7 @@ namespace Ragon.Core
   public struct Configuration
   {
     public string Key;
+    public string Protocol;
     public int StatisticsInterval;
     public ushort SendRate;
     public ushort Port;

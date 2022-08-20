@@ -1,46 +1,42 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Timers;
 using ENet;
 using NLog;
 
 namespace Ragon.Core
 {
-  public enum Status
-  {
-    Stopped,
-    Listening,
-    Disconnecting,
-    Connecting,
-    Assigning,
-    Connected
-  }
-
   public class ENetServer : ISocketServer
   {
-    public Status Status { get; private set; }
-
     private ILogger _logger = LogManager.GetCurrentClassLogger();
     private Host _host;
+    private uint _protocol;
     private Address _address;
     private Event _netEvent;
     private Peer[] _peers;
     private IHandler _handler;
-
+    private Stopwatch _timer;
+    
     public ENetServer(IHandler handler)
     {
       _handler = handler;
+      _timer = Stopwatch.StartNew();
+      _peers = Array.Empty<Peer>();
+      _host = new Host();
     }
 
-    public void Start(ushort port, int connections)
+    public void Start(ushort port, int connections, uint protocol)
     {
       _address = default;
       _address.Port = port;
       _peers = new Peer[connections];
-
-      _host = new Host();
+      _protocol = protocol;
       _host.Create(_address, connections, 2, 0, 0, 1024 * 1024);
-
-      Status = Status.Listening;
+      
+      
+      var protocolDecoded = (protocol >> 16 & 0xFF) + "." + (protocol >> 8 & 0xFF) + "." + (protocol & 0xFF);
       _logger.Info($"Network listening on {port}");
+      _logger.Info($"Protocol: {protocolDecoded}");
     }
 
     public void Broadcast(uint[] peersIds, byte[] data, DeliveryType type)
@@ -57,14 +53,14 @@ namespace Ragon.Core
       else if (type == DeliveryType.Unreliable)
       {
         channel = 1;
-        packetFlags = PacketFlags.None;
+        packetFlags = PacketFlags.UnreliableFragmented;
       }
 
       newPacket.Create(data, data.Length, packetFlags);
       foreach (var peerId in peersIds)
         _peers[peerId].Send(channel, ref newPacket);
     }
-    
+
     public void Send(uint peerId, byte[] data, DeliveryType type)
     {
       var newPacket = new Packet();
@@ -107,11 +103,17 @@ namespace Ragon.Core
         switch (_netEvent.Type)
         {
           case EventType.None:
-            Console.WriteLine("None event");
+          {
+            _logger.Trace("None event");
             break;
-
+          }
           case EventType.Connect:
           {
+            // if (IsValidProtocol(_netEvent.Data))
+            // {
+            //   _logger.Warn("Mismatched protocol, close connection");
+            //   break;
+            // }
             _peers[_netEvent.Peer.ID] = _netEvent.Peer;
             _handler.OnEvent(_netEvent);
             break;
@@ -139,6 +141,11 @@ namespace Ragon.Core
     public void Stop()
     {
       _host?.Dispose();
+    }
+
+    private bool IsValidProtocol(uint protocol)
+    {
+      return protocol == _protocol;
     }
   }
 }

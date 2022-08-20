@@ -25,11 +25,11 @@ public class AuthorizationManager : IAuthorizationManager
     _playersByPeers = new Dictionary<uint, Player>();
   }
 
-  public void OnAuthorization(uint peerId, string key, string name, byte protocol)
+  public void OnAuthorization(uint peerId, string key, string name)
   {
     var dispatcher = _gameThread.ThreadDispatcher;
     
-    _provider.OnAuthorizationRequest(key, name, protocol, Array.Empty<byte>(),
+    _provider.OnAuthorizationRequest(key, name, Array.Empty<byte>(),
       (playerId, playerName) => { dispatcher.Dispatch(() => Accepted(peerId, playerId, playerName)); },
       (errorCode) => { dispatcher.Dispatch(() => Rejected(peerId, errorCode)); });
   }

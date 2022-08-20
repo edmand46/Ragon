@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using Ragon.Common;
 using ENet;
@@ -12,10 +14,14 @@ namespace Ragon.Core
     private readonly RoomManager _roomManager;
     private readonly Thread _thread;
     private readonly Stopwatch _gameLoopTimer;
+    private readonly Stopwatch _statisticsTimer;
+    
+    private readonly Stopwatch _serverTimer;
+    private readonly Stopwatch _logicTimer;
+    
     private readonly Lobby _lobby;
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
     private readonly float _deltaTime = 0.0f;
-    private readonly Stopwatch _statisticsTimer;
     private readonly Configuration _configuration;
     private readonly IDispatcherInternal _dispatcherInternal;
 
@@ -40,6 +46,8 @@ namespace Ragon.Core
 
       _gameLoopTimer = new Stopwatch();
       _statisticsTimer = new Stopwatch();
+      _serverTimer = new Stopwatch();
+      _logicTimer = new Stopwatch();
 
       _thread = new Thread(Execute);
       _thread.Name = "Game Thread";
@@ -48,10 +56,30 @@ namespace Ragon.Core
 
     public void Start()
     {
-      Server.Start(_configuration.Port, _configuration.MaxConnections);
+      var strings = _configuration.Protocol.Split(".");
+      if (strings.Length < 3)
+      {
+        _logger.Error("Wrong protocol passed to connect method");
+        return;
+      }
+      var parts = new uint[] {0, 0, 0};
+      for (int i = 0; i < parts.Length; i++)
+      {
+        if (!uint.TryParse(strings[i], out var v))
+        {
+          _logger.Error("Wrong protocol");
+          return;
+        }
+        parts[i] = v;
+      }
+      
+      uint encoded = (parts[0] << 16) | (parts[1] << 8) | parts[2];
+      Server.Start(_configuration.Port, _configuration.MaxConnections, encoded);
 
       _gameLoopTimer.Start();
       _statisticsTimer.Start();
+      _logicTimer.Start();
+      _serverTimer.Start();
       _thread.Start();
     }
 
@@ -68,6 +96,9 @@ namespace Ragon.Core
     {
       while (true)
       {
+        _logicTimer.Restart();
+        _serverTimer.Restart();
+        
         Server.Process();
 
         _dispatcherInternal.Process();
@@ -82,7 +113,10 @@ namespace Ragon.Core
 
         if (_statisticsTimer.Elapsed.Seconds > _configuration.StatisticsInterval && _roomManager.RoomsBySocket.Count > 0)
         {
-          _logger.Trace($"Rooms: {_roomManager.Rooms.Count} Clients: {_roomManager.RoomsBySocket.Count}");
+          var rooms = _roomManager.Rooms.Count;
+          var clients = _roomManager.RoomsBySocket.Count;
+          var entities = _roomManager.Rooms.Select(r => r.EntitiesCount).Sum();
+          _logger.Trace($"Rooms: {rooms} Clients: {clients} Entities: {entities}");
           _statisticsTimer.Restart();
         }
       }

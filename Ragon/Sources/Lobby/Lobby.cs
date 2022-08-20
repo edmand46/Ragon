@@ -32,8 +32,7 @@ public class Lobby : ILobby
     {
       var key = _serializer.ReadString();
       var playerName = _serializer.ReadString();
-      var protocol = _serializer.ReadByte();
-      _authorizationManager.OnAuthorization(peerId, key, playerName, protocol);
+      _authorizationManager.OnAuthorization(peerId, key, playerName);
       return;
     }
 
