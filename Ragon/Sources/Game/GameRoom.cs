@@ -117,7 +117,7 @@ namespace Ragon.Core
           Broadcast(_readyPlayers, sendData);
         }
 
-        if (_allPlayers.Length > 0)
+        if (_allPlayers.Length > 0 && player.PeerId == _owner)
         {
           var nextOwnerId = _allPlayers[0];
           _owner = nextOwnerId;
