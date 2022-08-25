@@ -1,3 +1,4 @@
+using System;
 using Ragon.Common;
 
 namespace Ragon.Core;
@@ -20,7 +21,7 @@ public class Entity
     EntityType = entityType;
     EntityId = _idGenerator++;
     Properties = new EntityProperty[props];
-    Payload = new byte[1024];
+    Payload = Array.Empty<byte>();
     Authority = eventAuthority;
   }
 }

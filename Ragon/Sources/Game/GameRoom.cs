@@ -122,7 +122,7 @@ namespace Ragon.Core
           var nextOwnerId = _allPlayers[0];
           _owner = nextOwnerId;
           var nextOwner = _players[nextOwnerId];
-          
+
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
           _serializer.WriteString(nextOwner.Id);
@@ -130,7 +130,7 @@ namespace Ragon.Core
           var sendData = _serializer.ToArray();
           Broadcast(_readyPlayers, sendData);
         }
-        
+
         _entitiesAll = _entities.Values.ToArray();
       }
     }
@@ -155,7 +155,7 @@ namespace Ragon.Core
                 _logger.Warn($"Not owner can't change properties of object {entityId}");
                 return;
               }
-              
+
               for (var i = 0; i < ent.Properties.Length; i++)
               {
                 if (_serializer.ReadBool())
@@ -163,7 +163,7 @@ namespace Ragon.Core
                   var property = ent.Properties[i];
                   if (!property.IsFixed)
                     property.Size = _serializer.ReadUShort();
-                  
+
                   var propertyPayload = _serializer.ReadData(property.Size);
                   property.Write(ref propertyPayload);
                 }
@@ -178,6 +178,7 @@ namespace Ragon.Core
               break;
             }
           }
+
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
@@ -208,7 +209,7 @@ namespace Ragon.Core
           _serializer.WriteByte(evntMode);
           _serializer.WriteUShort(entityId);
           _serializer.WriteData(ref payload);
-          
+
           var sendData = _serializer.ToArray();
 
           switch (targetMode)
@@ -339,6 +340,7 @@ namespace Ragon.Core
 
           {
             ReadOnlySpan<byte> entityPayload = entity.Payload.AsSpan();
+            _serializer.WriteUShort((ushort) entityPayload.Length);
             _serializer.WriteData(ref entityPayload);
           }
 
@@ -351,13 +353,11 @@ namespace Ragon.Core
           var entityType = _serializer.ReadUShort();
           var propertiesCount = _serializer.ReadUShort();
           var entity = new Entity(peerId, entityType, 0, RagonAuthority.ALL, RagonAuthority.ALL, propertiesCount);
-          // _logger.Trace("Created entity with properties: " + propertiesCount);
           for (var i = 0; i < propertiesCount; i++)
           {
             var propertyType = _serializer.ReadBool();
             var propertySize = _serializer.ReadUShort();
             entity.Properties[i] = new EntityProperty(propertySize, propertyType);
-            // _logger.Trace($"Property: {i} Size: {propertySize} IsFixed: {propertyType}");
           }
 
           {
@@ -384,6 +384,7 @@ namespace Ragon.Core
 
           {
             ReadOnlySpan<byte> entityPayload = entity.Payload.AsSpan();
+            _serializer.WriteUShort((ushort) entityPayload.Length);
             _serializer.WriteData(ref entityPayload);
           }
 
@@ -413,6 +414,7 @@ namespace Ragon.Core
             _serializer.Clear();
             _serializer.WriteOperation(RagonOperation.DESTROY_ENTITY);
             _serializer.WriteInt(entityId);
+            _serializer.WriteUShort((ushort) destroyPayload.Length);
             _serializer.WriteData(ref destroyPayload);
 
             var sendData = _serializer.ToArray();
@@ -464,9 +466,12 @@ namespace Ragon.Core
           var sendData = _serializer.ToArray();
           Send(peerId, sendData, DeliveryType.Reliable);
 
+          RestoreProperties(peerId);
+
           _players[peerId].IsLoaded = true;
           _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
           _plugin.OnPlayerJoined(_players[peerId]);
+
           break;
         }
       }
@@ -481,12 +486,12 @@ namespace Ragon.Core
         _serializer.Clear();
         _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
         _serializer.WriteUShort((ushort) _entitiesDirty.Count);
-        
+
         for (var entityIndex = 0; entityIndex < _entitiesDirty.Count; entityIndex++)
         {
           var entity = _entitiesDirty[entityIndex];
           _serializer.WriteUShort(entity.EntityId);
-          
+
           for (int propertyIndex = 0; propertyIndex < entity.Properties.Length; propertyIndex++)
           {
             var property = entity.Properties[propertyIndex];
@@ -511,6 +516,32 @@ namespace Ragon.Core
         var sendData = _serializer.ToArray();
         Broadcast(_readyPlayers, sendData);
       }
+    }
+
+    public void RestoreProperties(uint peerId)
+    {
+      _serializer.Clear();
+      _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
+      _serializer.WriteUShort((ushort) _entitiesAll.Length);
+
+      for (var entityIndex = 0; entityIndex < _entitiesAll.Length; entityIndex++)
+      {
+        var entity = _entitiesAll[entityIndex];
+        _serializer.WriteUShort(entity.EntityId);
+
+        for (int propertyIndex = 0; propertyIndex < entity.Properties.Length; propertyIndex++)
+        {
+          var property = entity.Properties[propertyIndex];
+          _serializer.WriteBool(true);
+
+          var span = _serializer.GetWritableData(property.Size);
+          var data = property.Read();
+          data.CopyTo(span);
+        }
+      }
+
+      var sendData = _serializer.ToArray();
+      Send(peerId, sendData, DeliveryType.Reliable);
     }
 
     public void Start()

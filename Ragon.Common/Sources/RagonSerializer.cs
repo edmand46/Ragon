@@ -27,6 +27,7 @@ namespace Ragon.Common
     private byte[] _data;
     private int _offset;
     private int _size;
+    
     public int Lenght => _offset;
     public int Size => _size - _offset;
 
