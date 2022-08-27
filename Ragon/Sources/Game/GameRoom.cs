@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using NLog;
 using Ragon.Common;
@@ -480,7 +479,12 @@ namespace Ragon.Core
     public void Tick(float deltaTime)
     {
       _scheduler.Tick(deltaTime);
+      
+      ReplicateProperties();
+    }
 
+    private void ReplicateProperties()
+    {
       if (_entitiesDirty.Count > 0)
       {
         _serializer.Clear();
@@ -517,7 +521,7 @@ namespace Ragon.Core
         Broadcast(_readyPlayers, sendData);
       }
     }
-
+    
     public void RestoreProperties(uint peerId)
     {
       _serializer.Clear();
@@ -532,11 +536,18 @@ namespace Ragon.Core
         for (int propertyIndex = 0; propertyIndex < entity.Properties.Length; propertyIndex++)
         {
           var property = entity.Properties[propertyIndex];
-          _serializer.WriteBool(true);
-
-          var span = _serializer.GetWritableData(property.Size);
-          var data = property.Read();
-          data.CopyTo(span);
+          var hasPayload = property.IsFixed || property.Size > 0 && !property.IsFixed;
+          if (hasPayload)
+          {
+            _serializer.WriteBool(true);
+            var span = _serializer.GetWritableData(property.Size);
+            var data = property.Read();
+            data.CopyTo(span);
+          }
+          else
+          {
+            _serializer.WriteBool(false);
+          }
         }
       }
 
@@ -568,19 +579,13 @@ namespace Ragon.Core
 
     public IScheduler GetScheduler() => _scheduler;
 
-    public void Send(uint peerId, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
-    {
+    public void Send(uint peerId, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable) =>
       _gameThread.Server.Send(peerId, rawData, deliveryType);
-    }
 
-    public void Broadcast(uint[] peersIds, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
-    {
+    public void Broadcast(uint[] peersIds, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable) =>
       _gameThread.Server.Broadcast(peersIds, rawData, deliveryType);
-    }
 
-    public void Broadcast(byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
-    {
+    public void Broadcast(byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable) =>
       _gameThread.Server.Broadcast(_allPlayers, rawData, deliveryType);
-    }
   }
 }
