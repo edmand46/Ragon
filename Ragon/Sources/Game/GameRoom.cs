@@ -160,11 +160,19 @@ namespace Ragon.Core
                 if (_serializer.ReadBool())
                 {
                   var property = ent.Properties[i];
+                  var size = property.Size; 
                   if (!property.IsFixed)
-                    property.Size = _serializer.ReadUShort();
+                    size = _serializer.ReadUShort();
 
-                  var propertyPayload = _serializer.ReadData(property.Size);
+                  if (size > property.Capacity)
+                  {
+                    _logger.Warn($"Property {i} payload too large, size: {size}");
+                    continue;
+                  }
+                  
+                  var propertyPayload = _serializer.ReadData(size);
                   property.Write(ref propertyPayload);
+                  property.Size = size;
                 }
               }
 

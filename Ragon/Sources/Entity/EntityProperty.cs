@@ -6,17 +6,19 @@ namespace Ragon.Core;
 public class EntityProperty
 {
     public int Size { get; set; }
+    public int Capacity { get; set; }
     public bool IsDirty { get; private set; }
     public bool IsFixed { get; private set; }
     private byte[] _data;
 
     public EntityProperty(int size, bool isFixed)
     {
-        _data = new byte[512];
-
+        Capacity = 512;
         Size = size;
         IsFixed = isFixed;
         IsDirty = true;
+        
+        _data = new byte[Capacity];
     }
     
     public ReadOnlySpan<byte> Read()
