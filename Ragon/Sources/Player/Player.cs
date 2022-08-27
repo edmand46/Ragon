@@ -11,6 +11,6 @@ namespace Ragon.Core
     public bool IsLoaded { get; set; }
     
     public List<Entity> Entities;
-    public List<int> EntitiesIds;
+    public List<ushort> EntitiesIds;
   }
 }

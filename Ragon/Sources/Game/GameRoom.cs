@@ -108,7 +108,7 @@ namespace Ragon.Core
           _serializer.WriteUShort((ushort) player.EntitiesIds.Count);
           foreach (var entityId in player.EntitiesIds)
           {
-            _serializer.WriteInt(entityId);
+            _serializer.WriteUShort(entityId);
             _entities.Remove(entityId);
           }
 
@@ -376,7 +376,7 @@ namespace Ragon.Core
           player.Entities.Add(entity);
           player.EntitiesIds.Add(entity.EntityId);
 
-          var ownerId = (ushort) peerId;
+          var ownerId = peerId;
 
           _entities.Add(entity.EntityId, entity);
           _entitiesAll = _entities.Values.ToArray();
