@@ -212,7 +212,7 @@ namespace Ragon.Core
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
           _serializer.WriteUShort(evntId);
-          _serializer.WriteUShort((ushort) peerId);
+          _serializer.WriteUShort(peerId);
           _serializer.WriteByte(evntMode);
           _serializer.WriteUShort(entityId);
           _serializer.WriteData(ref payload);
@@ -242,7 +242,6 @@ namespace Ragon.Core
               break;
             }
           }
-
           break;
         }
         case RagonOperation.LOAD_SCENE:
@@ -332,7 +331,7 @@ namespace Ragon.Core
           player.EntitiesIds.Add(entity.EntityId);
 
           var ownerId = (ushort) peerId;
-
+          
           _entities.Add(entity.EntityId, entity);
           _entitiesAll = _entities.Values.ToArray();
 
