@@ -48,7 +48,7 @@ public class AuthorizationManager : IAuthorizationManager
       PeerId = peerId,
       IsLoaded = false,
       Entities = new List<Entity>(),
-      EntitiesIds = new List<int>(),
+      EntitiesIds = new List<ushort>(),
     };
 
     _playersByIds.Add(playerId, player);
