@@ -54,17 +54,6 @@ namespace Ragon.Core
         _owner = player.PeerId;
       }
 
-      {
-        _serializer.Clear();
-        _serializer.WriteOperation(RagonOperation.PLAYER_JOINED);
-        _serializer.WriteUShort((ushort) player.PeerId);
-        _serializer.WriteString(player.Id);
-        _serializer.WriteString(player.PlayerName);
-
-        var sendData = _serializer.ToArray();
-        Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
-      }
-
       _players.Add(player.PeerId, player);
       _allPlayers = _players.Select(p => p.Key).ToArray();
 
@@ -469,15 +458,30 @@ namespace Ragon.Core
             _serializer.WriteData(ref payload);
           }
 
-          var sendData = _serializer.ToArray();
-          Send(peerId, sendData, DeliveryType.Reliable);
-
+          {
+            var sendData = _serializer.ToArray();
+            Send(peerId, sendData, DeliveryType.Reliable);
+          }
+          
           RestoreProperties(peerId);
+
+          {
+            var player = _players[peerId];
+            
+            _serializer.Clear();
+            _serializer.WriteOperation(RagonOperation.PLAYER_JOINED);
+            _serializer.WriteUShort((ushort) player.PeerId);
+            _serializer.WriteString(player.Id);
+            _serializer.WriteString(player.PlayerName);
+
+            var sendData = _serializer.ToArray();
+            Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+          }
 
           _players[peerId].IsLoaded = true;
           _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
+          
           _plugin.OnPlayerJoined(_players[peerId]);
-
           break;
         }
       }
