@@ -32,6 +32,7 @@ namespace Ragon.Core
     private HashSet<Entity> _entitiesDirtySet = new HashSet<Entity>();
     private List<Entity> _entitiesDirty = new List<Entity>();
     private List<uint> _peersCache = new List<uint>();
+    private List<uint> _loadedPeers = new List<uint>();
 
     public GameRoom(IGameThread gameThread, PluginBase pluginBase, string roomId, string map, int min, int max)
     {
@@ -149,7 +150,7 @@ namespace Ragon.Core
                 if (_serializer.ReadBool())
                 {
                   var property = ent.Properties[i];
-                  var size = property.Size; 
+                  var size = property.Size;
                   if (!property.IsFixed)
                     size = _serializer.ReadUShort();
 
@@ -158,7 +159,7 @@ namespace Ragon.Core
                     _logger.Warn($"Property {i} payload too large, size: {size}");
                     continue;
                   }
-                  
+
                   var propertyPayload = _serializer.ReadData(size);
                   property.Write(ref propertyPayload);
                   property.Size = size;
@@ -231,6 +232,7 @@ namespace Ragon.Core
               break;
             }
           }
+
           break;
         }
         case RagonOperation.LOAD_SCENE:
@@ -319,8 +321,8 @@ namespace Ragon.Core
           player.Entities.Add(entity);
           player.EntitiesIds.Add(entity.EntityId);
 
-          var ownerId = (ushort) peerId;
-          
+          var ownerId = peerId;
+
           _entities.Add(entity.EntityId, entity);
           _entitiesAll = _entities.Values.ToArray();
 
@@ -340,7 +342,7 @@ namespace Ragon.Core
           }
 
           var sendData = _serializer.ToArray();
-          Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+          Send(peerId, sendData, DeliveryType.Reliable);
           break;
         }
         case RagonOperation.CREATE_ENTITY:
@@ -418,70 +420,41 @@ namespace Ragon.Core
 
           break;
         }
+        case RagonOperation.SCENE_IS_PROCESSED:
+        {
+          var player = _players[peerId];
+
+          _serializer.Clear();
+          _serializer.WriteOperation(RagonOperation.PLAYER_JOINED);
+          _serializer.WriteUShort((ushort) player.PeerId);
+          _serializer.WriteString(player.Id);
+          _serializer.WriteString(player.PlayerName);
+
+          var sendData = _serializer.ToArray();
+          Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+          
+          player.IsLoaded = true;
+          
+          _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
+          _plugin.OnPlayerJoined(player);
+          
+          var isOwner = _owner == peerId;
+          if (isOwner)
+          {
+            foreach (var peer in _loadedPeers)
+              ReplicateSnapshot(peer);
+            
+            _loadedPeers.Clear();
+          }
+          break;
+        }
         case RagonOperation.SCENE_IS_LOADED:
         {
-          _serializer.Clear();
-          _serializer.WriteOperation(RagonOperation.SNAPSHOT);
-
-          _serializer.WriteUShort((ushort) _allPlayers.Length);
-          foreach (var playerPeerId in _allPlayers)
-          {
-            _serializer.WriteString(_players[playerPeerId].Id);
-            _serializer.WriteUShort((ushort) playerPeerId);
-            _serializer.WriteString(_players[playerPeerId].PlayerName);
-          }
-
-          var dynamicEntities = _entitiesAll.Where(e => e.StaticId == 0).ToArray();
-          _serializer.WriteUShort((ushort) dynamicEntities.Length);
-          foreach (var entity in dynamicEntities)
-          {
-            ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
-
-            _serializer.WriteUShort(entity.EntityType);
-            _serializer.WriteUShort(entity.EntityId);
-            _serializer.WriteUShort((ushort) entity.OwnerId);
-            _serializer.WriteUShort((ushort) payload.Length);
-            _serializer.WriteData(ref payload);
-          }
-
-          var staticCount = _entitiesAll.Where(e => e.StaticId != 0).ToArray();
-          _serializer.WriteUShort((ushort) staticCount.Length);
-          foreach (var entity in staticCount)
-          {
-            ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
-
-            _serializer.WriteUShort(entity.EntityType);
-            _serializer.WriteUShort(entity.EntityId);
-            _serializer.WriteUShort(entity.StaticId);
-            _serializer.WriteUShort(entity.OwnerId);
-            _serializer.WriteUShort((ushort) payload.Length);
-            _serializer.WriteData(ref payload);
-          }
-
-          {
-            var sendData = _serializer.ToArray();
-            Send(peerId, sendData, DeliveryType.Reliable);
-          }
-          
-          RestoreProperties(peerId);
-
-          {
-            var player = _players[peerId];
-            
-            _serializer.Clear();
-            _serializer.WriteOperation(RagonOperation.PLAYER_JOINED);
-            _serializer.WriteUShort((ushort) player.PeerId);
-            _serializer.WriteString(player.Id);
-            _serializer.WriteString(player.PlayerName);
-
-            var sendData = _serializer.ToArray();
-            Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
-          }
-
-          _players[peerId].IsLoaded = true;
-          _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
-          
-          _plugin.OnPlayerJoined(_players[peerId]);
+          var player = GetOwner();
+          if (player.IsLoaded || _owner == peerId)
+            ReplicateSnapshot(peerId);
+          else
+            _loadedPeers.Add(peerId);
           break;
         }
       }
@@ -490,8 +463,54 @@ namespace Ragon.Core
     public void Tick(float deltaTime)
     {
       _scheduler.Tick(deltaTime);
-      
+
       ReplicateProperties();
+    }
+
+    public void ReplicateSnapshot(uint peerId)
+    {
+      _serializer.Clear();
+      _serializer.WriteOperation(RagonOperation.SNAPSHOT);
+
+      _serializer.WriteUShort((ushort) _allPlayers.Length);
+      foreach (var playerPeerId in _allPlayers)
+      {
+        _serializer.WriteString(_players[playerPeerId].Id);
+        _serializer.WriteUShort((ushort) playerPeerId);
+        _serializer.WriteString(_players[playerPeerId].PlayerName);
+      }
+
+      var dynamicEntities = _entitiesAll.Where(e => e.StaticId == 0).ToArray();
+      _serializer.WriteUShort((ushort) dynamicEntities.Length);
+      foreach (var entity in dynamicEntities)
+      {
+        ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
+
+        _serializer.WriteUShort(entity.EntityType);
+        _serializer.WriteUShort(entity.EntityId);
+        _serializer.WriteUShort((ushort) entity.OwnerId);
+        _serializer.WriteUShort((ushort) payload.Length);
+        _serializer.WriteData(ref payload);
+      }
+
+      var staticCount = _entitiesAll.Where(e => e.StaticId != 0).ToArray();
+      _serializer.WriteUShort((ushort) staticCount.Length);
+      foreach (var entity in staticCount)
+      {
+        ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
+
+        _serializer.WriteUShort(entity.EntityType);
+        _serializer.WriteUShort(entity.EntityId);
+        _serializer.WriteUShort(entity.StaticId);
+        _serializer.WriteUShort(entity.OwnerId);
+        _serializer.WriteUShort((ushort) payload.Length);
+        _serializer.WriteData(ref payload);
+      }
+
+      var sendData = _serializer.ToArray();
+      Send(peerId, sendData, DeliveryType.Reliable);
+
+      RestoreProperties(peerId);
     }
 
     private void ReplicateProperties()
@@ -532,7 +551,7 @@ namespace Ragon.Core
         Broadcast(_readyPlayers, sendData);
       }
     }
-    
+
     public void RestoreProperties(uint peerId)
     {
       _serializer.Clear();

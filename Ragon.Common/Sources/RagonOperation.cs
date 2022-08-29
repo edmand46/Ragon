@@ -16,6 +16,7 @@ namespace Ragon.Common
     
     LOAD_SCENE,
     SCENE_IS_LOADED,
+    SCENE_IS_PROCESSED,
 
     PLAYER_JOINED,
     PLAYER_LEAVED,
