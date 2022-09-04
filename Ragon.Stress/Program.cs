@@ -101,7 +101,7 @@ namespace Stress
                     simulationClient.InRoom = true;
                     
                     ragonSerializer.Clear();
-                    ragonSerializer.WriteOperation(RagonOperation.SCENE_IS_LOADED);
+                    ragonSerializer.WriteOperation(RagonOperation.SCENE_LOADED);
                     
                     var sendData = ragonSerializer.ToArray();
                     var packet = new Packet();

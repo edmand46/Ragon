@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using NLog.Targets;
+using NLog;
 using Ragon.Common;
 
 namespace Ragon.Core;
 
 public class AuthorizationManager : IAuthorizationManager
 {
+  private Logger _logger = LogManager.GetCurrentClassLogger();
   private IAuthorizationProvider _provider;
   private IGameThread _gameThread;
   private Lobby _lobby;
@@ -27,6 +27,12 @@ public class AuthorizationManager : IAuthorizationManager
 
   public void OnAuthorization(uint peerId, string key, string name)
   {
+    if (_playersByPeers.ContainsKey(peerId))
+    {
+     _logger.Warn($"Connection already authorized {peerId}"); 
+      return;
+    }
+    
     var dispatcher = _gameThread.ThreadDispatcher;
     
     _provider.OnAuthorizationRequest(key, name, Array.Empty<byte>(),

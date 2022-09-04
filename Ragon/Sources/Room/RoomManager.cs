@@ -34,7 +34,7 @@ public class RoomManager
       {
         if (existRoom.Id == roomId && existRoom.PlayersCount < existRoom.PlayersMax)
         {
-          existRoom.Joined(player, payload);
+          existRoom.AddPlayer(player, payload);
           _roomsBySocket.Add(player.PeerId, existRoom);
           return;
         }
@@ -55,7 +55,7 @@ public class RoomManager
       throw new NullReferenceException($"Plugin for map {map} is null");
 
     var room = new GameRoom(_gameThread, plugin, roomId, map, min, max);
-    room.Joined(creator, payload);
+    room.AddPlayer(creator, payload);
     room.Start();
 
     _roomsBySocket.Add(creator.PeerId, room);
@@ -76,7 +76,7 @@ public class RoomManager
         {
           _logger.Trace($"Player ({player.PlayerName}|{player.Id}) joined to room with Id {roomId}");
           
-          existRoom.Joined(player, payload);
+          existRoom.AddPlayer(player, payload);
           _roomsBySocket.Add(player.PeerId, existRoom);
           return;
         }
@@ -90,7 +90,7 @@ public class RoomManager
       throw new NullReferenceException($"Plugin for map {map} is null");
 
     var room = new GameRoom(_gameThread, plugin, roomId, map, min, max);
-    room.Joined(player, payload);
+    room.AddPlayer(player, payload);
     room.Start();
 
     _roomsBySocket.Add(player.PeerId, room);
@@ -102,7 +102,7 @@ public class RoomManager
     if (_roomsBySocket.Remove(player.PeerId, out var room))
     {
       _logger.Trace($"Player ({player.PlayerName}|{player.Id}) left room with Id {room.Id}");
-      room.Leave(player.PeerId);
+      room.RemovePlayer(player.PeerId);
       if (room.PlayersCount < room.PlayersMin)
       {
         _logger.Trace($"Room with Id {room.Id} destroyed");

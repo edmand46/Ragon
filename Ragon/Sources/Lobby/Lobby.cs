@@ -5,7 +5,7 @@ using Ragon.Common;
 
 namespace Ragon.Core;
 
-public class Lobby : ILobby
+public class Lobby
 {
   private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
   private readonly RagonSerializer _serializer;

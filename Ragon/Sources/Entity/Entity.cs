@@ -24,4 +24,47 @@ public class Entity
     Payload = Array.Empty<byte>();
     Authority = eventAuthority;
   }
+
+  public void ReplicateProperties(RagonSerializer serializer)
+  {
+    serializer.WriteUShort(EntityId);
+
+    for (int propertyIndex = 0; propertyIndex < Properties.Length; propertyIndex++)
+    {
+      var property = Properties[propertyIndex];
+      if (property.IsDirty)
+      {
+        serializer.WriteBool(true);
+        var span = serializer.GetWritableData(property.Size);
+        var data = property.Read();
+        data.CopyTo(span);
+        property.Clear();
+      }
+      else
+      {
+        serializer.WriteBool(false);
+      }
+    }
+  }
+  
+  public void Snapshot(RagonSerializer serializer)
+  {
+    for (int propertyIndex = 0; propertyIndex < Properties.Length; propertyIndex++)
+    {
+      var property = Properties[propertyIndex];
+      var hasPayload = property.IsFixed || property.Size > 0 && !property.IsFixed;
+      if (hasPayload)
+      {
+        serializer.WriteBool(true);
+        var span = serializer.GetWritableData(property.Size);
+        var data = property.Read();
+        data.CopyTo(span);
+      }
+      else
+      {
+        serializer.WriteBool(false);
+      }
+    }
+  }
+  
 }

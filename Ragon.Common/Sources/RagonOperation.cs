@@ -15,14 +15,12 @@ namespace Ragon.Common
     JOIN_FAILED,
     
     LOAD_SCENE,
-    SCENE_IS_LOADED,
-    SCENE_IS_PROCESSED,
+    SCENE_LOADED,
 
     PLAYER_JOINED,
     PLAYER_LEAVED,
     
     CREATE_ENTITY,
-    CREATE_SCENE_ENTITY,
     DESTROY_ENTITY,
     SNAPSHOT,
     
