@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Ragon.Common;
 
 namespace Ragon.Core;
@@ -12,9 +13,11 @@ public class Entity
   public ushort OwnerId { get; private set; }
   public RagonAuthority Authority { get; private set; }
   public EntityProperty[] Properties { get; private set; }
+  public List<EntityEvent> BufferedEvents = new List<EntityEvent>();
+
   public byte[] Payload { get; set; }
   
-  public Entity(ushort ownerId, ushort entityType, ushort staticId, RagonAuthority stateAuthority, RagonAuthority eventAuthority, int props)
+  public Entity(ushort ownerId, ushort entityType, ushort staticId, RagonAuthority eventAuthority, int props)
   {
     OwnerId = ownerId;
     StaticId = staticId;
