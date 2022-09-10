@@ -239,7 +239,7 @@ namespace Ragon.Core
                 _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
                 _serializer.WriteUShort(bufferedEvent.EventId);
                 _serializer.WriteUShort(peerId);
-                _serializer.WriteByte((byte) RagonReplicationMode.SERVER);
+                _serializer.WriteByte((byte) RagonReplicationMode.Server);
                 _serializer.WriteUShort(value.EntityId);
                 
                 ReadOnlySpan<byte> data = bufferedEvent.EventData.AsSpan();
@@ -318,7 +318,7 @@ namespace Ragon.Core
             return;
           }
 
-          if (ent.Authority == RagonAuthority.OWNER_ONLY && ent.OwnerId != peerId)
+          if (ent.Authority == RagonAuthority.OwnerOnly && ent.OwnerId != peerId)
           {
             _logger.Warn($"Player have not enought authority for event with Id {eventId}");
             return;
@@ -332,7 +332,7 @@ namespace Ragon.Core
           if (_plugin.InternalHandle(peerId, entityId, eventId, ref payload))
             return;
 
-          if (eventMode == RagonReplicationMode.BUFFERED && targetMode != RagonTarget.OWNER)
+          if (eventMode == RagonReplicationMode.Buffered && targetMode != RagonTarget.Owner)
           {
             var bufferedEvent = new EntityEvent()
             {
@@ -408,7 +408,7 @@ namespace Ragon.Core
           var entityId = _serializer.ReadInt();
           if (_entities.TryGetValue(entityId, out var entity))
           {
-            if (entity.Authority == RagonAuthority.OWNER_ONLY && entity.OwnerId != peerId)
+            if (entity.Authority == RagonAuthority.OwnerOnly && entity.OwnerId != peerId)
               return;
 
             var player = _players[peerId];
@@ -543,12 +543,12 @@ namespace Ragon.Core
     {
       switch (targetMode)
       {
-        case RagonTarget.OWNER:
+        case RagonTarget.Owner:
         {
           Send(ent.OwnerId, sendData, DeliveryType.Reliable);
           break;
         }
-        case RagonTarget.EXCEPT_OWNER:
+        case RagonTarget.ExceptOwner:
         {
           _peersCache.Clear();
           foreach (var playerPeerId in _readyPlayers)
@@ -558,7 +558,7 @@ namespace Ragon.Core
           Broadcast(_peersCache.ToArray(), sendData, DeliveryType.Reliable);
           break;
         }
-        case RagonTarget.ALL:
+        case RagonTarget.All:
         {
           Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           break;
