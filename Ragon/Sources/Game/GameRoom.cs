@@ -352,7 +352,7 @@ namespace Ragon.Core
           _serializer.WriteData(ref payload);
 
           var sendData = _serializer.ToArray();
-          Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
+          SendEvent(ent, targetMode, sendData);
           break;
         }
         case RagonOperation.CREATE_ENTITY:
