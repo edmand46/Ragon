@@ -116,9 +116,17 @@ namespace Ragon.Core
           _owner = nextOwnerId;
           var nextOwner = _players[nextOwnerId];
 
+          var entitiesToUpdate = player.Entities.Where(e => e.StaticId > 0).ToArray();
+
           _serializer.Clear();
           _serializer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
           _serializer.WriteString(nextOwner.Id);
+          _serializer.WriteUShort((ushort) entitiesToUpdate.Length);
+          foreach (var entity in entitiesToUpdate)
+          {
+            _serializer.WriteUShort(entity.EntityId);
+            entity.UpdateOwner((ushort) nextOwnerId);
+          }
 
           var sendData = _serializer.ToArray();
           Broadcast(_readyPlayers, sendData);
@@ -127,7 +135,7 @@ namespace Ragon.Core
         _entitiesAll = _entities.Values.ToArray();
       }
     }
-    
+
     // TODO: Move this processing to specialized classes with structures
     public void ProcessEvent(ushort peerId, RagonOperation operation, ReadOnlySpan<byte> payloadRawData)
     {
@@ -200,20 +208,20 @@ namespace Ragon.Core
                 Broadcast(readyPlayersWithExcludedPeer, sendData, DeliveryType.Reliable);
               }
             }
-            
+
             _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
             foreach (var peer in _awaitingPeers)
             {
-              ReplicateSnapshot(peer);  
+              ReplicateSnapshot(peer);
             }
-            
+
             _awaitingPeers.Clear();
           }
           else if (GetOwner().IsLoaded)
           {
             _logger.Trace($"[{_owner}][{peerId}] Player {player.Id} restored instantly");
             player.IsLoaded = true;
-            
+
             {
               _serializer.Clear();
               _serializer.WriteOperation(RagonOperation.PLAYER_JOINED);
@@ -225,12 +233,12 @@ namespace Ragon.Core
               var readyPlayersWithExcludedPeer = _readyPlayers.Where(p => p != peerId).ToArray();
               Broadcast(readyPlayersWithExcludedPeer, sendData, DeliveryType.Reliable);
             }
-            
+
             _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
             _plugin.OnPlayerJoined(player);
 
             ReplicateSnapshot(peerId);
-            
+
             foreach (var (key, value) in _entities)
             {
               foreach (var bufferedEvent in value.BufferedEvents)
@@ -241,7 +249,7 @@ namespace Ragon.Core
                 _serializer.WriteUShort(peerId);
                 _serializer.WriteByte((byte) RagonReplicationMode.Server);
                 _serializer.WriteUShort(value.EntityId);
-                
+
                 ReadOnlySpan<byte> data = bufferedEvent.EventData.AsSpan();
                 _serializer.WriteData(ref data);
 
@@ -311,7 +319,7 @@ namespace Ragon.Core
           var eventMode = (RagonReplicationMode) _serializer.ReadByte();
           var targetMode = (RagonTarget) _serializer.ReadByte();
           var entityId = _serializer.ReadUShort();
-          
+
           if (!_entities.TryGetValue(entityId, out var ent))
           {
             _logger.Warn($"Entity not found for event with Id {eventId}");
@@ -360,9 +368,9 @@ namespace Ragon.Core
           var entityType = _serializer.ReadUShort();
           var eventAuthority = (RagonAuthority) _serializer.ReadByte();
           var propertiesCount = _serializer.ReadUShort();
-          
+
           _logger.Trace($"[{peerId}] Create Entity {entityType}");
-          
+
           var entity = new Entity(peerId, entityType, 0, eventAuthority, propertiesCount);
           for (var i = 0; i < propertiesCount; i++)
           {
@@ -431,6 +439,7 @@ namespace Ragon.Core
             var sendData = _serializer.ToArray();
             Broadcast(_readyPlayers, sendData, DeliveryType.Reliable);
           }
+
           break;
         }
       }
@@ -442,7 +451,7 @@ namespace Ragon.Core
 
       ReplicateProperties();
     }
-    
+
     // TODO: Move this to specialized class
     void ReplicateSnapshot(uint peerId)
     {
@@ -537,7 +546,7 @@ namespace Ragon.Core
 
     public IScheduler GetScheduler() => _scheduler;
 
-    
+
     // TODO: Move this to Entity Event Manager
     public void SendEvent(Entity ent, RagonTarget targetMode, byte[] sendData)
     {

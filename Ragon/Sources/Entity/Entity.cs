@@ -28,6 +28,8 @@ public class Entity
     Authority = eventAuthority;
   }
 
+  public void UpdateOwner(ushort ownerId) => OwnerId = ownerId;
+
   public void ReplicateProperties(RagonSerializer serializer)
   {
     serializer.WriteUShort(EntityId);
