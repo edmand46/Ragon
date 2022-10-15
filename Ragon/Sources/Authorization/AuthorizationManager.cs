@@ -25,7 +25,7 @@ public class AuthorizationManager : IAuthorizationManager
     _playersByPeers = new Dictionary<uint, Player>();
   }
 
-  public void OnAuthorization(uint peerId, string key, string name)
+  public void OnAuthorization(uint peerId, string key, string name, ReadOnlySpan<byte> additionalData)
   {
     if (_playersByPeers.ContainsKey(peerId))
     {
@@ -35,7 +35,7 @@ public class AuthorizationManager : IAuthorizationManager
     
     var dispatcher = _gameThread.ThreadDispatcher;
     
-    _provider.OnAuthorizationRequest(key, name, Array.Empty<byte>(),
+    _provider.OnAuthorizationRequest(key, name, additionalData.ToArray(),
       (playerId, playerName) => { dispatcher.Dispatch(() => Accepted(peerId, playerId, playerName)); },
       (errorCode) => { dispatcher.Dispatch(() => Rejected(peerId, errorCode)); });
   }
