@@ -28,15 +28,22 @@ public class Lobby
     _serializer.Clear();
     _serializer.FromSpan(ref payload);
 
+    var player = _authorizationManager.GetPlayer(peerId);
     if (op == RagonOperation.AUTHORIZE)
     {
+      if (player != null)
+      {
+        _logger.Warn("Player already authorized");
+        return;
+      }
+      
       var key = _serializer.ReadString();
       var playerName = _serializer.ReadString();
-      _authorizationManager.OnAuthorization(peerId, key, playerName);
+      var additionalData = _serializer.ReadData(_serializer.Size);
+      _authorizationManager.OnAuthorization(peerId, key, playerName, additionalData);
       return;
     }
-
-    var player = _authorizationManager.GetPlayer(peerId);
+    
     if (player == null)
     {
       _logger.Warn($"Peer not authorized {peerId} trying to {op}");
