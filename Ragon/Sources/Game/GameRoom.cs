@@ -69,27 +69,7 @@ namespace Ragon.Core
       _players.Add(player.PeerId, player);
       _allPlayers = _players.Select(p => p.Key).ToArray();
 
-      {
-        _writer.Clear();
-        _writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
-        _writer.WriteString(Id);
-        _writer.WriteString(player.Id);
-        _writer.WriteString(GetOwner().Id);
-        _writer.WriteUShort((ushort) PlayersMin);
-        _writer.WriteUShort((ushort) PlayersMax);
-
-        var sendData = _writer.ToArray();
-        Send(player.PeerId, sendData, DeliveryType.Reliable);
-      }
-
-      {
-        _writer.Clear();
-        _writer.WriteOperation(RagonOperation.LOAD_SCENE);
-        _writer.WriteString(Map);
-
-        var sendData = _writer.ToArray();
-        Send(player.PeerId, sendData, DeliveryType.Reliable);
-      }
+      SendInfo(player);
     }
 
     public void RemovePlayer(ushort peerId)
@@ -147,9 +127,8 @@ namespace Ragon.Core
                 var propertySize = reader.ReadUShort();
                 entity.AddProperty(new EntityProperty(propertySize, propertyType));
               }
-              
+
               player.AttachEntity(entity);
-              
               AttachEntity(entity);
             }
 
@@ -162,6 +141,7 @@ namespace Ragon.Core
             {
               var joinedPlayer = _players[peer];
               joinedPlayer.IsLoaded = true;
+
               _plugin.OnPlayerJoined(joinedPlayer);
               _logger.Trace($"[{_owner}][{peer}] Player {joinedPlayer.Id} restored");
 
@@ -169,11 +149,9 @@ namespace Ragon.Core
             }
 
             _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
-            foreach (var peer in _awaitingPeers)
-            {
-              SendSnapshot(peer);
-            }
-
+            
+            SendSnapshot(_awaitingPeers.ToArray());
+            
             _awaitingPeers.Clear();
           }
           else if (GetOwner().IsLoaded)
@@ -186,7 +164,7 @@ namespace Ragon.Core
             _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
             _plugin.OnPlayerJoined(player);
 
-            SendSnapshot(peerId);
+            SendSnapshot(new[] {peerId});
 
             foreach (var (key, value) in _entities)
               value.RestoreBufferedEvents(peerId);
@@ -207,7 +185,7 @@ namespace Ragon.Core
             var entityId = reader.ReadUShort();
             if (_entities.TryGetValue(entityId, out var entity))
             {
-              entity.HandleState(peerId, reader);
+              entity.ReadState(peerId, reader);
 
               if (_entitiesDirtySet.Add(entity))
                 _entitiesDirty.Add(entity);
@@ -271,7 +249,7 @@ namespace Ragon.Core
           player.AttachEntity(entity);
           AttachEntity(entity);
 
-          entity.SendCreate();
+          entity.Create();
           break;
         }
         case RagonOperation.DESTROY_ENTITY:
@@ -289,11 +267,9 @@ namespace Ragon.Core
             DetachEntity(entity);
 
             if (_plugin.OnEntityDestroyed(player, entity))
-            {
               return;
-            }
 
-            entity.SendDestroy(destroyPayload);
+            entity.Destroy(destroyPayload);
           }
 
           break;
@@ -337,7 +313,7 @@ namespace Ragon.Core
     void SendChangeOwner(Player prev, Player next)
     {
       var entitiesToUpdate = prev.Entities.Where(e => e.StaticId > 0).ToArray();
-    
+
       _writer.Clear();
       _writer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
       _writer.WriteString(next.Id);
@@ -348,8 +324,7 @@ namespace Ragon.Core
         entity.SetOwner((ushort) next.PeerId);
       }
 
-      var sendData = _writer.ToArray();
-      Broadcast(_readyPlayers, sendData);
+      BroadcastToReady(_writer, DeliveryType.Reliable);
     }
 
     void SendJoined(Player player, uint excludePeerId)
@@ -360,9 +335,8 @@ namespace Ragon.Core
       _writer.WriteString(player.Id);
       _writer.WriteString(player.PlayerName);
 
-      var sendData = _writer.ToArray();
       var readyPlayersWithExcludedPeer = _readyPlayers.Where(p => p != excludePeerId).ToArray();
-      Broadcast(readyPlayersWithExcludedPeer, sendData, DeliveryType.Reliable);
+      BroadcastToReady(_writer, readyPlayersWithExcludedPeer, DeliveryType.Reliable);
     }
 
     void SendLeaved(Player player)
@@ -379,11 +353,10 @@ namespace Ragon.Core
         _entities.Remove(entity.EntityId);
       }
 
-      var sendData = _writer.ToArray();
-      Broadcast(_readyPlayers, sendData);
+      BroadcastToReady(_writer, DeliveryType.Reliable);
     }
 
-    void SendSnapshot(ushort peerId)
+    void SendSnapshot(ushort[] peersIds)
     {
       _writer.Clear();
       _writer.WriteOperation(RagonOperation.SNAPSHOT);
@@ -429,7 +402,7 @@ namespace Ragon.Core
       }
 
       var sendData = _writer.ToArray();
-      Send(peerId, sendData, DeliveryType.Reliable);
+      Broadcast(peersIds, sendData, DeliveryType.Reliable);
     }
 
     void SendChanges()
@@ -447,9 +420,22 @@ namespace Ragon.Core
         _entitiesDirty.Clear();
         _entitiesDirtySet.Clear();
 
-        var sendData = _writer.ToArray();
-        Broadcast(_readyPlayers, sendData);
+        BroadcastToReady(_writer, DeliveryType.Reliable);
       }
+    }
+
+    void SendInfo(Player player)
+    {
+      _writer.Clear();
+      _writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
+      _writer.WriteString(Id);
+      _writer.WriteString(player.Id);
+      _writer.WriteString(GetOwner().Id);
+      _writer.WriteUShort((ushort) PlayersMin);
+      _writer.WriteUShort((ushort) PlayersMax);
+      _writer.WriteString(Map);
+
+      Send(player.PeerId, _writer, DeliveryType.Reliable);
     }
 
     void SendScene(string sceneName)
@@ -462,21 +448,46 @@ namespace Ragon.Core
       _writer.WriteOperation(RagonOperation.LOAD_SCENE);
       _writer.WriteString(sceneName);
 
-      var sendData = _writer.ToArray();
-      Broadcast(_allPlayers, sendData, DeliveryType.Reliable);
+      BroadcastToAll(_writer, DeliveryType.Reliable);
     }
 
-    public void Send(ushort peerId, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable) =>
+    public void Send(ushort peerId, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
       _socketServer.Send(peerId, rawData, deliveryType);
+    }
 
-    public void Broadcast(ushort[] peersIds, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable) =>
+    public void Send(ushort peerId, RagonSerializer writer, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
+      var sendData = writer.ToArray();
+      _socketServer.Send(peerId, sendData, deliveryType);
+    }
+
+    public void Broadcast(ushort[] peersIds, byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
       _socketServer.Broadcast(peersIds, rawData, deliveryType);
+    }
 
-    public void BroadcastToAll(byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable) =>
+    public void BroadcastToAll(byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
       _socketServer.Broadcast(_allPlayers, rawData, deliveryType);
+    }
 
-    public void BroadcastToReady(byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable) =>
+    public void BroadcastToAll(RagonSerializer writer, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
+      var sendData = writer.ToArray();
+      _socketServer.Broadcast(_allPlayers, sendData, deliveryType);
+    }
+
+    public void BroadcastToReady(byte[] rawData, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
       _socketServer.Broadcast(_readyPlayers, rawData, deliveryType);
+    }
+
+    public void BroadcastToReady(RagonSerializer writer, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
+      var sendData = writer.ToArray();
+      _socketServer.Broadcast(_readyPlayers, sendData, deliveryType);
+    }
 
     public void BroadcastToReady(byte[] rawData, ushort[] excludePeersIds, DeliveryType deliveryType = DeliveryType.Unreliable)
     {
@@ -491,7 +502,15 @@ namespace Ragon.Core
           }
         }
       }
-      Broadcast(_peersCache.ToArray(), rawData, deliveryType);
+
+      var peersIds = _peersCache.ToArray();
+      _socketServer.Broadcast(peersIds, rawData, deliveryType);
+    }
+
+    public void BroadcastToReady(RagonSerializer writer, ushort[] excludePeersIds, DeliveryType deliveryType = DeliveryType.Unreliable)
+    {
+      var sendData = writer.ToArray();
+      BroadcastToReady(sendData, excludePeersIds, deliveryType);
     }
   }
 }

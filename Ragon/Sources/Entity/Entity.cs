@@ -66,6 +66,7 @@ public class Entity
         EventData = payload.ToArray(),
         Target = targetMode,
         EventId = eventId,
+        PeerId = peerId,
       };
       _bufferedEvents.Add(bufferedEvent);
     }
@@ -84,7 +85,7 @@ public class Entity
     Send(targetMode, sendData);
   }
 
-  public void HandleState(uint peerId, RagonSerializer serializer)
+  public void ReadState(uint peerId, RagonSerializer serializer)
   {
     if (OwnerId != peerId)
     {
@@ -164,7 +165,7 @@ public class Entity
       serializer.Clear();
       serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       serializer.WriteUShort(bufferedEvent.EventId);
-      serializer.WriteUShort(peerId);
+      serializer.WriteUShort(bufferedEvent.PeerId);
       serializer.WriteByte((byte) RagonReplicationMode.Server);
       serializer.WriteUShort(EntityId);
 
@@ -172,11 +173,11 @@ public class Entity
       serializer.WriteData(ref data);
 
       var sendData = serializer.ToArray();
-      Send(bufferedEvent.Target, sendData);
+      _room.Send(peerId, sendData, DeliveryType.Reliable);
     }
   }
 
-  public void SendCreate()
+  public void Create()
   {
     var serializer = _room.GetSharedSerializer();
 
@@ -194,7 +195,7 @@ public class Entity
     _room.BroadcastToReady(sendData, DeliveryType.Reliable);
   }
 
-  public void SendDestroy(ReadOnlySpan<byte> payload)
+  public void Destroy(ReadOnlySpan<byte> payload)
   {
     var serializer = _room.GetSharedSerializer();
     serializer.Clear();
