@@ -13,7 +13,7 @@ namespace Ragon.Core
     {
       _logger.Info("Configure application...");
       var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
-      var configuration = ConfigurationLoader.Load(filePath);
+      var configuration = Configuration.Load(filePath);
       var app = new Application(factory, configuration);
       return app;
     }

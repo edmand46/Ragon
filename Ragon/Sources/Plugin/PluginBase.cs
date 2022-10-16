@@ -149,10 +149,10 @@ namespace Ragon.Core
       if (!_entityEvents[entityId].ContainsKey(evntCode))
         return false;
 
-      var player = Room.GetPlayerById(peerId);
+      // var player = Room.GetPlayerById(peerId);
       var entity = Room.GetEntityById(entityId);
       
-      _entityEvents[entityId][evntCode].Invoke(player, entity, ref payload);
+      // _entityEvents[entityId][evntCode].Invoke(player, entity, ref payload);
 
       return true;
     }
@@ -161,61 +161,14 @@ namespace Ragon.Core
     {
       if (_globalEvents.ContainsKey(evntCode))
       {
-        var player = Room.GetPlayerById(peerId);
-        _globalEvents[evntCode].Invoke(player, ref payload);
+        // var player = Room.GetPlayerById(peerId);
+        // _globalEvents[evntCode].Invoke(player, ref payload);
         return true;
       }
 
       return false;
     }
-
-    public void ReplicateEvent(Player player, uint eventCode, IRagonSerializable payload)
-    {
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
-      
-      payload.Serialize(_serializer);
-      
-      var sendData = _serializer.ToArray();
-      Room.Send(player.PeerId, sendData);
-    }
-
-    public void ReplicateEvent(ushort eventCode, IRagonSerializable payload)
-    {
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.REPLICATE_EVENT);
-      
-      payload.Serialize(_serializer);
-
-      var sendData = _serializer.ToArray();
-      Room.Broadcast(sendData, DeliveryType.Reliable);
-    }
-
-    public void ReplicateEntityEvent(Player player, Entity entity, IRagonSerializable payload)
-    {
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
-      _serializer.WriteInt(entity.EntityId);
-
-      payload.Serialize(_serializer);
-
-      var sendData = _serializer.ToArray();
-      Room.Send(player.PeerId, sendData, DeliveryType.Reliable);
-    }
-
-    public void ReplicateEntityEvent(Entity entity, IRagonSerializable payload)
-    {
-      _serializer.Clear();
-      _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
-      _serializer.WriteInt(entity.EntityId);
-
-      payload.Serialize(_serializer);
-
-      var sendData = _serializer.ToArray();
-      Room.Broadcast(sendData);
-    }
-
-
+    
     #region VIRTUAL
 
     public virtual void OnPlayerJoined(Player player)
@@ -230,12 +183,14 @@ namespace Ragon.Core
     {
     }
 
-    public virtual void OnEntityCreated(Player creator, Entity entity)
+    public virtual bool OnEntityCreated(Player creator, Entity entity)
     {
+      return false;
     }
 
-    public virtual void OnEntityDestroyed(Player destoyer, Entity entity)
+    public virtual bool OnEntityDestroyed(Player destoyer, Entity entity)
     {
+      return false;
     }
 
     public virtual void OnStart()

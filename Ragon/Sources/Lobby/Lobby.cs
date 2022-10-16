@@ -11,11 +11,11 @@ public class Lobby
   private readonly RagonSerializer _serializer;
   private readonly RoomManager _roomManager;
   private readonly AuthorizationManager _authorizationManager;
-  private readonly IGameThread _gameThread;
+  private readonly Application _gameThread;
 
   public AuthorizationManager AuthorizationManager => _authorizationManager;
 
-  public Lobby(IAuthorizationProvider provider, RoomManager manager, IGameThread gameThread)
+  public Lobby(IAuthorizationProvider provider, RoomManager manager, Application gameThread)
   {
     _roomManager = manager;
     _gameThread = gameThread;
@@ -62,7 +62,7 @@ public class Lobby
           _serializer.WriteOperation(RagonOperation.JOIN_FAILED);
           _serializer.WriteString($"Room with id {roomId} not exists");
           var sendData = _serializer.ToArray();
-          _gameThread.Server.Send(peerId, sendData, DeliveryType.Reliable);
+          _gameThread.SocketServer.Send(peerId, sendData, DeliveryType.Reliable);
           return;
         }
 
@@ -87,7 +87,7 @@ public class Lobby
             _serializer.WriteString($"Room with id {roomId} already exists");
             
             var sendData = _serializer.ToArray();
-            _gameThread.Server.Send(peerId, sendData, DeliveryType.Reliable);
+            _gameThread.SocketServer.Send(peerId, sendData, DeliveryType.Reliable);
             return;
           }
         }
@@ -121,7 +121,7 @@ public class Lobby
     }
   }
 
-  public void OnDisconnected(uint peerId)
+  public void OnDisconnected(ushort peerId)
   {
     _authorizationManager.Cleanup(peerId);
   }

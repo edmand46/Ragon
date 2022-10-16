@@ -39,7 +39,7 @@ namespace Ragon.Core
       _logger.Info($"Protocol: {protocolDecoded}");
     }
 
-    public void Broadcast(uint[] peersIds, byte[] data, DeliveryType type)
+    public void Broadcast(ushort[] peersIds, byte[] data, DeliveryType type)
     {
       var newPacket = new Packet();
       var packetFlags = PacketFlags.Instant;
@@ -61,7 +61,7 @@ namespace Ragon.Core
         _peers[peerId].Send(channel, ref newPacket);
     }
 
-    public void Send(uint peerId, byte[] data, DeliveryType type)
+    public void Send(ushort peerId, byte[] data, DeliveryType type)
     {
       var newPacket = new Packet();
       var packetFlags = PacketFlags.Instant;
@@ -82,7 +82,7 @@ namespace Ragon.Core
       _peers[peerId].Send(channel, ref newPacket);
     }
 
-    public void Disconnect(uint peerId, uint errorCode)
+    public void Disconnect(ushort peerId, uint errorCode)
     {
       _peers[peerId].Reset();
     }
