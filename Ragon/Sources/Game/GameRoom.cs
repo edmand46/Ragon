@@ -36,7 +36,9 @@ namespace Ragon.Core
     private List<ushort> _peersCache = new List<ushort>();
     private List<ushort> _awaitingPeers = new List<ushort>();
 
-    public Player GetPlayerById(ushort peerId) => _players[peerId];
+    public Player GetPlayerByPeer(ushort peerId) => _players[peerId];
+    
+    public Player GetPlayerById(string id) => _players.Values.FirstOrDefault(p => p.Id == id)!;
 
     public Entity GetEntityById(int entityId) => _entities[entityId];
 
@@ -280,7 +282,6 @@ namespace Ragon.Core
     public void Tick(float deltaTime)
     {
       _scheduler.Tick(deltaTime);
-
       SendChanges();
     }
 

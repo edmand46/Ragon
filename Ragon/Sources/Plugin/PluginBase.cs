@@ -183,12 +183,12 @@ namespace Ragon.Core
     {
     }
 
-    public virtual bool OnEntityCreated(Player creator, Entity entity)
+    public virtual bool OnEntityCreated(Player player, Entity entity)
     {
       return false;
     }
 
-    public virtual bool OnEntityDestroyed(Player destoyer, Entity entity)
+    public virtual bool OnEntityDestroyed(Player player, Entity entity)
     {
       return false;
     }

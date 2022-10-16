@@ -15,12 +15,11 @@ public class Entity
   public ushort StaticId { get; private set; }
   public ushort EntityType { get; private set; }
   public ushort OwnerId { get; private set; }
+  public byte[] Payload { get; private set; }
   public RagonAuthority Authority { get; private set; }
 
   private List<EntityProperty> _properties;
   private List<EntityEvent> _bufferedEvents;
-
-  public byte[] Payload { get; set; }
 
   public Entity(GameRoom room, ushort ownerId, ushort entityType, ushort staticId, RagonAuthority eventAuthority)
   {
@@ -50,7 +49,7 @@ public class Entity
   {
     _properties.Add(property);
   }
-
+  
   public void ReplicateEvent(ushort peerId, ushort eventId, ReadOnlySpan<byte> payload, RagonReplicationMode eventMode, RagonTarget targetMode)
   {
     if (Authority == RagonAuthority.OwnerOnly && OwnerId != peerId)
