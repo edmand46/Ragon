@@ -8,26 +8,23 @@ namespace Ragon.Core;
 public class Lobby
 {
   private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
-  private readonly RagonSerializer _serializer;
+  private readonly Application _application;
+  private readonly RagonSerializer _writer;
   private readonly RoomManager _roomManager;
   private readonly AuthorizationManager _authorizationManager;
-  private readonly Application _gameThread;
 
   public AuthorizationManager AuthorizationManager => _authorizationManager;
 
-  public Lobby(IAuthorizationProvider provider, RoomManager manager, Application gameThread)
+  public Lobby(IAuthorizationProvider provider, RoomManager manager, Application application)
   {
     _roomManager = manager;
-    _gameThread = gameThread;
-    _serializer = new RagonSerializer();
-    _authorizationManager = new AuthorizationManager(provider, gameThread, this, _serializer);
+    _application = application;
+    _writer = new RagonSerializer();
+    _authorizationManager = new AuthorizationManager(provider, application, this, _writer);
   }
 
-  public void ProcessEvent(ushort peerId, RagonOperation op, ReadOnlySpan<byte> payload)
+  public void ProcessEvent(ushort peerId, RagonOperation op, RagonSerializer reader)
   {
-    _serializer.Clear();
-    _serializer.FromSpan(ref payload);
-
     var player = _authorizationManager.GetPlayer(peerId);
     if (op == RagonOperation.AUTHORIZE)
     {
@@ -37,9 +34,9 @@ public class Lobby
         return;
       }
       
-      var key = _serializer.ReadString();
-      var playerName = _serializer.ReadString();
-      var additionalData = _serializer.ReadData(_serializer.Size);
+      var key = reader.ReadString();
+      var playerName = reader.ReadString();
+      var additionalData = reader.ReadData(reader.Size);
       _authorizationManager.OnAuthorization(peerId, key, playerName, additionalData);
       return;
     }
@@ -54,15 +51,15 @@ public class Lobby
     {
       case RagonOperation.JOIN_ROOM:
       {
-        var roomId = _serializer.ReadString();
+        var roomId = reader.ReadString();
         var exists = _roomManager.Rooms.Any(r => r.Id == roomId);
         if (!exists)
         {
-          _serializer.Clear();
-          _serializer.WriteOperation(RagonOperation.JOIN_FAILED);
-          _serializer.WriteString($"Room with id {roomId} not exists");
-          var sendData = _serializer.ToArray();
-          _gameThread.SocketServer.Send(peerId, sendData, DeliveryType.Reliable);
+          _writer.Clear();
+          _writer.WriteOperation(RagonOperation.JOIN_FAILED);
+          _writer.WriteString($"Room with id {roomId} not exists");
+          var sendData = _writer.ToArray();
+          _application.SocketServer.Send(peerId, sendData, DeliveryType.Reliable);
           return;
         }
 
@@ -75,25 +72,25 @@ public class Lobby
       case RagonOperation.CREATE_ROOM:
       {
         var roomId = Guid.NewGuid().ToString();
-        var custom = _serializer.ReadBool();
+        var custom = reader.ReadBool();
         if (custom)
         {
-          roomId = _serializer.ReadString();
+          roomId = reader.ReadString();
           var exists = _roomManager.Rooms.Any(r => r.Id == roomId);
           if (exists)
           {
-            _serializer.Clear();
-            _serializer.WriteOperation(RagonOperation.JOIN_FAILED);
-            _serializer.WriteString($"Room with id {roomId} already exists");
+            _writer.Clear();
+            _writer.WriteOperation(RagonOperation.JOIN_FAILED);
+            _writer.WriteString($"Room with id {roomId} already exists");
             
-            var sendData = _serializer.ToArray();
-            _gameThread.SocketServer.Send(peerId, sendData, DeliveryType.Reliable);
+            var sendData = _writer.ToArray();
+            _application.SocketServer.Send(peerId, sendData, DeliveryType.Reliable);
             return;
           }
         }
         
         var roomProperties = new RagonRoomParameters();
-        roomProperties.Deserialize(_serializer);
+        roomProperties.Deserialize(reader);
 
         if (_roomManager.RoomsBySocket.ContainsKey(peerId))
           _roomManager.Left(player, Array.Empty<byte>());
@@ -105,7 +102,7 @@ public class Lobby
       {
         var roomId = Guid.NewGuid().ToString();
         var roomProperties = new RagonRoomParameters();
-        roomProperties.Deserialize(_serializer);
+        roomProperties.Deserialize(reader);
 
         if (_roomManager.RoomsBySocket.ContainsKey(peerId))
           _roomManager.Left(player, Array.Empty<byte>());

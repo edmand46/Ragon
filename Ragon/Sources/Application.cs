@@ -17,7 +17,7 @@ namespace Ragon.Core
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
     private readonly float _deltaTime = 0.0f;
     private readonly Configuration _configuration;
-    private RagonSerializer _serializer;
+    private readonly RagonSerializer _serializer;
     
     public ISocketServer SocketServer => _socketServer;
     public IDispatcher Dispatcher => _dispatcher;
@@ -107,15 +107,13 @@ namespace Ragon.Core
           var peerId = (ushort) evnt.Peer.ID;
           var dataRaw = new byte[evnt.Packet.Length];
           evnt.Packet.CopyTo(dataRaw);
+          _serializer.FromArray(dataRaw);
 
-          var data = new ReadOnlySpan<byte>(dataRaw);
-          var operation = (RagonOperation) data[0];
-          var payload = data.Slice(1, data.Length - 1);
-
+          var operation = _serializer.ReadOperation();
           if (_roomManager.RoomsBySocket.TryGetValue(peerId, out var room))
-            room.ProcessEvent(peerId, operation, payload);
+            room.ProcessEvent(peerId, operation, _serializer);
 
-          _lobby.ProcessEvent(peerId, operation, payload);
+          _lobby.ProcessEvent(peerId, operation, _serializer);
         }
         catch (Exception exception)
         {

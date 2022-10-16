@@ -25,7 +25,6 @@ namespace Ragon.Core
     private readonly ISocketServer _socketServer;
     private readonly Application _application;
     private readonly PluginBase _plugin;
-    private readonly RagonSerializer _reader = new(512);
     private readonly RagonSerializer _writer = new(512);
 
     // Cache
@@ -71,24 +70,24 @@ namespace Ragon.Core
       _allPlayers = _players.Select(p => p.Key).ToArray();
 
       {
-        _reader.Clear();
-        _reader.WriteOperation(RagonOperation.JOIN_SUCCESS);
-        _reader.WriteString(Id);
-        _reader.WriteString(player.Id);
-        _reader.WriteString(GetOwner().Id);
-        _reader.WriteUShort((ushort) PlayersMin);
-        _reader.WriteUShort((ushort) PlayersMax);
+        _writer.Clear();
+        _writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
+        _writer.WriteString(Id);
+        _writer.WriteString(player.Id);
+        _writer.WriteString(GetOwner().Id);
+        _writer.WriteUShort((ushort) PlayersMin);
+        _writer.WriteUShort((ushort) PlayersMax);
 
-        var sendData = _reader.ToArray();
+        var sendData = _writer.ToArray();
         Send(player.PeerId, sendData, DeliveryType.Reliable);
       }
 
       {
-        _reader.Clear();
-        _reader.WriteOperation(RagonOperation.LOAD_SCENE);
-        _reader.WriteString(Map);
+        _writer.Clear();
+        _writer.WriteOperation(RagonOperation.LOAD_SCENE);
+        _writer.WriteString(Map);
 
-        var sendData = _reader.ToArray();
+        var sendData = _writer.ToArray();
         Send(player.PeerId, sendData, DeliveryType.Reliable);
       }
     }
@@ -118,16 +117,13 @@ namespace Ragon.Core
       }
     }
 
-    public void ProcessEvent(ushort peerId, RagonOperation operation, ReadOnlySpan<byte> payloadRawData)
+    public void ProcessEvent(ushort peerId, RagonOperation operation, RagonSerializer reader)
     {
-      _reader.Clear();
-      _reader.FromSpan(ref payloadRawData);
-
       switch (operation)
       {
         case RagonOperation.LOAD_SCENE:
         {
-          var sceneName = _reader.ReadString();
+          var sceneName = reader.ReadString();
           SendScene(sceneName);
           break;
         }
@@ -136,19 +132,19 @@ namespace Ragon.Core
           var player = _players[peerId];
           if (peerId == _owner)
           {
-            var statics = _reader.ReadUShort();
+            var statics = reader.ReadUShort();
             for (var staticIndex = 0; staticIndex < statics; staticIndex++)
             {
-              var entityType = _reader.ReadUShort();
-              var entityAuthority = (RagonAuthority) _reader.ReadByte();
-              var staticId = _reader.ReadUShort();
-              var propertiesCount = _reader.ReadUShort();
+              var entityType = reader.ReadUShort();
+              var entityAuthority = (RagonAuthority) reader.ReadByte();
+              var staticId = reader.ReadUShort();
+              var propertiesCount = reader.ReadUShort();
 
               var entity = new Entity(this, player.PeerId, entityType, staticId, entityAuthority);
               for (var propertyIndex = 0; propertyIndex < propertiesCount; propertyIndex++)
               {
-                var propertyType = _reader.ReadBool();
-                var propertySize = _reader.ReadUShort();
+                var propertyType = reader.ReadBool();
+                var propertySize = reader.ReadUShort();
                 entity.AddProperty(new EntityProperty(propertySize, propertyType));
               }
               
@@ -205,13 +201,13 @@ namespace Ragon.Core
         }
         case RagonOperation.REPLICATE_ENTITY_STATE:
         {
-          var entitiesCount = _reader.ReadUShort();
+          var entitiesCount = reader.ReadUShort();
           for (var entityIndex = 0; entityIndex < entitiesCount; entityIndex++)
           {
-            var entityId = _reader.ReadUShort();
+            var entityId = reader.ReadUShort();
             if (_entities.TryGetValue(entityId, out var entity))
             {
-              entity.HandleState(peerId, _reader);
+              entity.HandleState(peerId, reader);
 
               if (_entitiesDirtySet.Add(entity))
                 _entitiesDirty.Add(entity);
@@ -227,13 +223,13 @@ namespace Ragon.Core
         }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
-          var eventId = _reader.ReadUShort();
-          var eventMode = (RagonReplicationMode) _reader.ReadByte();
-          var targetMode = (RagonTarget) _reader.ReadByte();
-          var entityId = _reader.ReadUShort();
-          var payloadData = _reader.ReadData(_reader.Size);
+          var eventId = reader.ReadUShort();
+          var eventMode = (RagonReplicationMode) reader.ReadByte();
+          var targetMode = (RagonTarget) reader.ReadByte();
+          var entityId = reader.ReadUShort();
+          var payloadData = reader.ReadData(reader.Size);
 
-          Span<byte> payloadRaw = stackalloc byte[_reader.Size];
+          Span<byte> payloadRaw = stackalloc byte[reader.Size];
           ReadOnlySpan<byte> payload = payloadRaw;
           payloadData.CopyTo(payloadRaw);
 
@@ -251,9 +247,9 @@ namespace Ragon.Core
         }
         case RagonOperation.CREATE_ENTITY:
         {
-          var entityType = _reader.ReadUShort();
-          var eventAuthority = (RagonAuthority) _reader.ReadByte();
-          var propertiesCount = _reader.ReadUShort();
+          var entityType = reader.ReadUShort();
+          var eventAuthority = (RagonAuthority) reader.ReadByte();
+          var propertiesCount = reader.ReadUShort();
 
           _logger.Trace($"[{peerId}] Create Entity {entityType}");
 
@@ -261,12 +257,12 @@ namespace Ragon.Core
           var entity = new Entity(this, (ushort) player.PeerId, entityType, 0, eventAuthority);
           for (var i = 0; i < propertiesCount; i++)
           {
-            var propertyType = _reader.ReadBool();
-            var propertySize = _reader.ReadUShort();
+            var propertyType = reader.ReadBool();
+            var propertySize = reader.ReadUShort();
             entity.AddProperty(new EntityProperty(propertySize, propertyType));
           }
 
-          var entityPayload = _reader.ReadData(_reader.Size);
+          var entityPayload = reader.ReadData(reader.Size);
           entity.SetPayload(entityPayload.ToArray());
 
           if (_plugin.OnEntityCreated(player, entity))
@@ -280,14 +276,14 @@ namespace Ragon.Core
         }
         case RagonOperation.DESTROY_ENTITY:
         {
-          var entityId = _reader.ReadInt();
+          var entityId = reader.ReadInt();
           if (_entities.TryGetValue(entityId, out var entity))
           {
             if (entity.Authority == RagonAuthority.OwnerOnly && entity.OwnerId != peerId)
               return;
 
             var player = _players[peerId];
-            var destroyPayload = _reader.ReadData(_reader.Size);
+            var destroyPayload = reader.ReadData(reader.Size);
 
             player.DetachEntity(entity);
             DetachEntity(entity);
@@ -341,98 +337,98 @@ namespace Ragon.Core
     void SendChangeOwner(Player prev, Player next)
     {
       var entitiesToUpdate = prev.Entities.Where(e => e.StaticId > 0).ToArray();
-
-      _reader.Clear();
-      _reader.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
-      _reader.WriteString(next.Id);
-      _reader.WriteUShort((ushort) entitiesToUpdate.Length);
+    
+      _writer.Clear();
+      _writer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
+      _writer.WriteString(next.Id);
+      _writer.WriteUShort((ushort) entitiesToUpdate.Length);
       foreach (var entity in entitiesToUpdate)
       {
-        _reader.WriteUShort(entity.EntityId);
+        _writer.WriteUShort(entity.EntityId);
         entity.SetOwner((ushort) next.PeerId);
       }
 
-      var sendData = _reader.ToArray();
+      var sendData = _writer.ToArray();
       Broadcast(_readyPlayers, sendData);
     }
 
     void SendJoined(Player player, uint excludePeerId)
     {
-      _reader.Clear();
-      _reader.WriteOperation(RagonOperation.PLAYER_JOINED);
-      _reader.WriteUShort((ushort) player.PeerId);
-      _reader.WriteString(player.Id);
-      _reader.WriteString(player.PlayerName);
+      _writer.Clear();
+      _writer.WriteOperation(RagonOperation.PLAYER_JOINED);
+      _writer.WriteUShort((ushort) player.PeerId);
+      _writer.WriteString(player.Id);
+      _writer.WriteString(player.PlayerName);
 
-      var sendData = _reader.ToArray();
+      var sendData = _writer.ToArray();
       var readyPlayersWithExcludedPeer = _readyPlayers.Where(p => p != excludePeerId).ToArray();
       Broadcast(readyPlayersWithExcludedPeer, sendData, DeliveryType.Reliable);
     }
 
     void SendLeaved(Player player)
     {
-      _reader.Clear();
-      _reader.WriteOperation(RagonOperation.PLAYER_LEAVED);
-      _reader.WriteString(player.Id);
+      _writer.Clear();
+      _writer.WriteOperation(RagonOperation.PLAYER_LEAVED);
+      _writer.WriteString(player.Id);
 
       var entitiesToDelete = player.Entities.Where(e => e.StaticId == 0).ToArray();
-      _reader.WriteUShort((ushort) entitiesToDelete.Length);
+      _writer.WriteUShort((ushort) entitiesToDelete.Length);
       foreach (var entity in entitiesToDelete)
       {
-        _reader.WriteUShort(entity.EntityId);
+        _writer.WriteUShort(entity.EntityId);
         _entities.Remove(entity.EntityId);
       }
 
-      var sendData = _reader.ToArray();
+      var sendData = _writer.ToArray();
       Broadcast(_readyPlayers, sendData);
     }
 
     void SendSnapshot(ushort peerId)
     {
-      _reader.Clear();
-      _reader.WriteOperation(RagonOperation.SNAPSHOT);
-      _reader.WriteUShort((ushort) _readyPlayers.Length);
+      _writer.Clear();
+      _writer.WriteOperation(RagonOperation.SNAPSHOT);
+      _writer.WriteUShort((ushort) _readyPlayers.Length);
       foreach (var playerPeerId in _readyPlayers)
       {
-        _reader.WriteUShort(playerPeerId);
-        _reader.WriteString(_players[playerPeerId].Id);
-        _reader.WriteString(_players[playerPeerId].PlayerName);
+        _writer.WriteUShort(playerPeerId);
+        _writer.WriteString(_players[playerPeerId].Id);
+        _writer.WriteString(_players[playerPeerId].PlayerName);
       }
 
       var dynamicEntities = _entitiesAll.Where(e => e.StaticId == 0).ToArray();
       var dynamicEntitiesCount = (ushort) dynamicEntities.Length;
-      _reader.WriteUShort(dynamicEntitiesCount);
+      _writer.WriteUShort(dynamicEntitiesCount);
       foreach (var entity in dynamicEntities)
       {
         ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
 
-        _reader.WriteUShort(entity.EntityType);
-        _reader.WriteUShort(entity.EntityId);
-        _reader.WriteUShort(entity.OwnerId);
-        _reader.WriteUShort((ushort) payload.Length);
-        _reader.WriteData(ref payload);
+        _writer.WriteUShort(entity.EntityType);
+        _writer.WriteUShort(entity.EntityId);
+        _writer.WriteUShort(entity.OwnerId);
+        _writer.WriteUShort((ushort) payload.Length);
+        _writer.WriteData(ref payload);
 
-        entity.WriteSnapshot(_reader);
+        entity.WriteSnapshot(_writer);
       }
 
       var staticEntities = _entitiesAll.Where(e => e.StaticId != 0).ToArray();
       var staticEntitiesCount = (ushort) staticEntities.Length;
-      _reader.WriteUShort(staticEntitiesCount);
+      _writer.WriteUShort(staticEntitiesCount);
       foreach (var entity in staticEntities)
       {
         ReadOnlySpan<byte> payload = entity.Payload.AsSpan();
 
-        _reader.WriteUShort(entity.EntityType);
-        _reader.WriteUShort(entity.EntityId);
-        _reader.WriteUShort(entity.StaticId);
-        _reader.WriteUShort(entity.OwnerId);
-        _reader.WriteUShort((ushort) payload.Length);
-        _reader.WriteData(ref payload);
+        _writer.WriteUShort(entity.EntityType);
+        _writer.WriteUShort(entity.EntityId);
+        _writer.WriteUShort(entity.StaticId);
+        _writer.WriteUShort(entity.OwnerId);
+        _writer.WriteUShort((ushort) payload.Length);
+        _writer.WriteData(ref payload);
 
-        entity.WriteSnapshot(_reader);
+        entity.WriteSnapshot(_writer);
       }
 
-      var sendData = _reader.ToArray();
+      var sendData = _writer.ToArray();
       Send(peerId, sendData, DeliveryType.Reliable);
     }
 
@@ -441,17 +437,17 @@ namespace Ragon.Core
       var entities = (ushort) _entitiesDirty.Count;
       if (entities > 0)
       {
-        _reader.Clear();
-        _reader.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
-        _reader.WriteUShort(entities);
+        _writer.Clear();
+        _writer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
+        _writer.WriteUShort(entities);
 
         foreach (var entity in _entitiesDirty)
-          entity.WriteProperties(_reader);
+          entity.WriteProperties(_writer);
 
         _entitiesDirty.Clear();
         _entitiesDirtySet.Clear();
 
-        var sendData = _reader.ToArray();
+        var sendData = _writer.ToArray();
         Broadcast(_readyPlayers, sendData);
       }
     }
@@ -462,11 +458,11 @@ namespace Ragon.Core
       _entitiesAll = Array.Empty<Entity>();
       _entities.Clear();
 
-      _reader.Clear();
-      _reader.WriteOperation(RagonOperation.LOAD_SCENE);
-      _reader.WriteString(sceneName);
+      _writer.Clear();
+      _writer.WriteOperation(RagonOperation.LOAD_SCENE);
+      _writer.WriteString(sceneName);
 
-      var sendData = _reader.ToArray();
+      var sendData = _writer.ToArray();
       Broadcast(_allPlayers, sendData, DeliveryType.Reliable);
     }
 
