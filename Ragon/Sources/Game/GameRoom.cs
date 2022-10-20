@@ -61,27 +61,16 @@ namespace Ragon.Core
       _players.Add(player.PeerId, player);
       _allPlayers = _players.Select(p => p.Key).ToArray();
 
-      {
-        _serializer.Clear();
-        _serializer.WriteOperation(RagonOperation.JOIN_SUCCESS);
-        _serializer.WriteString(Id);
-        _serializer.WriteString(player.Id);
-        _serializer.WriteString(GetOwner().Id);
-        _serializer.WriteUShort((ushort) PlayersMin);
-        _serializer.WriteUShort((ushort) PlayersMax);
-
-        var sendData = _serializer.ToArray();
-        Send(player.PeerId, sendData, DeliveryType.Reliable);
-      }
-
-      {
-        _serializer.Clear();
-        _serializer.WriteOperation(RagonOperation.LOAD_SCENE);
-        _serializer.WriteString(Map);
-
-        var sendData = _serializer.ToArray();
-        Send(player.PeerId, sendData, DeliveryType.Reliable);
-      }
+      _serializer.Clear();
+      _serializer.WriteOperation(RagonOperation.JOIN_SUCCESS);
+      _serializer.WriteString(Id);
+      _serializer.WriteString(player.Id);
+      _serializer.WriteString(GetOwner().Id);
+      _serializer.WriteUShort((ushort) PlayersMin);
+      _serializer.WriteUShort((ushort) PlayersMax);
+      _serializer.WriteString(Map);
+      var sendData = _serializer.ToArray();
+      Send(player.PeerId, sendData, DeliveryType.Reliable);
     }
 
     public void RemovePlayer(uint peerId)
@@ -221,7 +210,7 @@ namespace Ragon.Core
           {
             _logger.Trace($"[{_owner}][{peerId}] Player {player.Id} restored instantly");
             player.IsLoaded = true;
-
+ 
             {
               _serializer.Clear();
               _serializer.WriteOperation(RagonOperation.PLAYER_JOINED);
@@ -246,15 +235,16 @@ namespace Ragon.Core
                 _serializer.Clear();
                 _serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
                 _serializer.WriteUShort(bufferedEvent.EventId);
-                _serializer.WriteUShort(peerId);
+                _serializer.WriteUShort(bufferedEvent.PeerId);
                 _serializer.WriteByte((byte) RagonReplicationMode.Server);
                 _serializer.WriteUShort(value.EntityId);
 
                 ReadOnlySpan<byte> data = bufferedEvent.EventData.AsSpan();
                 _serializer.WriteData(ref data);
 
+                _logger.Trace($"[{peerId}] Restored buffered event {bufferedEvent.EventId}");
                 var sendData = _serializer.ToArray();
-                SendEvent(value, bufferedEvent.Target, sendData);
+                Send(peerId, sendData, DeliveryType.Reliable);
               }
             }
           }
@@ -347,6 +337,7 @@ namespace Ragon.Core
               EventData = payload.ToArray(),
               Target = targetMode,
               EventId = eventId,
+              PeerId = peerId,
             };
             ent.BufferedEvents.Add(bufferedEvent);
           }
