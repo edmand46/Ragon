@@ -71,7 +71,7 @@ namespace Ragon.Core
       _players.Add(player.PeerId, player);
       _allPlayers = _players.Select(p => p.Key).ToArray();
 
-      SendInfo(player);
+      AcceptPlayer(player);
     }
 
     public void RemovePlayer(ushort peerId)
@@ -83,7 +83,7 @@ namespace Ragon.Core
 
         _plugin.OnPlayerLeaved(player);
 
-        SendLeaved(player);
+        BroadcastLeaved(player);
 
         if (_allPlayers.Length > 0 && player.PeerId == _owner)
         {
@@ -92,7 +92,7 @@ namespace Ragon.Core
 
           _owner = nextOwnerId;
 
-          SendChangeOwner(player, nextOwner);
+          BroadcastNewOwner(player, nextOwner);
         }
 
         _entitiesAll = _entities.Values.ToArray();
@@ -106,7 +106,7 @@ namespace Ragon.Core
         case RagonOperation.LOAD_SCENE:
         {
           var sceneName = reader.ReadString();
-          SendScene(sceneName);
+          BroadcastNewScene(sceneName);
           break;
         }
         case RagonOperation.SCENE_LOADED:
@@ -147,12 +147,12 @@ namespace Ragon.Core
               _plugin.OnPlayerJoined(joinedPlayer);
               _logger.Trace($"[{_owner}][{peer}] Player {joinedPlayer.Id} restored");
 
-              SendJoined(player, peerId);
+              BroadcastJoined(player);
             }
 
             _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
             
-            SendSnapshot(_awaitingPeers.ToArray());
+            BroadcastSnapshot(_awaitingPeers.ToArray());
             
             _awaitingPeers.Clear();
           }
@@ -161,12 +161,12 @@ namespace Ragon.Core
             _logger.Trace($"[{_owner}][{peerId}] Player {player.Id} restored instantly");
             player.IsLoaded = true;
 
-            SendJoined(player, peerId);
+            BroadcastJoined(player);
 
             _readyPlayers = _players.Where(p => p.Value.IsLoaded).Select(p => p.Key).ToArray();
             _plugin.OnPlayerJoined(player);
 
-            SendSnapshot(new[] {peerId});
+            BroadcastSnapshot(new[] {peerId});
 
             foreach (var (key, value) in _entities)
               value.RestoreBufferedEvents(peerId);
@@ -198,7 +198,6 @@ namespace Ragon.Core
               break;
             }
           }
-
           break;
         }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
@@ -282,7 +281,7 @@ namespace Ragon.Core
     public void Tick(float deltaTime)
     {
       _scheduler.Tick(deltaTime);
-      SendChanges();
+      BroadcastState();
     }
 
     public void OnStart()
@@ -311,7 +310,7 @@ namespace Ragon.Core
       _entitiesAll = _entities.Values.ToArray();
     }
 
-    void SendChangeOwner(Player prev, Player next)
+    void BroadcastNewOwner(Player prev, Player next)
     {
       var entitiesToUpdate = prev.Entities.Where(e => e.StaticId > 0).ToArray();
 
@@ -328,19 +327,18 @@ namespace Ragon.Core
       BroadcastToReady(_writer, DeliveryType.Reliable);
     }
 
-    void SendJoined(Player player, uint excludePeerId)
+    void BroadcastJoined(Player player)
     {
       _writer.Clear();
       _writer.WriteOperation(RagonOperation.PLAYER_JOINED);
-      _writer.WriteUShort((ushort) player.PeerId);
+      _writer.WriteUShort(player.PeerId);
       _writer.WriteString(player.Id);
       _writer.WriteString(player.PlayerName);
-
-      var readyPlayersWithExcludedPeer = _readyPlayers.Where(p => p != excludePeerId).ToArray();
-      BroadcastToReady(_writer, readyPlayersWithExcludedPeer, DeliveryType.Reliable);
+      
+      BroadcastToReady(_writer, new [] { player.PeerId }, DeliveryType.Reliable);
     }
 
-    void SendLeaved(Player player)
+    void BroadcastLeaved(Player player)
     {
       _writer.Clear();
       _writer.WriteOperation(RagonOperation.PLAYER_LEAVED);
@@ -357,7 +355,7 @@ namespace Ragon.Core
       BroadcastToReady(_writer, DeliveryType.Reliable);
     }
 
-    void SendSnapshot(ushort[] peersIds)
+    void BroadcastSnapshot(ushort[] peersIds)
     {
       _writer.Clear();
       _writer.WriteOperation(RagonOperation.SNAPSHOT);
@@ -406,7 +404,7 @@ namespace Ragon.Core
       Broadcast(peersIds, sendData, DeliveryType.Reliable);
     }
 
-    void SendChanges()
+    void BroadcastState()
     {
       var entities = (ushort) _entitiesDirty.Count;
       if (entities > 0)
@@ -425,7 +423,7 @@ namespace Ragon.Core
       }
     }
 
-    void SendInfo(Player player)
+    void AcceptPlayer(Player player)
     {
       _writer.Clear();
       _writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
@@ -439,7 +437,7 @@ namespace Ragon.Core
       Send(player.PeerId, _writer, DeliveryType.Reliable);
     }
 
-    void SendScene(string sceneName)
+    void BroadcastNewScene(string sceneName)
     {
       _readyPlayers = Array.Empty<ushort>();
       _entitiesAll = Array.Empty<Entity>();
