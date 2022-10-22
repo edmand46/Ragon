@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+
 
 namespace Ragon.Core
 {
-  public class Scheduler: IScheduler
+  public class Scheduler: IDisposable
   {
     List<SchedulerTask> _scheduledTasks;
 

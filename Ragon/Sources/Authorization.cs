@@ -5,17 +5,17 @@ using Ragon.Common;
 
 namespace Ragon.Core;
 
-public class AuthorizationManager : IAuthorizationManager
+public class AuthorizationManager 
 {
   private Logger _logger = LogManager.GetCurrentClassLogger();
-  private IAuthorizationProvider _provider;
+  private IApplicationHandler _provider;
   private Application _gameThread;
   private Lobby _lobby;
   private RagonSerializer _serializer;
   private readonly Dictionary<uint, Player> _playersByPeers;
   private readonly Dictionary<string, Player> _playersByIds;
 
-  public AuthorizationManager(IAuthorizationProvider provider, Application gameThread, Lobby lobby, RagonSerializer serializer)
+  public AuthorizationManager(IApplicationHandler provider, Application gameThread, Lobby lobby, RagonSerializer serializer)
   {
     _serializer = serializer;
     _lobby = lobby;

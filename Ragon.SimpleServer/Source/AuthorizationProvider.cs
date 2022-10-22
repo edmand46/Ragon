@@ -4,10 +4,10 @@ using Ragon.Core;
 
 namespace Game.Source;
 
-public class AuthorizationProviderByKey: IAuthorizationProvider
+public class ApplicationHandlerByKey: IApplicationHandler
 {
   private Configuration _configuration;
-  public AuthorizationProviderByKey(Configuration configuration)
+  public ApplicationHandlerByKey(Configuration configuration)
   {
     _configuration = configuration;
   }
@@ -25,5 +25,20 @@ public class AuthorizationProviderByKey: IAuthorizationProvider
     {
       reject(0);
     }  
+  }
+
+  public void OnCustomEvent(ushort peerId, ReadOnlySpan<byte> payload)
+  {
+    
+  }
+
+  public void OnJoin(ushort peerId)
+  {
+    
+  }
+
+  public void OnLeave(ushort peerId)
+  {
+    
   }
 }

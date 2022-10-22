@@ -29,11 +29,10 @@ namespace Ragon.Core
       _logger.Info($"OS: {Environment.OSVersion}");
       _logger.Info($"Processors: {Environment.ProcessorCount}");
       _logger.Info($"Runtime Version: {Environment.Version}");
-      
       _logger.Info("==================================");
-      _logger.Info("=                                =");
-      _logger.Info($"={"Ragon".PadBoth(32)}=");
-      _logger.Info("=                                =");
+      _logger.Info("|                                |");
+      _logger.Info("|            Ragon               |");
+      _logger.Info("|                                |");
       _logger.Info("==================================");
     }
 

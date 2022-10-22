@@ -7,7 +7,7 @@ using Ragon.Common;
 
 namespace Ragon.Core
 {
-  public class GameRoom : IGameRoom
+  public class GameRoom 
   {
     public int PlayersMin { get; private set; }
     public int PlayersMax { get; private set; }
@@ -15,14 +15,14 @@ namespace Ragon.Core
     public int EntitiesCount => _entities.Count;
     public string Id { get; private set; }
     public string Map { get; private set; }
-
+    public PluginBase Plugin => _plugin;
     private ILogger _logger = LogManager.GetCurrentClassLogger();
     private Dictionary<ushort, Player> _players = new();
     private Dictionary<int, Entity> _entities = new();
     private ushort _owner;
 
-    private readonly IScheduler _scheduler;
     private readonly ISocketServer _socketServer;
+    private readonly Scheduler _scheduler;
     private readonly Application _application;
     private readonly PluginBase _plugin;
     private readonly RagonSerializer _writer = new(512);
@@ -131,7 +131,7 @@ namespace Ragon.Core
               }
 
               player.AttachEntity(entity);
-              AttachEntity(entity);
+              AttachEntity(player, entity);
             }
 
             _entitiesAll = _entities.Values.ToArray();
@@ -202,26 +202,15 @@ namespace Ragon.Core
         }
         case RagonOperation.REPLICATE_ENTITY_EVENT:
         {
-          var eventId = reader.ReadUShort();
-          var eventMode = (RagonReplicationMode) reader.ReadByte();
-          var targetMode = (RagonTarget) reader.ReadByte();
           var entityId = reader.ReadUShort();
-          var payloadData = reader.ReadData(reader.Size);
-
-          Span<byte> payloadRaw = stackalloc byte[reader.Size];
-          ReadOnlySpan<byte> payload = payloadRaw;
-          payloadData.CopyTo(payloadRaw);
-
           if (!_entities.TryGetValue(entityId, out var ent))
           {
-            _logger.Warn($"Entity not found for event with Id {eventId}");
+            _logger.Warn($"Entity not found for event with Id {entityId}");
             return;
           }
-
-          if (_plugin.InternalHandle(peerId, entityId, eventId, ref payload))
-            return;
-
-          ent.ReplicateEvent(peerId, eventId, payload, eventMode, targetMode);
+          
+          var player = _players[peerId];
+          ent.ProcessEvent(player, reader);
           break;
         }
         case RagonOperation.CREATE_ENTITY:
@@ -233,7 +222,7 @@ namespace Ragon.Core
           _logger.Trace($"[{peerId}] Create Entity {entityType}");
 
           var player = _players[peerId];
-          var entity = new Entity(this, (ushort) player.PeerId, entityType, 0, eventAuthority);
+          var entity = new Entity(this, player.PeerId, entityType, 0, eventAuthority);
           for (var i = 0; i < propertiesCount; i++)
           {
             var propertyType = reader.ReadBool();
@@ -248,7 +237,7 @@ namespace Ragon.Core
             return;
 
           player.AttachEntity(entity);
-          AttachEntity(entity);
+          AttachEntity(player, entity);
 
           entity.Create();
           break;
@@ -258,21 +247,10 @@ namespace Ragon.Core
           var entityId = reader.ReadInt();
           if (_entities.TryGetValue(entityId, out var entity))
           {
-            if (entity.Authority == RagonAuthority.OwnerOnly && entity.OwnerId != peerId)
-              return;
-
             var player = _players[peerId];
-            var destroyPayload = reader.ReadData(reader.Size);
-
-            player.DetachEntity(entity);
-            DetachEntity(entity);
-
-            if (_plugin.OnEntityDestroyed(player, entity))
-              return;
-
-            entity.Destroy(destroyPayload);
+            var payload = reader.ReadData(reader.Size);
+            DetachEntity(player, entity, payload);
           }
-
           break;
         }
       }
@@ -293,19 +271,29 @@ namespace Ragon.Core
     {
       foreach (var peerId in _allPlayers)
         _application.SocketServer.Disconnect(peerId, 0);
-
+      
       _plugin.OnStop();
       _plugin.Detach();
+      _scheduler.Dispose();
     }
 
-    public void AttachEntity(Entity entity)
+    public void AttachEntity(Player player, Entity entity)
     {
       _entities.Add(entity.EntityId, entity);
       _entitiesAll = _entities.Values.ToArray();
     }
 
-    public void DetachEntity(Entity entity)
+    public void DetachEntity(Player player, Entity entity, ReadOnlySpan<byte> payload)
     {
+      if (entity.Authority == RagonAuthority.OwnerOnly && entity.OwnerId != player.PeerId)
+        return;
+      
+      if (_plugin.OnEntityDestroyed(player, entity))
+        return;
+      
+      player.DetachEntity(entity);
+      entity.Destroy(payload);
+      
       _entities.Remove(entity.EntityId);
       _entitiesAll = _entities.Values.ToArray();
     }

@@ -228,4 +228,21 @@ public class Entity
       }
     }
   }
+
+  public void ProcessEvent(Player player, RagonSerializer reader)
+  {
+    var eventId = reader.ReadUShort();
+    var eventMode = (RagonReplicationMode) reader.ReadByte();
+    var targetMode = (RagonTarget) reader.ReadByte();
+    var payloadData = reader.ReadData(reader.Size);
+
+    Span<byte> payloadRaw = stackalloc byte[reader.Size];
+    ReadOnlySpan<byte> payload = payloadRaw;
+    payloadData.CopyTo(payloadRaw);
+          
+    if (_room.Plugin.InternalHandle(player.PeerId, EntityId, eventId, ref payload))
+      return;
+    
+    ReplicateEvent(player.PeerId, eventId, payload, eventMode, targetMode);
+  }
 }

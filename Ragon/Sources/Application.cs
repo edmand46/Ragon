@@ -6,21 +6,20 @@ using NLog;
 
 namespace Ragon.Core
 {
-  public class Application : IHandler
+  public class Application : IEventHandler
   {
     private readonly RoomManager _roomManager;
     private readonly Thread _thread;
     private readonly Lobby _lobby;
     private readonly ISocketServer _socketServer;
-    private readonly IDispatcherInternal _dispatcherInternal;
-    private readonly IDispatcher _dispatcher;
+    private readonly Dispatcher _dispatcher;
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
     private readonly float _deltaTime = 0.0f;
     private readonly Configuration _configuration;
     private readonly RagonSerializer _serializer;
     
     public ISocketServer SocketServer => _socketServer;
-    public IDispatcher Dispatcher => _dispatcher;
+    public Dispatcher Dispatcher => _dispatcher;
 
     public Application(PluginFactory factory, Configuration configuration)
     {
@@ -30,10 +29,9 @@ namespace Ragon.Core
       _serializer = new RagonSerializer();
       
       var dispatcher = new Dispatcher();
-      _dispatcherInternal = dispatcher;
       _dispatcher = dispatcher;
 
-      _socketServer = new ENetServer(this);
+      _socketServer = new WebSocketServer(this);
       _deltaTime = 1000.0f / configuration.SendRate;
 
       _roomManager = new RoomManager(factory, this);
@@ -81,45 +79,55 @@ namespace Ragon.Core
       while (true)
       {
         _socketServer.Process();
-        _dispatcherInternal.Process();
+        _dispatcher.Process();
         _roomManager.Tick(_deltaTime);
-
+        //
         Thread.Sleep((int) _deltaTime);
       }
     }
-
-
-    public void OnEvent(Event evnt)
+    
+    public void OnConnected(ushort peerId)
     {
-      if (evnt.Type == EventType.Timeout || evnt.Type == EventType.Disconnect)
+        _logger.Trace("Connected " + peerId);
+    }
+
+    public void OnDisconnected(ushort peerId)
+    {
+      _logger.Trace("Disconnected " + peerId);
+      
+      var player = _lobby.AuthorizationManager.GetPlayer(peerId);
+      if (player != null)
+        _roomManager.Left(player, Array.Empty<byte>());
+
+      _lobby.OnDisconnected(peerId);
+    }
+
+    public void OnData(ushort peerId, byte[] data)
+    {
+      try
       {
-        var player = _lobby.AuthorizationManager.GetPlayer((ushort) evnt.Peer.ID);
-        if (player != null)
-          _roomManager.Left(player, Array.Empty<byte>());
+        _serializer.Clear();
+        _serializer.FromArray(data);
 
-        _lobby.OnDisconnected((ushort) evnt.Peer.ID);
+        var operation = _serializer.ReadOperation();
+        if (_roomManager.RoomsBySocket.TryGetValue(peerId, out var room))
+          room.ProcessEvent(peerId, operation, _serializer);
+
+        _lobby.ProcessEvent(peerId, operation, _serializer);
       }
-
-      if (evnt.Type == EventType.Receive)
+      catch (Exception exception)
       {
-        try
-        {
-          var peerId = (ushort) evnt.Peer.ID;
-          var dataRaw = new byte[evnt.Packet.Length];
-          evnt.Packet.CopyTo(dataRaw);
-          _serializer.FromArray(dataRaw);
-
-          var operation = _serializer.ReadOperation();
-          if (_roomManager.RoomsBySocket.TryGetValue(peerId, out var room))
-            room.ProcessEvent(peerId, operation, _serializer);
-
-          _lobby.ProcessEvent(peerId, operation, _serializer);
-        }
-        catch (Exception exception)
-        {
-          _logger.Error(exception);
-        }
+        _logger.Error(exception);
       }
+    }
+
+    public void OnTimeout(ushort peerId)
+    {
+      var player = _lobby.AuthorizationManager.GetPlayer(peerId);
+      if (player != null)
+        _roomManager.Left(player, Array.Empty<byte>());
+
+      _lobby.OnDisconnected(peerId);
     }
   }
 }

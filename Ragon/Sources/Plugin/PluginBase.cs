@@ -14,7 +14,7 @@ namespace Ragon.Core
     private Dictionary<int, Dictionary<ushort, SubscribeEntityDelegate>> _entityEvents = new();
     private readonly RagonSerializer _serializer = new();
 
-    protected IGameRoom Room { get; private set; } = null!;
+    protected GameRoom Room { get; private set; } = null!;
     protected ILogger Logger = null!;
 
     public void Attach(GameRoom gameRoom)

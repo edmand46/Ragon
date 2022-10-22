@@ -14,12 +14,12 @@ namespace Ragon.Core
     private Address _address;
     private Event _netEvent;
     private Peer[] _peers;
-    private IHandler _handler;
+    private IEventHandler _eventHandler;
     private Stopwatch _timer;
     
-    public ENetServer(IHandler handler)
+    public ENetServer(IEventHandler eventHandler)
     {
-      _handler = handler;
+      _eventHandler = eventHandler;
       _timer = Stopwatch.StartNew();
       _peers = Array.Empty<Peer>();
       _host = new Host();
@@ -115,23 +115,28 @@ namespace Ragon.Core
             //   break;
             // }
             _peers[_netEvent.Peer.ID] = _netEvent.Peer;
-            _handler.OnEvent(_netEvent);
+            _eventHandler.OnConnected((ushort)_netEvent.Peer.ID);
             break;
           }
           case EventType.Disconnect:
           {
-            _handler.OnEvent(_netEvent);
+            _eventHandler.OnDisconnected((ushort)_netEvent.Peer.ID);
             break;
           }
           case EventType.Timeout:
           {
-            _handler.OnEvent(_netEvent);
+            _eventHandler.OnTimeout((ushort)_netEvent.Peer.ID);
             break;
           }
           case EventType.Receive:
           {
-            _handler.OnEvent(_netEvent);
+            var peerId = (ushort) _netEvent.Peer.ID;
+            var dataRaw = new byte[_netEvent.Packet.Length];
+            
+            _netEvent.Packet.CopyTo(dataRaw);
             _netEvent.Packet.Dispose();
+            
+            _eventHandler.OnData(peerId, dataRaw);
             break;
           }
         }

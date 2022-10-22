@@ -15,7 +15,7 @@ public class Lobby
 
   public AuthorizationManager AuthorizationManager => _authorizationManager;
 
-  public Lobby(IAuthorizationProvider provider, RoomManager manager, Application application)
+  public Lobby(IApplicationHandler provider, RoomManager manager, Application application)
   {
     _roomManager = manager;
     _application = application;

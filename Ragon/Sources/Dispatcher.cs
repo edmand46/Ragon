@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ragon.Core;
 
-public class Dispatcher: IDispatcher, IDispatcherInternal
+public class Dispatcher
 {
   public Queue<Action> _actions = new Queue<Action>();
   
