@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
@@ -19,7 +20,7 @@ public class WebSocketServer : ISocketServer
   private WebSocketTaskScheduler _webSocketScheduler;
   private TaskFactory _taskFactory;
   private HttpListener _httpListener;
-
+  
   public WebSocketServer(IEventHandler eventHandler)
   {
     _eventHandler = eventHandler;
@@ -53,9 +54,16 @@ public class WebSocketServer : ISocketServer
     var buffer = new Memory<byte>(bytes);
     while (webSocket.State == WebSocketState.Open)
     {
-      var result = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
-      var dataRaw = buffer.Slice(0, result.Count);
-      _eventHandler.OnData(peerId, dataRaw.ToArray());
+      try
+      {
+        var result = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
+        var dataRaw = buffer.Slice(0, result.Count);
+        _eventHandler.OnData(peerId, dataRaw.ToArray());
+      }
+      catch (Exception ex)
+      {
+        break;
+      }
     }
 
     _eventHandler.OnDisconnected(peerId);

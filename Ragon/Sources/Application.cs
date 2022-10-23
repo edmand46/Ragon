@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using Ragon.Common;
-using ENet;
 using NLog;
 
 namespace Ragon.Core
@@ -31,7 +30,7 @@ namespace Ragon.Core
       var dispatcher = new Dispatcher();
       _dispatcher = dispatcher;
 
-      _socketServer = new WebSocketServer(this);
+      _socketServer = new ENetServer(this);
       _deltaTime = 1000.0f / configuration.SendRate;
 
       _roomManager = new RoomManager(factory, this);

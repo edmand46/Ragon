@@ -41,7 +41,7 @@ public class WebSocketTaskScheduler: TaskScheduler
     {
       TryExecuteTask(task);
       
-      if (task.Status != TaskStatus.RanToCompletion)
+      if (task.Status == TaskStatus.Running)
         _pendingTasks.Enqueue(task);
     }
 
