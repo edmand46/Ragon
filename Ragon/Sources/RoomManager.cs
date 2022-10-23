@@ -8,7 +8,7 @@ namespace Ragon.Core;
 
 public class RoomManager
 {
-  private readonly IGameThread _gameThread;
+  private readonly Application _gameThread;
   private readonly PluginFactory _factory;
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   private readonly List<GameRoom> _rooms = new();
@@ -17,7 +17,7 @@ public class RoomManager
   public IReadOnlyDictionary<uint, GameRoom> RoomsBySocket => _roomsBySocket;
   public IReadOnlyList<GameRoom> Rooms => _rooms;
   
-  public RoomManager(PluginFactory factory, IGameThread gameThread)
+  public RoomManager(PluginFactory factory, Application gameThread)
   {
     _gameThread = gameThread;
     _factory = factory;
@@ -56,7 +56,7 @@ public class RoomManager
 
     var room = new GameRoom(_gameThread, plugin, roomId, map, min, max);
     room.AddPlayer(creator, payload);
-    room.Start();
+    room.OnStart();
 
     _roomsBySocket.Add(creator.PeerId, room);
     _rooms.Add(room);
@@ -91,7 +91,7 @@ public class RoomManager
 
     var room = new GameRoom(_gameThread, plugin, roomId, map, min, max);
     room.AddPlayer(player, payload);
-    room.Start();
+    room.OnStart();
 
     _roomsBySocket.Add(player.PeerId, room);
     _rooms.Add(room);
@@ -106,11 +106,11 @@ public class RoomManager
       if (room.PlayersCount < room.PlayersMin)
       {
         _logger.Trace($"Room with Id {room.Id} destroyed");
-        room.Stop();
+        room.OnStop();
         _rooms.Remove(room);
       }
 
-      _gameThread.Server.Send(player.PeerId, new byte[] {(byte) RagonOperation.LEAVE_ROOM}, DeliveryType.Reliable);
+      _gameThread.SocketServer.Send(player.PeerId, new byte[] {(byte) RagonOperation.LEAVE_ROOM}, DeliveryType.Reliable);
     }
   }
 

@@ -26,13 +26,15 @@ namespace Game.Source
       // Logger.Info($"Player({player.PlayerName}) left from Room({Room.Id})");
     }
 
-    public override void OnEntityCreated(Player player, Entity entity)
+    public override bool OnEntityCreated(Player player, Entity entity)
     {
+      return false;
       // Logger.Info($"Player({player.PlayerName}) create entity {entity.EntityId}:{entity.EntityType}"); 
     }
 
-    public override void OnEntityDestroyed(Player player, Entity entity)
+    public override bool OnEntityDestroyed(Player player, Entity entity)
     {
+      return false;
       // Logger.Info($"Player({player.PlayerName}) destroy entity {entity.EntityId}:{entity.EntityType}");
     }
   }

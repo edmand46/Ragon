@@ -10,9 +10,9 @@ namespace Game.Source
       return new SimplePlugin();
     }
     
-    public IAuthorizationProvider CreateAuthorizationProvider(Configuration configuration)
+    public IApplicationHandler CreateAuthorizationProvider(Configuration configuration)
     {
-      return new AuthorizationProviderByKey(configuration);
+      return new ApplicationHandlerByKey(configuration);
     }
   }
 }
