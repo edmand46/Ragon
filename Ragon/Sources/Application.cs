@@ -16,21 +16,33 @@ namespace Ragon.Core
     private readonly float _deltaTime = 0.0f;
     private readonly Configuration _configuration;
     private readonly RagonSerializer _serializer;
-    
+
     public ISocketServer SocketServer => _socketServer;
     public Dispatcher Dispatcher => _dispatcher;
 
     public Application(PluginFactory factory, Configuration configuration)
     {
       var authorizationProvider = factory.CreateAuthorizationProvider(configuration);
-      
+
       _configuration = configuration;
       _serializer = new RagonSerializer();
-      
+
       var dispatcher = new Dispatcher();
       _dispatcher = dispatcher;
 
-      _socketServer = new ENetServer(this);
+      if (configuration.Socket == "udp")
+      {
+        _socketServer = new ENetServer(this);
+      }
+      else if (configuration.Socket == "websocket")
+      {
+        _socketServer = new WebSocketServer(this);
+      }
+      else
+      {
+        _logger.Error($"Unknown socket type {configuration.Socket}");
+      }
+
       _deltaTime = 1000.0f / configuration.SendRate;
 
       _roomManager = new RoomManager(factory, this);
@@ -84,16 +96,16 @@ namespace Ragon.Core
         Thread.Sleep((int) _deltaTime);
       }
     }
-    
+
     public void OnConnected(ushort peerId)
     {
-        _logger.Trace("Connected " + peerId);
+      _logger.Trace("Connected " + peerId);
     }
 
     public void OnDisconnected(ushort peerId)
     {
       _logger.Trace("Disconnected " + peerId);
-      
+
       var player = _lobby.AuthorizationManager.GetPlayer(peerId);
       if (player != null)
         _roomManager.Left(player, Array.Empty<byte>());

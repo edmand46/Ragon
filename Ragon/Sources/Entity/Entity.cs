@@ -197,6 +197,7 @@ public class Entity
   public void Destroy(ReadOnlySpan<byte> payload)
   {
     var serializer = _room.GetSharedSerializer();
+    
     serializer.Clear();
     serializer.WriteOperation(RagonOperation.DESTROY_ENTITY);
     serializer.WriteInt(EntityId);
@@ -236,7 +237,7 @@ public class Entity
     var targetMode = (RagonTarget) reader.ReadByte();
     var payloadData = reader.ReadData(reader.Size);
 
-    Span<byte> payloadRaw = stackalloc byte[reader.Size];
+    Span<byte> payloadRaw = stackalloc byte[payloadData.Length];
     ReadOnlySpan<byte> payload = payloadRaw;
     payloadData.CopyTo(payloadRaw);
           

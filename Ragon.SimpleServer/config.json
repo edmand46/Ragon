@@ -1,5 +1,6 @@
 {
   "key": "defaultkey",
+  "socket": "udp",
   "protocol": "1.0.0",
   "statisticsInterval": 5,
   "sendRate": 50,

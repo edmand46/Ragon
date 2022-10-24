@@ -246,7 +246,7 @@ namespace Ragon.Core
         {
           var entityId = reader.ReadInt();
           if (_entities.TryGetValue(entityId, out var entity))
-          {
+          { 
             var player = _players[peerId];
             var payload = reader.ReadData(reader.Size);
             DetachEntity(player, entity, payload);
