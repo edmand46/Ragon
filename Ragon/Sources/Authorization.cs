@@ -5,7 +5,7 @@ using Ragon.Common;
 
 namespace Ragon.Core;
 
-public class AuthorizationManager 
+public class AuthorizationManager
 {
   private Logger _logger = LogManager.GetCurrentClassLogger();
   private IApplicationHandler _provider;
@@ -29,12 +29,12 @@ public class AuthorizationManager
   {
     if (_playersByPeers.ContainsKey(peerId))
     {
-     _logger.Warn($"Connection already authorized {peerId}"); 
+      _logger.Warn($"Connection already authorized {peerId}");
       return;
     }
-    
+
     var dispatcher = _gameThread.Dispatcher;
-    
+
     _provider.OnAuthorizationRequest(key, name, additionalData.ToArray(),
       (playerId, playerName) => { dispatcher.Dispatch(() => Accepted(peerId, playerId, playerName)); },
       (errorCode) => { dispatcher.Dispatch(() => Rejected(peerId, errorCode)); });
@@ -42,6 +42,12 @@ public class AuthorizationManager
 
   public void Accepted(ushort peerId, string playerId, string playerName)
   {
+    if (_playersByPeers.ContainsKey(peerId))
+    {
+      _logger.Warn($"Connection already authorized {peerId}");
+      return;
+    }
+
     _serializer.Clear();
     _serializer.WriteOperation(RagonOperation.AUTHORIZED_SUCCESS);
     _serializer.WriteString(playerId);
