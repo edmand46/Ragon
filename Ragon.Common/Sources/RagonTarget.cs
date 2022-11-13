@@ -4,6 +4,7 @@ namespace Ragon.Common
   {
     Owner,
     ExceptOwner,
+    ExceptInvoker,
     All,
   }
 }

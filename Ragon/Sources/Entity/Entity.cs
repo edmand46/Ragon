@@ -81,7 +81,7 @@ public class Entity
     serializer.WriteData(ref payload);
 
     var sendData = serializer.ToArray();
-    Send(targetMode, sendData);
+    RouteEvent(peerId, targetMode, sendData);
   }
 
   public void ReadState(uint peerId, RagonSerializer serializer)
@@ -208,7 +208,7 @@ public class Entity
     _room.BroadcastToReady(sendData, DeliveryType.Reliable);
   }
 
-  void Send(RagonTarget targetMode, byte[] sendData)
+  void RouteEvent(ushort peerId, RagonTarget targetMode, byte[] sendData)
   {
     switch (targetMode)
     {
@@ -220,6 +220,11 @@ public class Entity
       case RagonTarget.ExceptOwner:
       {
         _room.BroadcastToReady(sendData, new [] { OwnerId }, DeliveryType.Reliable);
+        break;
+      }
+      case RagonTarget.ExceptInvoker:
+      {
+        _room.BroadcastToReady(sendData, new[] {peerId}, DeliveryType.Reliable);
         break;
       }
       case RagonTarget.All:
