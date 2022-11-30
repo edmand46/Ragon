@@ -16,8 +16,8 @@ Ragon is fully free, small and high perfomance room based game server with plugi
 - Simple matchmaking
 - Room based architecture
 - Сustomizable authorization
-- Сustomizable server-side logic via plugins with flexible API
-- No CCU limitations*
+- Сustomizable server-side logic via plugins with flexible API*(2)
+- No CCU limitations*(1)
 - No Room count limitations
 - Reliable UDP 
 
@@ -27,10 +27,11 @@ Ragon is fully free, small and high perfomance room based game server with plugi
 
 ### Dependencies
 * ENet-Sharp [v2.4.8]
-* NetStack [latest]
 
 ### License
 MIT
 
 ### Tips
-\* Limited to 4095 CCU by library ENet-Sharp
+\* Limited to 4095 CCU by library ENet-Sharp (1)
+
+\* Non finally (2)

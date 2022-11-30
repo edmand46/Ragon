@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using NLog;
 using Ragon.Common;
@@ -306,6 +305,7 @@ namespace Ragon.Core
       _writer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
       _writer.WriteString(next.Id);
       _writer.WriteUShort((ushort) entitiesToUpdate.Length);
+      
       foreach (var entity in entitiesToUpdate)
       {
         _writer.WriteUShort(entity.EntityId);
