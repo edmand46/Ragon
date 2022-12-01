@@ -99,12 +99,12 @@ namespace Ragon.Core
 
     public void OnConnected(ushort peerId)
     {
-      _logger.Trace("Connected " + peerId);
+      // _logger.Trace("Connected " + peerId);
     }
 
     public void OnDisconnected(ushort peerId)
     {
-      _logger.Trace("Disconnected " + peerId);
+      // _logger.Trace("Disconnected " + peerId);
 
       var player = _lobby.AuthorizationManager.GetPlayer(peerId);
       if (player != null)

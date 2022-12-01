@@ -128,7 +128,6 @@ namespace Ragon.Core
                 var propertySize = reader.ReadUShort();
                 entity.AddProperty(new EntityProperty(propertySize, propertyType));
               }
-
               player.AttachEntity(entity);
               AttachEntity(player, entity);
             }
@@ -217,9 +216,7 @@ namespace Ragon.Core
           var entityType = reader.ReadUShort();
           var eventAuthority = (RagonAuthority) reader.ReadByte();
           var propertiesCount = reader.ReadUShort();
-
-          _logger.Trace($"[{peerId}] Create Entity {entityType}");
-
+          
           var player = _players[peerId];
           var entity = new Entity(this, player.PeerId, entityType, 0, eventAuthority);
           for (var i = 0; i < propertiesCount; i++)
@@ -309,8 +306,12 @@ namespace Ragon.Core
       foreach (var entity in entitiesToUpdate)
       {
         _writer.WriteUShort(entity.EntityId);
-        entity.SetOwner((ushort) next.PeerId);
+        entity.SetOwner(next.PeerId);
+        
+        next.Entities.Add(entity);
       }
+
+      next.EntitiesIds = next.Entities.Select(e => e.EntityId).ToList();
 
       BroadcastToReady(_writer, DeliveryType.Reliable);
     }
@@ -345,6 +346,7 @@ namespace Ragon.Core
 
     void BroadcastSnapshot(ushort[] peersIds)
     {
+      _logger.Trace("Snapshot");
       _writer.Clear();
       _writer.WriteOperation(RagonOperation.SNAPSHOT);
       _writer.WriteUShort((ushort) _readyPlayers.Length);
@@ -367,7 +369,7 @@ namespace Ragon.Core
         _writer.WriteUShort(entity.OwnerId);
         _writer.WriteUShort((ushort) payload.Length);
         _writer.WriteData(ref payload);
-
+        
         entity.WriteSnapshot(_writer);
       }
 
@@ -384,7 +386,7 @@ namespace Ragon.Core
         _writer.WriteUShort(entity.OwnerId);
         _writer.WriteUShort((ushort) payload.Length);
         _writer.WriteData(ref payload);
-
+        
         entity.WriteSnapshot(_writer);
       }
 

@@ -21,7 +21,7 @@ namespace Ragon.Core
     public int MaxRooms;
 
     private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
-    private static readonly string _serverVersion = "1.0.25-rc";
+    private static readonly string _serverVersion = "1.0.26-rc";
 
     private static void CopyrightInfo()
     {

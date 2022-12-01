@@ -74,7 +74,7 @@ public class RoomManager
       {
         if (existRoom.Map == map && existRoom.PlayersCount < existRoom.PlayersMax)
         {
-          _logger.Trace($"Player ({player.PlayerName}|{player.Id}) joined to room with Id {roomId}");
+          _logger.Trace($"Player ({player.PlayerName}|{player.Id}) joined to room with Id {existRoom.Id}");
           
           existRoom.AddPlayer(player, payload);
           _roomsBySocket.Add(player.PeerId, existRoom);
