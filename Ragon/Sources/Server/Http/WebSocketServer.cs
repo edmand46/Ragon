@@ -75,7 +75,14 @@ public class WebSocketServer : ISocketServer
     {
       if (_webSockets.TryGetValue(evnt.PeerId, out var ws) && ws.State == WebSocketState.Open)
       {
-        await ws.SendAsync(evnt.Data, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, CancellationToken.None);
+        try
+        {
+          await ws.SendAsync(evnt.Data, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+          _logger.Error(ex);
+        }
       }
     }
   }
