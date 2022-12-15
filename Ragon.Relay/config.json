@@ -1,0 +1,12 @@
+{
+  "key": "defaultkey",
+  "socket": "enet",
+  "protocol": "1.0.0",
+  "sendRate": 50,
+  "port": 4444,
+  "skipTimeout": 60,
+  "reconnectTimeout": 300,
+  "limitConnections": 4095,
+  "limitPlayersPerRoom": 20,
+  "limitRooms": 200
+}

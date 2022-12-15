@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
+      <PackageReference Include="NLog" Version="5.0.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Ragon.Protocol\Ragon.Protocol.csproj" />
+      <ProjectReference Include="..\Ragon.Server.ENet\Ragon.Server.ENet.csproj" />
+      <ProjectReference Include="..\Ragon.Server.WebSockets\Ragon.Server.WebSockets.csproj" />
+      <ProjectReference Include="..\Ragon.Server\Ragon.Server.csproj" />
+    </ItemGroup>
+
+</Project>
