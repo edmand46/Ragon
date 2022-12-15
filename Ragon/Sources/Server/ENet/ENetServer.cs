@@ -27,6 +27,8 @@ namespace Ragon.Core
 
     public void Start(ushort port, int connections, uint protocol)
     {
+      Library.Initialize();
+      
       _address = default;
       _address.Port = port;
       _peers = new Peer[connections];
@@ -146,6 +148,8 @@ namespace Ragon.Core
     public void Stop()
     {
       _host?.Dispose();
+      
+      Library.Deinitialize();
     }
 
     private bool IsValidProtocol(uint protocol)
