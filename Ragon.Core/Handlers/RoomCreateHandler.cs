@@ -50,7 +50,7 @@ public sealed class CreateHandler: IHandler
     var lobbyPlayer = context.LobbyPlayer;
     var roomPlayer = new RoomPlayer(lobbyPlayer.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
     
-    var room = new Room(roomId, information, new PluginBase());
+    var room = new Room(roomId, information);
     room.AddPlayer(roomPlayer);
 
     context.Room?.RemovePlayer(context.RoomPlayer);
@@ -61,6 +61,8 @@ public sealed class CreateHandler: IHandler
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} {information}");
     
     JoinSuccess(roomPlayer, room, writer);
+    
+     context.Loop.Run(room);
     
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to room {room.Id}");
   }

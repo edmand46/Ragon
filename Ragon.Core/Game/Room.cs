@@ -1,8 +1,9 @@
 using Ragon.Common;
+using Ragon.Core.Time;
 
 namespace Ragon.Core.Game;
 
-public class Room
+public class Room: IAction
 {
   public string Id { get; }
   public RoomInformation Info { get; }
@@ -22,14 +23,11 @@ public class Room
   private RagonSerializer _writer;
 
   public RagonSerializer Writer => _writer;
-  public PluginBase Plugin { get; set; }
 
-  public Room(string roomId, RoomInformation info, PluginBase plugin)
+  public Room(string roomId, RoomInformation info)
   {
     Id = roomId;
     Info = info;
-
-    Plugin = plugin;
 
     Players = new Dictionary<ushort, RoomPlayer>(info.Max);
     WaitPlayersList = new List<RoomPlayer>(info.Max);
@@ -68,7 +66,7 @@ public class Room
     DynamicEntitiesList.Remove(entity);
     _entitiesDirtySet.Remove(entity);
 
-    entity.Destroy();
+    entity.Destroy(payload);
     currentOwner.Entities.Remove(entity);
   }
 

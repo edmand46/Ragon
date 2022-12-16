@@ -4,7 +4,7 @@ using Ragon.Core.Lobby;
 
 namespace Ragon.Core.Handlers;
 
-public sealed class AuthHandler: IHandler
+public sealed class AuthorizationHandler: IHandler
 {
   private Logger _logger = LogManager.GetCurrentClassLogger();
   

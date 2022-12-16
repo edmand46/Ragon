@@ -9,7 +9,7 @@ namespace Ragon.Core;
 public class PlayerContext: IDisposable
 {
   public INetworkConnection Connection { get; }
-  public Scheduler Scheduler;
+  public Loop Loop;
   public ILobby Lobby { get; set; }
   public LobbyPlayer LobbyPlayer { private set; get; }
   public Room? Room { get; set; }

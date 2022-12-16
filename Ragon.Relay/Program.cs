@@ -5,13 +5,6 @@ using Ragon.Core;
 
 namespace Ragon.Relay
 {
-    [StructLayout(LayoutKind.Sequential)]
-    struct Serializer
-    {
-        [FieldOffset(0)] public Guid Uuid;
-        [FieldOffset(0)] public long Long0;
-        [FieldOffset(0)] public long Long1;
-    }
     class Program
     {
         static void Main(string[] args)

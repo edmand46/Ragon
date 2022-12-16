@@ -44,7 +44,7 @@ public sealed class JoinOrCreateHandler : IHandler
         Min = _roomParameters.Min,
       };
 
-      var room = new Room(roomId, information, new PluginBase());
+      var room = new Room(roomId, information);
       context.Lobby.Persist(room);
       
       var roomPlayer = new RoomPlayer(lobbyPlayer.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
@@ -57,6 +57,8 @@ public sealed class JoinOrCreateHandler : IHandler
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} {information}");
 
       JoinSuccess(roomPlayer, room, writer);
+      
+      context.Loop.Run(room);
     }
   }
 

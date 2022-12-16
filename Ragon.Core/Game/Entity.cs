@@ -78,7 +78,7 @@ public class Entity
       player.Connection.ReliableChannel.Send(sendData);
   }
 
-  public void Destroy()
+  public void Destroy(byte[] payload)
   {
     var room = Owner.Room;
     var serializer = room.Writer;

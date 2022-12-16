@@ -1,6 +1,6 @@
 namespace Ragon.Core.Time;
 
-public interface IScheduleTask
+public interface IAction
 {
     public void Tick();
 }

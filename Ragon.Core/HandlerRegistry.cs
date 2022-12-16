@@ -27,7 +27,7 @@ public sealed class HandlerRegistry
     _reader = new RagonSerializer(2048);
     _writer = new RagonSerializer(2048);
 
-    _authorizationHandler = new AuthHandler();
+    _authorizationHandler = new AuthorizationHandler();
     _joinOrCreateHandler = new JoinOrCreateHandler();
     _sceneLoadedHandler = new SceneLoadedHandler();
     _createHandler = new CreateHandler();

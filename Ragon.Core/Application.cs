@@ -10,25 +10,24 @@ namespace Ragon.Core;
 
 public class Application : INetworkListener
 {
-  private Logger _logger = LogManager.GetCurrentClassLogger();
-  
-  private INetworkServer _server;
-  private Thread _dedicatedThread;
-  private Configuration _configuration;
-  private HandlerRegistry _handlerRegistry;
-  private ILobby _lobby;
-  private Scheduler _scheduler;
-  private Dictionary<ushort, PlayerContext> _contexts = new();
+  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly INetworkServer _server;
+  private readonly Thread _dedicatedThread;
+  private readonly Configuration _configuration;
+  private readonly HandlerRegistry _handlerRegistry;
+  private readonly ILobby _lobby;
+  private readonly Loop _loop;
+  private readonly Dictionary<ushort, PlayerContext> _contexts;
 
   public Application(Configuration configuration)
   {
     _configuration = configuration;
     _dedicatedThread = new Thread(Execute);
     _dedicatedThread.IsBackground = true;
-
+    _contexts = new Dictionary<ushort, PlayerContext>();
     _handlerRegistry = new HandlerRegistry();
     _lobby = new LobbyInMemory();
-    _scheduler = new Scheduler();
+    _loop = new Loop();
 
     if (configuration.Socket == "enet")
       _server = new ENetServer();
@@ -40,7 +39,7 @@ public class Application : INetworkListener
   {
     while (true)
     {
-      _scheduler.Tick();
+      _loop.Tick();
       _server.Poll();
       
       Thread.Sleep((int) 1000.0f / _configuration.SendRate);
@@ -71,7 +70,7 @@ public class Application : INetworkListener
   {
     var context = new PlayerContext(connection, new LobbyPlayer(connection));
     context.Lobby = _lobby;
-    context.Scheduler = _scheduler;
+    context.Loop = _loop;
 
     _logger.Trace($"Connected {connection.Id}");
     _contexts.Add(connection.Id, context);
