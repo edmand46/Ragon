@@ -5,11 +5,11 @@ namespace Ragon.Core.Game;
 
 public class Room: IAction
 {
-  public string Id { get; }
-  public RoomInformation Info { get; }
-  public RoomPlayer Owner { get; set; }
-
-  public Dictionary<ushort, RoomPlayer> Players { get; }
+  public string Id { get; private set; }
+  public RoomInformation Info { get; private set; }
+  public RoomPlayer Owner { get; private set; }
+  public RagonSerializer Writer { get; }
+  public Dictionary<ushort, RoomPlayer> Players { get; private set; }
   public List<RoomPlayer> WaitPlayersList { get; private set; }
   public List<RoomPlayer> ReadyPlayersList { get; private set; }
   public List<RoomPlayer> PlayerList { get; private set; }
@@ -19,10 +19,7 @@ public class Room: IAction
   public List<Entity> StaticEntitiesList { get; private set; }
   public List<Entity> EntityList { get; private set; }
 
-  private HashSet<Entity> _entitiesDirtySet;
-  private RagonSerializer _writer;
-
-  public RagonSerializer Writer => _writer;
+  private readonly HashSet<Entity> _entitiesDirtySet;
 
   public Room(string roomId, RoomInformation info)
   {
@@ -40,7 +37,7 @@ public class Room: IAction
     EntityList = new List<Entity>();
 
     _entitiesDirtySet = new HashSet<Entity>();
-    _writer = new RagonSerializer(512);
+    Writer = new RagonSerializer(512);
   }
 
   public void AttachEntity(RoomPlayer newOwner, Entity entity)
@@ -75,16 +72,16 @@ public class Room: IAction
     var entities = (ushort) _entitiesDirtySet.Count;
     if (entities > 0)
     {
-      _writer.Clear();
-      _writer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
-      _writer.WriteUShort(entities);
+      Writer.Clear();
+      Writer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
+      Writer.WriteUShort(entities);
 
       foreach (var entity in _entitiesDirtySet)
-        entity.State.Write(_writer);
+        entity.State.Write(Writer);
 
       _entitiesDirtySet.Clear();
 
-      var sendData = _writer.ToArray();
+      var sendData = Writer.ToArray();
       foreach (var roomPlayer in ReadyPlayersList)
         roomPlayer.Connection.UnreliableChannel.Send(sendData);
     }
@@ -108,19 +105,19 @@ public class Room: IAction
       PlayerList.Remove(player);
 
       {
-        _writer.Clear();
-        _writer.WriteOperation(RagonOperation.PLAYER_LEAVED);
-        _writer.WriteString(player.Id);
+        Writer.Clear();
+        Writer.WriteOperation(RagonOperation.PLAYER_LEAVED);
+        Writer.WriteString(player.Id);
 
         var entitiesToDelete = player.Entities.DynamicList;
-        _writer.WriteUShort((ushort) entitiesToDelete.Count);
+        Writer.WriteUShort((ushort) entitiesToDelete.Count);
         foreach (var entity in entitiesToDelete)
         {
-          _writer.WriteUShort(entity.Id);
+          Writer.WriteUShort(entity.Id);
           EntityList.Remove(entity);
         }
 
-        var sendData = _writer.ToArray();
+        var sendData = Writer.ToArray();
         Broadcast(sendData);
       }
       
@@ -132,20 +129,20 @@ public class Room: IAction
         
         var entitiesToUpdate =  roomPlayer.Entities.StaticList;
         
-        _writer.Clear();
-        _writer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
-        _writer.WriteString(Owner.Id);
-        _writer.WriteUShort((ushort) entitiesToUpdate.Count);
+        Writer.Clear();
+        Writer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
+        Writer.WriteString(Owner.Id);
+        Writer.WriteUShort((ushort) entitiesToUpdate.Count);
       
         foreach (var entity in entitiesToUpdate)
         {
-          _writer.WriteUShort(entity.Id);
+          Writer.WriteUShort(entity.Id);
         
           entity.SetOwner(nextOwner);
           nextOwner.Entities.Add(entity);
         }
 
-        var sendData = _writer.ToArray();
+        var sendData = Writer.ToArray();
         Broadcast(sendData);
       }
     }

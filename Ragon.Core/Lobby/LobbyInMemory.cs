@@ -47,11 +47,15 @@ public class LobbyInMemory : ILobby
     _rooms.Add(room);
 
     foreach (var r in _rooms)
-      _logger.Trace($"{r.Id} {r.Info}");
+      _logger.Trace($"Room: {r.Id} {r.Info} Players: {r.Players.Count}");
   }
 
-  public void Remove(Room room)
+  public void RemoveIfEmpty(Room room)
   {
-    _rooms.Remove(room);
+    if (room.Players.Count == 0)
+      _rooms.Remove(room);
+    
+    foreach (var r in _rooms)
+      _logger.Trace($"Room: {r.Id} {r.Info} Players: {r.Players.Count}");
   }
 }

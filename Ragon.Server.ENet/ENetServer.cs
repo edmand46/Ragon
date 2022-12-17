@@ -8,30 +8,31 @@ namespace Ragon.Server.ENet
 {
   public sealed class ENetServer: INetworkServer 
   {
-    public ENetConnection[] Connections;
-    private ILogger _logger = LogManager.GetCurrentClassLogger();
-    private INetworkListener _listener;
+    private readonly Host _host;
+    private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
+    
+    private ENetConnection[] _connections;
     private uint _protocol;
-    private Host _host;
+    private INetworkListener _listener;
     private Event _event;
-    private NetworkConfiguration _configuration;
 
     public ENetServer()
     {
       _host = new Host();
+      _connections = Array.Empty<ENetConnection>();
     }
 
     public void Start(INetworkListener listener, NetworkConfiguration configuration)
     {
       Library.Initialize();
       
+      _connections = new ENetConnection[configuration.LimitConnections];
+      
       _listener = listener;
       _protocol = configuration.Protocol;
       
-      Connections = new ENetConnection[configuration.LimitConnections];
-      
       var address = new Address { Port = (ushort) configuration.Port };
-      _host.Create(address, Connections.Length, 2, 0, 0, 1024 * 1024);
+      _host.Create(address, _connections.Length, 2, 0, 0, 1024 * 1024);
 
       var protocolDecoded = RagonVersion.Parse(_protocol);
       _logger.Info($"Network listening on {configuration.Port}");
@@ -60,34 +61,33 @@ namespace Ragon.Server.ENet
           }
           case EventType.Connect:
           {
-            if (IsValidProtocol(_event.Data))
+            if (!IsValidProtocol(_event.Data))
             {
               _logger.Warn("Mismatched protocol, close connection");
               break;
             }
 
             var connection = new ENetConnection(_event.Peer);
-            Connections[_event.Peer.ID] = connection;
-            
+            _connections[_event.Peer.ID] = connection;
             _listener.OnConnected(connection);
             break;
           }
           case EventType.Disconnect:
           {
-            var connection = Connections[_event.Peer.ID];
+            var connection = _connections[_event.Peer.ID];
             _listener.OnDisconnected(connection);
             break;
           }
           case EventType.Timeout:
           {
-            var connection = Connections[_event.Peer.ID];
+            var connection = _connections[_event.Peer.ID];
             _listener.OnTimeout(connection);
             break;
           }
           case EventType.Receive:
           {
             var peerId = (ushort) _event.Peer.ID;
-            var connection = Connections[peerId];
+            var connection = _connections[peerId];
             var dataRaw = new byte[_event.Packet.Length];
             
             _event.Packet.CopyTo(dataRaw);
@@ -109,7 +109,8 @@ namespace Ragon.Server.ENet
 
     private bool IsValidProtocol(uint protocol)
     {
-      return protocol == _configuration.Protocol;
+     Console.WriteLine($"{protocol} {_protocol}");
+      return protocol == _protocol;
     }
   }
 }

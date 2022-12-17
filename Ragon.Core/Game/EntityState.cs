@@ -52,7 +52,7 @@ public class EntityState
         var size = property.Size;
         if (!property.IsFixed)
           size = serializer.ReadUShort();
-
+        
         if (size > property.Capacity)
         {
           Console.WriteLine($"Property {i} payload too large, size: {size}");

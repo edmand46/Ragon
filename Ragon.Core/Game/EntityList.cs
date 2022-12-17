@@ -20,16 +20,15 @@ public class EntityList
     _entitiesMap.Add(entity.Id, entity);
   }
 
-  public Entity Remove(Entity entity)
+  public bool Remove(Entity entity)
   {
     if (_entitiesMap.Remove(entity.Id, out var existEntity))
     {
       _staticEntitiesList.Remove(entity);
       _dynamicEntitiesList.Remove(entity);
       
-      return existEntity;
+      return true;
     }
-
-    return null;
+    return false;
   }
 }

@@ -82,7 +82,13 @@ public class Application : INetworkListener
 
     if (_contexts.Remove(connection.Id, out var context))
     {
-      context.Room?.RemovePlayer(context.RoomPlayer);
+      var room = context.Room;
+      if (room != null)
+      {
+        room.RemovePlayer(context.RoomPlayer);
+        
+        _lobby.RemoveIfEmpty(room);
+      }
       context.Dispose();
     }
   }
