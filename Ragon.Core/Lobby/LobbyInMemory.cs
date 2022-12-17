@@ -1,15 +1,16 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using NLog;
 using Ragon.Core.Game;
 
 namespace Ragon.Core.Lobby;
 
-public class LobbyInMemory: ILobby
+public class LobbyInMemory : ILobby
 {
   private readonly List<Room> _rooms = new();
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-  
-  public bool FindRoomById(string roomId, out Room room)
+
+  public bool FindRoomById(string roomId, [MaybeNullWhen(false)] out Room room)
   {
     foreach (var existRoom in _rooms)
     {
@@ -21,11 +22,11 @@ public class LobbyInMemory: ILobby
       }
     }
 
-    room = null;
+    room = default;
     return false;
   }
 
-  public bool FindRoomByMap(string map, out Room room)
+  public bool FindRoomByMap(string map, [MaybeNullWhen(false)] out Room room)
   {
     foreach (var existRoom in _rooms)
     {
@@ -37,7 +38,7 @@ public class LobbyInMemory: ILobby
       }
     }
 
-    room = null;
+    room = default;
     return false;
   }
 
