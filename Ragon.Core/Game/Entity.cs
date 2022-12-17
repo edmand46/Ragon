@@ -13,7 +13,7 @@ public class Entity
   public byte[] Payload { get; private set; }
   public ushort StaticId { get; private set; }
   public ushort Type { get; private set; }
-  
+
   private List<EntityEvent> _bufferedEvents;
 
   public Entity(RoomPlayer owner, ushort type, ushort staticId, RagonAuthority eventAuthority)
@@ -25,7 +25,7 @@ public class Entity
     Payload = Array.Empty<byte>();
     Authority = eventAuthority;
     State = new EntityState(this);
-    
+
     _bufferedEvents = new List<EntityEvent>();
   }
 
@@ -38,7 +38,7 @@ public class Entity
   {
     Owner = owner;
   }
-  
+
   public void RestoreBufferedEvents(RoomPlayer roomPlayer, RagonSerializer writer)
   {
     foreach (var bufferedEvent in _bufferedEvents)
@@ -46,8 +46,8 @@ public class Entity
       writer.Clear();
       writer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       writer.WriteUShort(bufferedEvent.EventId);
-      writer.WriteUShort(bufferedEvent.PeerId);
-      writer.WriteByte((byte) RagonReplicationMode.Server);
+      writer.WriteUShort(bufferedEvent.Invoker.Connection.Id);
+      writer.WriteByte((byte)RagonReplicationMode.Server);
       writer.WriteUShort(Id);
 
       ReadOnlySpan<byte> data = bufferedEvent.EventData.AsSpan();
@@ -70,7 +70,7 @@ public class Entity
     serializer.WriteUShort(Owner.Connection.Id);
 
     ReadOnlySpan<byte> entityPayload = Payload.AsSpan();
-    serializer.WriteUShort((ushort) entityPayload.Length);
+    serializer.WriteUShort((ushort)entityPayload.Length);
     serializer.WriteData(ref entityPayload);
 
     var sendData = serializer.ToArray();
@@ -109,7 +109,7 @@ public class Entity
     serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
     serializer.WriteUShort(eventId);
     serializer.WriteUShort(caller.Connection.Id);
-    serializer.WriteByte((byte) eventMode);
+    serializer.WriteByte((byte)eventMode);
     serializer.WriteUShort(Id);
     serializer.WriteData(ref payload);
 
@@ -134,13 +134,7 @@ public class Entity
 
     if (eventMode == RagonReplicationMode.Buffered && targetMode != RagonTarget.Owner)
     {
-      var bufferedEvent = new EntityEvent()
-      {
-        EventData = payload.ToArray(),
-        Target = targetMode,
-        EventId = eventId,
-        PeerId = caller.Connection.Id,
-      };
+      var bufferedEvent = new EntityEvent(caller, eventId, payload.ToArray(), targetMode);
       _bufferedEvents.Add(bufferedEvent);
     }
 
@@ -151,7 +145,7 @@ public class Entity
     serializer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
     serializer.WriteUShort(eventId);
     serializer.WriteUShort(caller.Connection.Id);
-    serializer.WriteByte((byte) eventMode);
+    serializer.WriteByte((byte)eventMode);
     serializer.WriteUShort(Id);
     serializer.WriteData(ref payload);
 

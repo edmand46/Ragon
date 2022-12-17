@@ -2,18 +2,18 @@ namespace Ragon.Core.Game;
 
 public class EntityList
 {
-  private List<Entity> _dynamicEntitiesList = new List<Entity>();
-  private List<Entity> _staticEntitesList = new List<Entity>();
-  private Dictionary<ushort, Entity> _entitiesMap = new Dictionary<ushort, Entity>();
+  private readonly List<Entity> _dynamicEntitiesList = new List<Entity>();
+  private readonly List<Entity> _staticEntitiesList = new List<Entity>();
+  private readonly Dictionary<ushort, Entity> _entitiesMap = new Dictionary<ushort, Entity>();
 
-  public IReadOnlyList<Entity> StaticList => _staticEntitesList;
+  public IReadOnlyList<Entity> StaticList => _staticEntitiesList;
   public IReadOnlyList<Entity> DynamicList => _dynamicEntitiesList;
   public IReadOnlyDictionary<ushort, Entity> Map => _entitiesMap;
 
   public void Add(Entity entity)
   {
     if (entity.StaticId != 0)
-      _staticEntitesList.Add(entity);
+      _staticEntitiesList.Add(entity);
     else
       _dynamicEntitiesList.Add(entity);
     
@@ -24,7 +24,7 @@ public class EntityList
   {
     if (_entitiesMap.Remove(entity.Id, out var existEntity))
     {
-      _staticEntitesList.Remove(entity);
+      _staticEntitiesList.Remove(entity);
       _dynamicEntitiesList.Remove(entity);
       
       return existEntity;
