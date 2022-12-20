@@ -47,7 +47,7 @@ public sealed class JoinHandler : IHandler
     writer.WriteString(room.Info.Map);
 
     var sendData = writer.ToArray();
-    player.Connection.ReliableChannel.Send(sendData);
+    player.Connection.Reliable.Send(sendData);
   }
 
   private void JoinFailed(LobbyPlayer player, RagonSerializer writer)
@@ -57,6 +57,6 @@ public sealed class JoinHandler : IHandler
     writer.WriteString($"Room not exists");
 
     var sendData = writer.ToArray();
-    player.Connection.ReliableChannel.Send(sendData);
+    player.Connection.Reliable.Send(sendData);
   }
 }

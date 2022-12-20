@@ -6,13 +6,11 @@ namespace Ragon.Core;
 [Serializable]
 public struct Configuration
 {
-  public string Key;
-  public string Protocol;
-  public string Socket;
-  public ushort SendRate;
+  public string ServerKey;
+  public string ServerType;
+  public ushort ServerTickRate;
+  public string GameProtocol;
   public ushort Port;
-  public int SkipTimeout;
-  public int ReconnectTimeout;
   public int LimitConnections;
   public int LimitPlayersPerRoom;
   public int LimitRooms;

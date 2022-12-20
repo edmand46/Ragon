@@ -88,7 +88,7 @@ public sealed class SceneLoadedHandler : IHandler
     foreach (var awaiter in room.ReadyPlayersList)
     {
       if (awaiter != roomPlayer)
-        awaiter.Connection.ReliableChannel.Send(sendData);
+        awaiter.Connection.Reliable.Send(sendData);
     }
   }
 
@@ -118,6 +118,6 @@ public sealed class SceneLoadedHandler : IHandler
 
     var sendData = writer.ToArray();
     foreach (var player in receviersList)
-      player.Connection.ReliableChannel.Send(sendData);
+      player.Connection.Reliable.Send(sendData);
   }
 }

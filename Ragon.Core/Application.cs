@@ -2,6 +2,7 @@ using System.Diagnostics;
 using NLog;
 using Ragon.Common;
 using Ragon.Core.Lobby;
+using Ragon.Core.Server;
 using Ragon.Core.Time;
 using Ragon.Server;
 using Ragon.Server.ENet;
@@ -13,6 +14,7 @@ public class Application : INetworkListener
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   private readonly INetworkServer _server;
   private readonly Thread _dedicatedThread;
+  private readonly Executor _executor;
   private readonly Configuration _configuration;
   private readonly HandlerRegistry _handlerRegistry;
   private readonly ILobby _lobby;
@@ -22,6 +24,7 @@ public class Application : INetworkListener
   public Application(Configuration configuration)
   {
     _configuration = configuration;
+    _executor = new Executor();
     _dedicatedThread = new Thread(Execute);
     _dedicatedThread.IsBackground = true;
     _contexts = new Dictionary<ushort, PlayerContext>();
@@ -29,20 +32,24 @@ public class Application : INetworkListener
     _lobby = new LobbyInMemory();
     _loop = new Loop();
 
-    if (configuration.Socket == "enet")
+    if (configuration.ServerType == "enet")
       _server = new ENetServer();
+    
+    if (configuration.ServerType == "websocket")
+      _server = new NativeWebSocketServer(_executor);
 
-    Debug.Assert(_server != null, $"Socket type not supported: {configuration.Socket}. Supported: [enet, websocket]");
+    Debug.Assert(_server != null, $"Socket type not supported: {configuration.ServerType}. Supported: [enet, websocket]");
   }
 
   public void Execute()
   {
     while (true)
     {
+      _executor.Execute();
       _loop.Tick();
       _server.Poll();
-      
-      Thread.Sleep((int) 1000.0f / _configuration.SendRate);
+
+      Thread.Sleep((int)1000.0f / _configuration.ServerTickRate);
     }
   }
 
@@ -51,7 +58,7 @@ public class Application : INetworkListener
     var networkConfiguration = new NetworkConfiguration()
     {
       LimitConnections = _configuration.LimitConnections,
-      Protocol = RagonVersion.Parse(_configuration.Protocol),
+      Protocol = RagonVersion.Parse(_configuration.GameProtocol),
       Address = "0.0.0.0",
       Port = _configuration.Port,
     };
@@ -86,9 +93,10 @@ public class Application : INetworkListener
       if (room != null)
       {
         room.RemovePlayer(context.RoomPlayer);
-        
+
         _lobby.RemoveIfEmpty(room);
       }
+
       context.Dispose();
     }
   }

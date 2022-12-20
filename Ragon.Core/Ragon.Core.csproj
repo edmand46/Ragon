@@ -14,7 +14,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Ragon.Protocol\Ragon.Protocol.csproj" />
       <ProjectReference Include="..\Ragon.Server.ENet\Ragon.Server.ENet.csproj" />
-      <ProjectReference Include="..\Ragon.Server.WebSockets\Ragon.Server.WebSockets.csproj" />
+      <ProjectReference Include="..\Ragon.Server.NativeWebSockets\Ragon.Server.NativeWebSockets.csproj" />
       <ProjectReference Include="..\Ragon.Server\Ragon.Server.csproj" />
     </ItemGroup>
 

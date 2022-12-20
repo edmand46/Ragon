@@ -10,12 +10,17 @@ namespace Ragon.Relay
         static void Main(string[] args)
         {
             var logger = LogManager.GetLogger("Ragon.Relay");
+            
             logger.Info("Relay Application");
-            var configuration = Configuration.Load("config.json");
+            
+            var configuration = Configuration.Load("relay.config.json");
             var relay = new Application(configuration);
-            relay.Start();
+            
             logger.Info("Started");
+            relay.Start();
+
             Console.ReadKey();
+            
             relay.Stop();
             logger.Info("Stopped");
         }

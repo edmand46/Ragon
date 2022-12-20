@@ -54,7 +54,7 @@ public class Entity
       writer.WriteData(ref data);
 
       var sendData = writer.ToArray();
-      roomPlayer.Connection.ReliableChannel.Send(sendData);
+      roomPlayer.Connection.Reliable.Send(sendData);
     }
   }
 
@@ -68,14 +68,14 @@ public class Entity
     serializer.WriteUShort(Type);
     serializer.WriteUShort(Id);
     serializer.WriteUShort(Owner.Connection.Id);
-
+    
     ReadOnlySpan<byte> entityPayload = Payload.AsSpan();
     serializer.WriteUShort((ushort)entityPayload.Length);
     serializer.WriteData(ref entityPayload);
 
     var sendData = serializer.ToArray();
     foreach (var player in room.ReadyPlayersList)
-      player.Connection.ReliableChannel.Send(sendData);
+      player.Connection.Reliable.Send(sendData);
   }
 
   public void Destroy(byte[] payload)
@@ -91,7 +91,7 @@ public class Entity
 
     var sendData = serializer.ToArray();
     foreach (var player in room.ReadyPlayersList)
-      player.Connection.ReliableChannel.Send(sendData);
+      player.Connection.Reliable.Send(sendData);
   }
 
   public void ReplicateEvent(
@@ -114,7 +114,7 @@ public class Entity
     serializer.WriteData(ref payload);
 
     var sendData = serializer.ToArray();
-    targetPlayer.Connection.ReliableChannel.Send(sendData);
+    targetPlayer.Connection.Reliable.Send(sendData);
   }
 
   public void ReplicateEvent(
@@ -155,7 +155,7 @@ public class Entity
     {
       case RagonTarget.Owner:
       {
-        Owner.Connection.ReliableChannel.Send(sendData);
+        Owner.Connection.Reliable.Send(sendData);
         break;
       }
       case RagonTarget.ExceptOwner:
@@ -163,7 +163,7 @@ public class Entity
         foreach (var roomPlayer in room.ReadyPlayersList)
         {
           if (roomPlayer.Connection.Id != Owner.Connection.Id)
-            roomPlayer.Connection.ReliableChannel.Send(sendData);
+            roomPlayer.Connection.Reliable.Send(sendData);
         }
 
         break;
@@ -173,7 +173,7 @@ public class Entity
         foreach (var roomPlayer in room.ReadyPlayersList)
         {
           if (roomPlayer.Connection.Id != caller.Connection.Id)
-            roomPlayer.Connection.ReliableChannel.Send(sendData);
+            roomPlayer.Connection.Reliable.Send(sendData);
         }
 
         break;
@@ -181,7 +181,7 @@ public class Entity
       case RagonTarget.All:
       {
         foreach (var roomPlayer in room.ReadyPlayersList)
-          roomPlayer.Connection.ReliableChannel.Send(sendData);
+          roomPlayer.Connection.Reliable.Send(sendData);
         break;
       }
     }

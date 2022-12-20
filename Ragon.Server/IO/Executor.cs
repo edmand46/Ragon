@@ -1,20 +1,17 @@
-using System;
-using System.Collections.Generic;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-using NLog.LayoutRenderers.Wrappers;
 
-namespace Ragon.Core;
+namespace Ragon.Core.Server;
 
 public class Executor: TaskScheduler
 {
   private ChannelReader<Task> _reader;
   private ChannelWriter<Task> _writer;
   private Queue<Task> _pendingTasks;
-  
+  private TaskFactory _taskFactory;
+
   public void Run(Task task)
   {
-    task.Start(this);
+    _taskFactory.StartNew(() => task);
   }
 
   public Executor()
@@ -22,7 +19,8 @@ public class Executor: TaskScheduler
     var channel = Channel.CreateUnbounded<Task>();
     _reader = channel.Reader;
     _writer = channel.Writer;
-
+    
+    _taskFactory = new TaskFactory(this);
     _pendingTasks = new Queue<Task>();
   }
 

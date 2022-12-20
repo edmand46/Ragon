@@ -32,7 +32,7 @@ public sealed class AuthorizationHandler: IHandler
     writer.WriteString(playerName);
     
     var sendData = writer.ToArray();
-    context.Connection.ReliableChannel.Send(sendData);
+    context.Connection.Reliable.Send(sendData);
     
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} authorized");
   }

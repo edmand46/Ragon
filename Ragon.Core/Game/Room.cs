@@ -83,7 +83,7 @@ public class Room: IAction
 
       var sendData = Writer.ToArray();
       foreach (var roomPlayer in ReadyPlayersList)
-        roomPlayer.Connection.UnreliableChannel.Send(sendData);
+        roomPlayer.Connection.Unreliable.Send(sendData);
     }
   }
 
@@ -161,6 +161,6 @@ public class Room: IAction
   public void Broadcast(byte[] data)
   {
     foreach (var readyPlayer in ReadyPlayersList)
-      readyPlayer.Connection.ReliableChannel.Send(data);
+      readyPlayer.Connection.Reliable.Send(data);
   }
 }

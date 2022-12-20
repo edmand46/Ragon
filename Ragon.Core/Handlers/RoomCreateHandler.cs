@@ -31,7 +31,7 @@ public sealed class CreateHandler: IHandler
         writer.WriteString($"Room with id {roomId} already exists");
             
         var sendData = writer.ToArray();
-        context.Connection.ReliableChannel.Send(sendData);
+        context.Connection.Reliable.Send(sendData);
         
         _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} join failed to room {roomId}, room already exist");
         return;        
@@ -79,6 +79,6 @@ public sealed class CreateHandler: IHandler
     writer.WriteString(room.Info.Map);
 
     var sendData = writer.ToArray();
-    player.Connection.ReliableChannel.Send(sendData);
+    player.Connection.Reliable.Send(sendData);
   }
 }

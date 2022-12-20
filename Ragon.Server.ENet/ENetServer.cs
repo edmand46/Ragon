@@ -63,7 +63,8 @@ namespace Ragon.Server.ENet
           {
             if (!IsValidProtocol(_event.Data))
             {
-              _logger.Warn("Mismatched protocol, close connection");
+              _logger.Warn($"Mismatched protocol Server: {RagonVersion.Parse(_protocol)} Client: {RagonVersion.Parse(_event.Data)}, close connection");
+              _event.Peer.DisconnectNow(0);
               break;
             }
 
@@ -109,7 +110,6 @@ namespace Ragon.Server.ENet
 
     private bool IsValidProtocol(uint protocol)
     {
-     Console.WriteLine($"{protocol} {_protocol}");
       return protocol == _protocol;
     }
   }
