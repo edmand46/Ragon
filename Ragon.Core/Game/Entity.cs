@@ -5,16 +5,15 @@ namespace Ragon.Core.Game;
 public class Entity
 {
   private static ushort _idGenerator = 0;
-
   public ushort Id { get; private set; }
+  public ushort Type { get; private set; }
+  public ushort StaticId { get; private set; }
   public RoomPlayer Owner { get; private set; }
   public RagonAuthority Authority { get; private set; }
   public EntityState State { get; private set; }
   public byte[] Payload { get; private set; }
-  public ushort StaticId { get; private set; }
-  public ushort Type { get; private set; }
-
-  private List<EntityEvent> _bufferedEvents;
+  
+  private readonly List<EntityEvent> _bufferedEvents;
 
   public Entity(RoomPlayer owner, ushort type, ushort staticId, RagonAuthority eventAuthority)
   {
