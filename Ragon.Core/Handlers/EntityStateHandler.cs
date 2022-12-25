@@ -14,6 +14,7 @@ public sealed class EntityStateHandler: IHandler
     for (var entityIndex = 0; entityIndex < entitiesCount; entityIndex++)
     {
       var entityId = reader.ReadUShort();
+      
       if (room.Entities.TryGetValue(entityId, out var entity))
       {
         entity.State.Read(reader);

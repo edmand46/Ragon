@@ -6,20 +6,18 @@
 
 Ragon is fully free, small and high perfomance room based game server with plugin based architecture.
 
-<a href="https://ragon-server.com/docs/category/basics">Documentation</a>
-<br>
-<a href="https://ragon-server.com/docs/get-started">Get started</a>
+<a href="http://localhost:3000/docs/installation">Documentation</a>
 
 ### Features:
 - Effective
 - Free
-- Simple matchmaking
+- Lobby
 - Room based architecture
 - Сustomizable authorization
 - Сustomizable server-side logic via plugins with flexible API*(2)
 - No CCU limitations*(1)
 - No Room count limitations
-- Reliable UDP 
+- Reliable UDP
 
 ### Requirements
 - OSX, Windows, Linux(Ubuntu, Debian)
@@ -33,5 +31,4 @@ MIT
 
 ### Tips
 \* Limited to 4095 CCU by library ENet-Sharp (1)
-
 \* Non finally (2)

@@ -76,6 +76,6 @@ public sealed class JoinOrCreateHandler : IHandler
     var sendData = writer.ToArray();
     player.Connection.Reliable.Send(sendData);
     
-    _logger.Trace($"Joined to room {room.Id}");
+    _logger.Trace($"{player.Connection.Id}|{player.Name} joined to room {room.Id}");
   }
 }

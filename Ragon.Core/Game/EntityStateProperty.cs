@@ -24,8 +24,8 @@ public class EntityStateProperty
     public ReadOnlySpan<byte> Read()
     {
         var dataSpan = _data.AsSpan();
-        
-        return dataSpan.Slice(0, Size);
+        var src = dataSpan.Slice(0, Size);
+        return src;
     }
 
     public void Write(ref ReadOnlySpan<byte> src)

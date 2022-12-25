@@ -36,10 +36,11 @@ public sealed class SceneLoadedHandler : IHandler
           entity.State.AddProperty(new EntityStateProperty(propertySize, propertyType));
         }
         
+        _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} created entity {entity.Id}:{entity.Type}");
         room.AttachEntity(player, entity);
       }
 
-      _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} loaded with {statics} scene entities");
+      _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} loaded");
       
       room.WaitPlayersList.Add(player);
 

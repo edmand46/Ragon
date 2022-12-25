@@ -3,9 +3,8 @@ using Ragon.Common;
 
 namespace Ragon.Core.Game;
 
-public class EntityState
+public class  EntityState
 {
-  private Logger _logger = LogManager.GetCurrentClassLogger();
   private List<EntityStateProperty> _properties;
   private Entity _entity;
 
@@ -23,7 +22,7 @@ public class EntityState
   public void Write(RagonSerializer serializer)
   {
     serializer.WriteUShort(_entity.Id);
-
+ 
     for (int propertyIndex = 0; propertyIndex < _properties.Count; propertyIndex++)
     {
       var property = _properties[propertyIndex];

@@ -37,7 +37,7 @@ public class Application : INetworkListener
     
     if (configuration.ServerType == "websocket")
       _server = new NativeWebSocketServer(_executor);
-
+        
     Debug.Assert(_server != null, $"Socket type not supported: {configuration.ServerType}. Supported: [enet, websocket]");
   }
 
@@ -48,7 +48,7 @@ public class Application : INetworkListener
       _executor.Execute();
       _loop.Tick();
       _server.Poll();
-
+    
       Thread.Sleep((int)1000.0f / _configuration.ServerTickRate);
     }
   }

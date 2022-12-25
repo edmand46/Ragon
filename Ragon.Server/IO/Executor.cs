@@ -9,9 +9,9 @@ public class Executor: TaskScheduler
   private Queue<Task> _pendingTasks;
   private TaskFactory _taskFactory;
 
-  public void Run(Task task)
+  public void Run(Action action)
   {
-    _taskFactory.StartNew(() => task);
+    _taskFactory.StartNew(action);
   }
 
   public Executor()
