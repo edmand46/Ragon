@@ -1,6 +1,6 @@
 {
   "serverKey": "defaultkey",
-  "serverType": "websocket",
+  "serverType": "enet",
   "serverTickRate": 20,
   "gameProtocol": "1.0.0",
   "port": 5000,
