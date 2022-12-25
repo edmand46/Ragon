@@ -16,7 +16,7 @@ public struct Configuration
   public int LimitRooms;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-  private static readonly string ServerVersion = "1.1.0-rc";
+  private static readonly string ServerVersion = "1.0.31-rc";
 
   private static void CopyrightInfo()
   {
