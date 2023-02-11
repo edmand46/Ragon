@@ -22,9 +22,9 @@ public sealed class EntityEventHandler: IHandler
     var eventId = reader.ReadUShort();
     var eventMode = (RagonReplicationMode) reader.ReadByte();
     var targetMode = (RagonTarget) reader.ReadByte();
-    var payloadData = reader.ReadData(reader.Size);
     var targetPlayerPeerId = reader.ReadUShort();
-    
+    var payloadData = reader.ReadData(reader.Size);
+
     if (targetMode == RagonTarget.Player && context.Room.Players.TryGetValue(targetPlayerPeerId, out var targetPlayer)) 
     {
       Span<byte> payloadRaw = stackalloc byte[payloadData.Length];
