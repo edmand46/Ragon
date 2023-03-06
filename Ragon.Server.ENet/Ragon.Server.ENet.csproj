@@ -9,7 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="ENet-CSharp" Version="2.4.8" />
-      <PackageReference Include="NLog" Version="5.0.5" />
+      <PackageReference Include="NLog" Version="5.1.1" />
     </ItemGroup>
 
     <ItemGroup>

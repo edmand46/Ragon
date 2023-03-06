@@ -4,13 +4,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Relay", "Ragon.Relay\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Protocol", "Ragon.Protocol\Ragon.Protocol.csproj", "{F478B2A2-36F4-43B9-9BB7-382A57C449B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server", "Ragon.Server\Ragon.Server.csproj", "{45D3B686-8960-4656-91B2-6F8BFCCAA225}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server", "Ragon.Server\Ragon.Server.csproj", "{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Core", "Ragon.Core\Ragon.Core.csproj", "{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.NativeWebSockets", "Ragon.Server.NativeWebSockets\Ragon.Server.NativeWebSockets.csproj", "{81050343-A9B8-487B-86C8-7A5B7DD9C39B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.DotNetWebSockets", "Ragon.Server.DotNetWebSockets\Ragon.Server.DotNetWebSockets.csproj", "{81050343-A9B8-487B-86C8-7A5B7DD9C39B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.ENet", "Ragon.Server.ENet\Ragon.Server.ENet.csproj", "{DD79AC4F-9E5C-4938-850E-805D537E68D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Client", "Ragon.Client\Ragon.Client.csproj", "{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Client.Simulation", "Ragon.Client.Simulation\Ragon.Client.Simulation.csproj", "{0384848D-3B63-4B3A-B15F-A836EBB3E95D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Tests", "Ragon.Tests\Ragon.Tests.csproj", "{D1F44471-A700-4E7C-B047-334685850A5C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Client.Property", "Ragon.Client.Property\Ragon.Client.Property.csproj", "{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,10 +32,6 @@ Global
 		{F478B2A2-36F4-43B9-9BB7-382A57C449B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F478B2A2-36F4-43B9-9BB7-382A57C449B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F478B2A2-36F4-43B9-9BB7-382A57C449B2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{45D3B686-8960-4656-91B2-6F8BFCCAA225}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{45D3B686-8960-4656-91B2-6F8BFCCAA225}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{45D3B686-8960-4656-91B2-6F8BFCCAA225}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{45D3B686-8960-4656-91B2-6F8BFCCAA225}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -42,5 +44,21 @@ Global
 		{DD79AC4F-9E5C-4938-850E-805D537E68D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD79AC4F-9E5C-4938-850E-805D537E68D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD79AC4F-9E5C-4938-850E-805D537E68D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0384848D-3B63-4B3A-B15F-A836EBB3E95D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0384848D-3B63-4B3A-B15F-A836EBB3E95D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0384848D-3B63-4B3A-B15F-A836EBB3E95D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0384848D-3B63-4B3A-B15F-A836EBB3E95D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1F44471-A700-4E7C-B047-334685850A5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1F44471-A700-4E7C-B047-334685850A5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1F44471-A700-4E7C-B047-334685850A5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1F44471-A700-4E7C-B047-334685850A5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
