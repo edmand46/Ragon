@@ -2,8 +2,8 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
-        <RootNamespace>Game</RootNamespace>
+        <RootNamespace>Ragon.Relay</RootNamespace>
+        <TargetFramework>net7.0</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -17,10 +17,15 @@
       <None Update="relay.config.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="libenet.dylib">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Ragon.Core\Ragon.Core.csproj" />
+      <ProjectReference Include="..\Ragon.Server.ENet\Ragon.Server.ENet.csproj" />
+      <ProjectReference Include="..\Ragon.Server.DotNetWebSockets\Ragon.Server.DotNetWebSockets.csproj" />
+      <ProjectReference Include="..\Ragon.Server\Ragon.Server.csproj" />
     </ItemGroup>
 
 </Project>

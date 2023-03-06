@@ -16,7 +16,8 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <OutputPath></OutputPath>
+      <OutputPath>C:\Users\edmand46\RagonProjects\ragon-unity-sdk\Assets\Ragon-Unity-SDK\Runtime\Plugins</OutputPath>
       <DefineConstants>TRACE;NETSTACK_SPAN</DefineConstants>
+      <DebugType>none</DebugType>
     </PropertyGroup>
 </Project>
