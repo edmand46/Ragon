@@ -35,8 +35,8 @@ namespace Ragon.Client
     private RagonStatus _status;
     private NetworkStatistics _stats;
 
-    private float _replicatationRate = 0;
-    private float _replicatationTime = 0;
+    private float _replicationRate = 0;
+    private float _replicationTime = 0;
 
     public IRagonConnection Connection => _connection;
     public RagonStatus Status => _status;
@@ -67,8 +67,8 @@ namespace Ragon.Client
       _connection.OnConnected += OnConnected;
       _connection.OnDisconnected += OnDisconnected;
 
-      _replicatationRate = (1000.0f / rate) / 1000.0f;
-      _replicatationTime = 0;
+      _replicationRate = (1000.0f / rate) / 1000.0f;
+      _replicationTime = 0;
 
       _eventCache = new RagonEventCache();
       _stats = new NetworkStatistics();
@@ -129,11 +129,11 @@ namespace Ragon.Client
 
     public void Update(float dt)
     {
-      _replicatationTime += dt;
-      if (_replicatationTime >= _replicatationRate)
+      _replicationTime += dt;
+      if (_replicationTime >= _replicationRate)
       {
         _entityCache.WriteState(_readBuffer);
-        _replicatationTime = 0;
+        _replicationTime = 0;
       }
 
       _stats.Update(_connection.BytesSent, _connection.BytesReceived, _connection.Ping, dt);
