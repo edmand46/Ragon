@@ -26,9 +26,6 @@ Ragon is fully free, small and high perfomance room based game server with plugi
 ### Dependencies
 * ENet-Sharp [v2.4.8]
 
-### License
-MIT
-
 ### Tips
 \* Limited to 4095 CCU by library ENet-Sharp (1)
 \* Non finally (2)
