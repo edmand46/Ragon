@@ -23,7 +23,7 @@ namespace Ragon.Client
     private readonly INetworkConnection _connection;
     private readonly IRagonEntityListener _entityListener;
     private readonly IRagonSceneCollector _sceneCollector;
-    private Handler[] _processors;
+    private Handler[] _handlers;
     private RagonBuffer _readBuffer;
     private RagonBuffer _writeBuffer;
     private RagonRoom _room;
@@ -94,25 +94,25 @@ namespace Ragon.Client
       _playerCache = new RagonPlayerCache();
       _entityCache = new RagonEntityCache(this, _playerCache, _entityListener, _sceneCollector);
 
-      _processors = new Handler[byte.MaxValue];
-      _processors[(byte)RagonOperation.AUTHORIZED_SUCCESS] = new AuthorizeSuccessHandler(_listenerList);
-      _processors[(byte)RagonOperation.AUTHORIZED_FAILED] = new AuthorizeFailedHandler(_listenerList);
-      _processors[(byte)RagonOperation.JOIN_SUCCESS] =
+      _handlers = new Handler[byte.MaxValue];
+      _handlers[(byte)RagonOperation.AUTHORIZED_SUCCESS] = new AuthorizeSuccessHandler(_listenerList);
+      _handlers[(byte)RagonOperation.AUTHORIZED_FAILED] = new AuthorizeFailedHandler(_listenerList);
+      _handlers[(byte)RagonOperation.JOIN_SUCCESS] =
         new JoinSuccessHandler(this, _readBuffer, _listenerList, _playerCache, _entityCache);
-      _processors[(byte)RagonOperation.JOIN_FAILED] = new JoinFailedHandler(_listenerList);
-      _processors[(byte)RagonOperation.LEAVE_ROOM] = new LeaveRoomHandler(this, _listenerList, _entityCache);
-      _processors[(byte)RagonOperation.OWNERSHIP_CHANGED] =
+      _handlers[(byte)RagonOperation.JOIN_FAILED] = new JoinFailedHandler(_listenerList);
+      _handlers[(byte)RagonOperation.LEAVE_ROOM] = new LeaveRoomHandler(this, _listenerList, _entityCache);
+      _handlers[(byte)RagonOperation.OWNERSHIP_CHANGED] =
         new OwnershipHandler(_listenerList, _playerCache, _entityCache);
-      _processors[(byte)RagonOperation.PLAYER_JOINED] = new PlayerJoinHandler(_playerCache, _listenerList);
-      _processors[(byte)RagonOperation.PLAYER_LEAVED] =
+      _handlers[(byte)RagonOperation.PLAYER_JOINED] = new PlayerJoinHandler(_playerCache, _listenerList);
+      _handlers[(byte)RagonOperation.PLAYER_LEAVED] =
         new PlayerLeftHandler(_entityCache, _playerCache, _listenerList);
-      _processors[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadHandler(this, _listenerList);
-      _processors[(byte)RagonOperation.CREATE_ENTITY] = new EntityCreateHandler(this, _playerCache, _entityCache);
-      _processors[(byte)RagonOperation.DESTROY_ENTITY] = new EntityDestroyHandler(_entityCache);
-      _processors[(byte)RagonOperation.REPLICATE_ENTITY_STATE] = new StateEntityHandler(_entityCache);
-      _processors[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] =
+      _handlers[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadHandler(this, _listenerList);
+      _handlers[(byte)RagonOperation.CREATE_ENTITY] = new EntityCreateHandler(this, _playerCache, _entityCache);
+      _handlers[(byte)RagonOperation.DESTROY_ENTITY] = new EntityDestroyHandler(_entityCache);
+      _handlers[(byte)RagonOperation.REPLICATE_ENTITY_STATE] = new StateEntityHandler(_entityCache);
+      _handlers[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] =
         new EntityEventHandler(this, _playerCache, _entityCache);
-      _processors[(byte)RagonOperation.SNAPSHOT] =
+      _handlers[(byte)RagonOperation.SNAPSHOT] =
         new SnapshotHandler(this, _listenerList, _entityCache, _playerCache);
 
       var protocolRaw = RagonVersion.Parse(protocol);
@@ -183,7 +183,7 @@ namespace Ragon.Client
       _readBuffer.FromArray(data);
 
       var operation = _readBuffer.ReadByte();
-      _processors[operation].Handle(_readBuffer);
+      _handlers[operation].Handle(_readBuffer);
     }
 
     #endregion
