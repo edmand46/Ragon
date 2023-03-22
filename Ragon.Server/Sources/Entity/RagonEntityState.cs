@@ -27,7 +27,7 @@ public class RagonEntityState
   public RagonEntityState(RagonEntity entity, int capacity = 10)
   {
     _entity = entity;
-    _properties = new List<RagonProperty>(10);
+    _properties = new List<RagonProperty>(capacity);
   }
 
   public void AddProperty(RagonProperty property)
