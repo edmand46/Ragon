@@ -23,7 +23,7 @@ namespace Ragon.Client
   {
     public string Name => _name;
     public RagonEntity Entity => _entity;
-    
+
     public event Action Changed;
     public bool IsDirty => _dirty && _ticks >= _priority;
     public bool IsFixed => _fixed;
@@ -32,13 +32,13 @@ namespace Ragon.Client
     private bool _fixed;
     private string _name;
     protected bool _invokeLocal;
-    
+
     private RagonEntity _entity;
     private bool _dirty;
     private int _size;
     private int _ticks;
     private int _priority;
- 
+
     protected RagonProperty(int priority, bool invokeLocal)
     {
       _size = 0;
@@ -46,12 +46,12 @@ namespace Ragon.Client
       _fixed = false;
       _invokeLocal = invokeLocal;
     }
-    
+
     public void SetName(string name)
     {
       _name = name;
     }
-    
+
     protected void SetFixedSize(int size)
     {
       _size = size;
@@ -62,22 +62,19 @@ namespace Ragon.Client
     {
       if (!_invokeLocal)
         return;
-      
+
       Changed?.Invoke();
     }
 
     protected void MarkAsChanged()
     {
       InvokeChanged();
-      
-      if (_dirty) 
+
+      if (_dirty)
         return;
 
-      if (_entity != null)
-      {
-        _dirty = true;
-        _entity.TrackChangedProperty(this);
-      }
+      _dirty = true;
+      _entity?.TrackChangedProperty(this);
     }
 
     internal void Flush()
@@ -90,10 +87,13 @@ namespace Ragon.Client
     {
       _ticks++;
     }
-    
-    internal void AssignEntity(RagonEntity obj)
+
+    internal void AssignEntity(RagonEntity ent)
     {
-      _entity = obj;
+      _entity = ent;
+
+      if (_dirty)
+        _entity.TrackChangedProperty(this);
       
       Changed?.Invoke();
     }
@@ -111,8 +111,8 @@ namespace Ragon.Client
       var propOffset = buffer.WriteOffset;
 
       Serialize(buffer);
-      
-      var propSize = (uint) (buffer.WriteOffset - propOffset);
+
+      var propSize = (uint)(buffer.WriteOffset - propOffset);
       buffer.Write(propSize, 16, sizeOffset);
     }
 
