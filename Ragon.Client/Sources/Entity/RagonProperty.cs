@@ -70,11 +70,11 @@ namespace Ragon.Client
     {
       InvokeChanged();
 
-      if (_dirty)
+      if (_dirty || _entity == null)
         return;
 
       _dirty = true;
-      _entity?.TrackChangedProperty(this);
+      _entity.TrackChangedProperty(this);
     }
 
     internal void Flush()
@@ -91,9 +91,6 @@ namespace Ragon.Client
     internal void AssignEntity(RagonEntity ent)
     {
       _entity = ent;
-
-      if (_dirty)
-        _entity.TrackChangedProperty(this);
       
       Changed?.Invoke();
     }

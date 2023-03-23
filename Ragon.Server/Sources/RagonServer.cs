@@ -51,7 +51,7 @@ public class RagonServer : INetworkListener
     
     _reader = new RagonBuffer();
     _writer = new RagonBuffer();
-    _tickrate = _configuration.ServerTickRate;
+    _tickrate = 1000 / _configuration.ServerTickRate;
     _timer = new Stopwatch();
     
     _handlers = new IRagonOperation[byte.MaxValue];
@@ -78,12 +78,11 @@ public class RagonServer : INetworkListener
       if (_timer.ElapsedMilliseconds > _tickrate)
       {
         _executor.Update();
+        _scheduler.Update();
         _timer.Restart();
       }
       
-      _scheduler.Update();
       _server.Update();
-      
       Thread.Sleep(1);
     }
   }
