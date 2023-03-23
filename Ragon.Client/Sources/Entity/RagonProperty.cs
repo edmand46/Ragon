@@ -70,10 +70,14 @@ namespace Ragon.Client
     {
       InvokeChanged();
       
-      if (_dirty) return;
-      _dirty = true;
+      if (_dirty) 
+        return;
 
-      _entity?.TrackChangedProperty(this);
+      if (_entity != null)
+      {
+        _dirty = true;
+        _entity.TrackChangedProperty(this);
+      }
     }
 
     internal void Flush()
