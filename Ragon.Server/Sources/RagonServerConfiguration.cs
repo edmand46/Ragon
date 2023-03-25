@@ -38,7 +38,7 @@ public struct Configuration
   public int LimitRooms;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-  private static readonly string ServerVersion = "1.1.0-rc";
+  private static readonly string ServerVersion = "1.1.3-rc";
   private static Dictionary<string, ServerType> _serverTypes = new Dictionary<string, ServerType>()
   {
     {"enet", Server.ServerType.ENET},

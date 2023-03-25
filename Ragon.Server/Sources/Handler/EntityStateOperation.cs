@@ -31,7 +31,7 @@ public sealed class EntityStateOperation: IRagonOperation
     for (var entityIndex = 0; entityIndex < entitiesCount; entityIndex++)
     {
       var entityId = reader.ReadUShort();
-      if (room.Entities.TryGetValue(entityId, out var entity))
+      if (room.Entities.TryGetValue(entityId, out var entity) && entity.Owner.Connection.Id == context.Connection.Id)
       {
         entity.State.Read(reader);
         room.Track(entity);
