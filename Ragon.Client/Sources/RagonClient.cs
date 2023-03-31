@@ -114,19 +114,24 @@ namespace Ragon.Client
       _status = RagonStatus.DISCONNECTED;
       _room.Cleanup();
       _connection.Disconnect();
+      
       OnDisconnected(DisconnectReason.MANUAL);
     }
 
     public void Update(float dt)
     {
-      _replicationTime += dt;
-      if (_replicationTime >= _replicationRate)
+      if (_status != RagonStatus.DISCONNECTED)
       {
-        _entityCache.WriteState(_readBuffer);
-        _replicationTime = 0;
+        _replicationTime += dt;
+        if (_replicationTime >= _replicationRate)
+        {
+          _entityCache.WriteState(_readBuffer);
+          _replicationTime = 0;
+        }
+
+        _stats.Update(_connection.BytesSent, _connection.BytesReceived, _connection.Ping, dt);
       }
 
-      _stats.Update(_connection.BytesSent, _connection.BytesReceived, _connection.Ping, dt);
       _connection.Update();
     }
 
