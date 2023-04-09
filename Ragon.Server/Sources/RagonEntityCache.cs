@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Ragon.Server.Entity;
+
 namespace Ragon.Server;
 
 public class RagonEntityCache

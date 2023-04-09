@@ -17,6 +17,7 @@
 using ENet;
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.ENet
 {

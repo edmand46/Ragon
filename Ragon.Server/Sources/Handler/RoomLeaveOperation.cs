@@ -17,6 +17,7 @@
 using NLog;
 using Ragon.Protocol;
 using Ragon.Server.Plugin;
+using Ragon.Server.Plugin.Web;
 
 namespace Ragon.Server.Handler;
 

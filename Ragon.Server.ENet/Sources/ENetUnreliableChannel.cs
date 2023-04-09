@@ -15,6 +15,7 @@
  */
 
 using ENet;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.ENet;
 

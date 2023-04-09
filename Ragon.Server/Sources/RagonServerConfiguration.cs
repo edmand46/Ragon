@@ -44,7 +44,7 @@ public struct Configuration
   public Dictionary<string, string> WebHooks;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-  private static readonly string ServerVersion = "1.1.3-rc";
+  private static readonly string ServerVersion = "1.2.0-rc";
   private static Dictionary<string, ServerType> _serverTypes = new Dictionary<string, ServerType>()
   {
     {"enet", Server.ServerType.ENET},

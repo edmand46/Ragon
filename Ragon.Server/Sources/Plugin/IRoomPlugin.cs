@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+using Ragon.Server.Entity;
+using Ragon.Server.Room;
+
 namespace Ragon.Server.Plugin;
 
 public interface IRoomPlugin

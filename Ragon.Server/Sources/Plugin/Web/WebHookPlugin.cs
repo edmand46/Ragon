@@ -2,11 +2,11 @@ using System.Net;
 using System.Net.Http.Json;
 using Newtonsoft.Json;
 using Ragon.Protocol;
+using Ragon.Server.Handler;
 using Ragon.Server.Lobby;
-using Ragon.Server.Plugin.Web;
 using Ragon.Server.Room;
 
-namespace Ragon.Server.Plugin;
+namespace Ragon.Server.Plugin.Web;
 
 public class WebHookPlugin
 {

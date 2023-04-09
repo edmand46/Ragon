@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-using System.Net.WebSockets;
 using NLog;
+using System.Net.WebSockets;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.DotNetWebsockets;
 

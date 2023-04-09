@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Ragon.Server.Entity;
 using Ragon.Server.IO;
 
 namespace Ragon.Server.Room;

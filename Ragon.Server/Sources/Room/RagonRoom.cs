@@ -15,6 +15,7 @@
  */
 
 using Ragon.Protocol;
+using Ragon.Server.Entity;
 using Ragon.Server.Plugin;
 using Ragon.Server.Time;
 
