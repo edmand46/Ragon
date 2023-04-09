@@ -16,7 +16,7 @@
 
 using Ragon.Protocol;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Handler;
 
 public interface IRagonOperation
 {

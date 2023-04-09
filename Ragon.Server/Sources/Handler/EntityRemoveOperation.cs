@@ -16,12 +16,13 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.Hander;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Handler;
 
 public sealed class EntityDestroyOperation: IRagonOperation
 {
-  private Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
   {

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-
 using Ragon.Protocol;
+using Ragon.Server.Room;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Entity;
 
 public class RagonEvent
 {

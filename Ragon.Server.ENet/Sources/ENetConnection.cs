@@ -23,11 +23,19 @@ public sealed class ENetConnection: INetworkConnection
   public ushort Id { get; }
   public INetworkChannel Reliable { get; private set; }
   public INetworkChannel Unreliable { get; private set; }
+  private Peer _peer;
   
   public ENetConnection(Peer peer)
   {
+    _peer = peer;
+    
     Id = (ushort) peer.ID;
     Reliable = new ENetReliableChannel(peer, 0);
     Unreliable = new ENetUnreliableChannel(peer, 1);
+  }
+  
+  public void Close()
+  {
+    _peer.Disconnect(0);
   }
 }

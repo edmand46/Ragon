@@ -43,6 +43,11 @@ public sealed class WebSocketConnection : INetworkConnection
         Unreliable = unreliableChannel;
     }
 
+    public void Close()
+    {
+        Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+    }
+    
     public async Task Flush()
     {
         foreach (var channel in _channels)

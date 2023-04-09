@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-namespace Ragon.Core.Time;
+namespace Ragon.Server.Time;
 
 public interface IRagonAction
 {
-    public void Tick();
+    public void Tick(float dt);
 }

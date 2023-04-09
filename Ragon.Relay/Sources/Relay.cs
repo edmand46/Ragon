@@ -19,7 +19,6 @@ using Ragon.Server;
 using Ragon.Server.ENet;
 using Ragon.Server.DotNetWebsockets;
 
-
 namespace Ragon.Relay;
 
 public class Relay
@@ -32,21 +31,19 @@ public class Relay
     var configuration = Configuration.Load("relay.config.json");
     var serverType = Configuration.GetServerType(configuration.ServerType);
 
-    INetworkServer server = null;
+    INetworkServer networkServer = new ENetServer();
+    IServerPlugin plugin = new RelayServerPlugin();
     switch (serverType)
     {
       case ServerType.ENET:
-        server = new ENetServer();
+        networkServer = new ENetServer();
         break;
       case ServerType.WEBSOCKET:
-        server = new DotNetWebSocketServer();
-        break;
-      default:
-        server = new ENetServer();
+        networkServer = new DotNetWebSocketServer();
         break;
     }
 
-    var relay = new RagonServer(server, configuration);
+    var relay = new RagonServer(networkServer, plugin, configuration);
     logger.Info("Started");
     relay.Start();
   }

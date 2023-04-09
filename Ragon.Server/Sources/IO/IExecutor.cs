@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-namespace Ragon.Server;
+namespace Ragon.Server.IO;
 
 public interface IExecutor
 {
-  public void Run(Action action);
+  public Task Run(Action action);
 }

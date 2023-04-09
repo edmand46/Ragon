@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-namespace Ragon.Server.IO;
+namespace Ragon.Server.Plugin;
 
-public interface INetworkServer
+public interface IRoomPlugin
 {
-  public Executor Executor { get; }
-  public void Stop();
-  public void Update();
-  public void Start(INetworkListener listener, NetworkConfiguration configuration);
+  void Tick(float dt);
+  void OnAttached();
+  void OnDetached();
+  bool OnEntityCreate(RagonRoomPlayer creator, RagonEntity entity);
+  bool OnEntityRemove(RagonRoomPlayer remover, RagonEntity entity);
 }

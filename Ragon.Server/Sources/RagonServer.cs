@@ -16,9 +16,9 @@
 
 using System.Diagnostics;
 using NLog;
-using Ragon.Core.Time;
 using Ragon.Protocol;
-using Ragon.Server;
+using Ragon.Server.Plugin;
+using Ragon.Server.Time;
 
 namespace Ragon.Server;
 
@@ -28,6 +28,7 @@ public class RagonServer : INetworkListener
   private readonly INetworkServer _server;
   private readonly Thread _dedicatedThread;
   private readonly Executor _executor;
+  private readonly WebHookPlugin _webhooks;
   private readonly Configuration _configuration;
   private readonly IRagonOperation[] _handlers;
   private readonly RagonBuffer _reader;
@@ -35,50 +36,56 @@ public class RagonServer : INetworkListener
   private readonly IRagonLobby _lobby;
   private readonly RagonScheduler _scheduler;
   private readonly Dictionary<ushort, RagonContext> _contexts;
-  private long _tickrate = 0;
-  private Stopwatch _timer;
+  private readonly Stopwatch _timer;
+  private readonly long _tickRate = 0;
   
-  public RagonServer(INetworkServer server, Configuration configuration)
+  public RagonServer(
+    INetworkServer server,
+    IServerPlugin plugin,
+    Configuration configuration)
   {
     _server = server;
     _executor = _server.Executor;
     _configuration = configuration;
-    _dedicatedThread = new Thread(Execute);
-    _dedicatedThread.IsBackground = true;
     _contexts = new Dictionary<ushort, RagonContext>();
     _lobby = new LobbyInMemory();
     _scheduler = new RagonScheduler();
-    
+    _webhooks = new WebHookPlugin(this, configuration);
+    _dedicatedThread = new Thread(Execute);
+    _dedicatedThread.IsBackground = true;
+
     _reader = new RagonBuffer();
     _writer = new RagonBuffer();
-    _tickrate = 1000 / _configuration.ServerTickRate;
+    _tickRate = 1000 / _configuration.ServerTickRate;
     _timer = new Stopwatch();
     
     _handlers = new IRagonOperation[byte.MaxValue];
-    _handlers[(byte) RagonOperation.AUTHORIZE] = new AuthorizationOperation();
-    _handlers[(byte) RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation();
-    _handlers[(byte) RagonOperation.CREATE_ROOM] = new RoomCreateOperation();
-    _handlers[(byte) RagonOperation.JOIN_ROOM] = new RoomJoinOperation();
-    _handlers[(byte) RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation();
+    _handlers[(byte) RagonOperation.AUTHORIZE] = new AuthorizationOperation(_webhooks, _writer, configuration);
+    _handlers[(byte) RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation(plugin, _webhooks);
+    _handlers[(byte) RagonOperation.CREATE_ROOM] = new RoomCreateOperation(plugin, _webhooks);
+    _handlers[(byte) RagonOperation.JOIN_ROOM] = new RoomJoinOperation(plugin, _webhooks);
+    _handlers[(byte) RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation(plugin, _webhooks);
     _handlers[(byte) RagonOperation.LOAD_SCENE] = new SceneLoadOperation();
     _handlers[(byte) RagonOperation.SCENE_LOADED] = new SceneLoadedOperation();
     _handlers[(byte) RagonOperation.CREATE_ENTITY] = new EntityCreateOperation();
-    _handlers[(byte) RagonOperation.DESTROY_ENTITY] = new EntityDestroyOperation();
+    _handlers[(byte) RagonOperation.REMOVE_ENTITY] = new EntityDestroyOperation();
     _handlers[(byte) RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventOperation();
     _handlers[(byte) RagonOperation.REPLICATE_ENTITY_STATE] = new EntityStateOperation();
     
     _logger.Trace($"Server Tick Rate: {_configuration.ServerTickRate}");
   }
+  
+  public IRagonOperation Resolve(RagonOperation operation) => _handlers[(byte)operation];
 
   public void Execute()
   {
     _timer.Start();
     while (true)
     {
-      if (_timer.ElapsedMilliseconds > _tickrate)
+      if (_timer.ElapsedMilliseconds > _tickRate)
       {
         _executor.Update();
-        _scheduler.Update();
+        _scheduler.Update(_timer.ElapsedMilliseconds / 1000.0f);
         _timer.Restart();
       }
       
@@ -113,9 +120,8 @@ public class RagonServer : INetworkListener
 
   public void OnConnected(INetworkConnection connection)
   {
-    var lobbyPlayer = new RagonLobbyPlayer(connection);
-    var context = new RagonContext(connection, _executor, _lobby, _scheduler, lobbyPlayer);
-
+    var context = new RagonContext(connection, _executor, _lobby, _scheduler);
+   
     _logger.Trace($"Connected: {connection.Id}");
     _contexts.Add(connection.Id, context);
   }
@@ -128,10 +134,11 @@ public class RagonServer : INetworkListener
       if (room != null)
       {
         room.DetachPlayer(context.RoomPlayer);
-        _lobby.RemoveIfEmpty(room);
+        if (_lobby.RemoveIfEmpty(room)) 
+          _webhooks.RoomRemoved(context, room);
       }
       
-      _logger.Trace($"Disconnected: {connection.Id}|{context.LobbyPlayer.Name}|{context.LobbyPlayer.Id}");
+      _logger.Trace($"Disconnected: {connection.Id}");
     }
     else
     {
@@ -168,7 +175,6 @@ public class RagonServer : INetworkListener
         _reader.Clear();
         _reader.FromArray(data);
         
-        // Console.WriteLine($"{string.Join(",", data.Select(d => d.ToString()))}");
         var operation = _reader.ReadByte();
         _handlers[operation].Handle(context, _reader, _writer);
       }

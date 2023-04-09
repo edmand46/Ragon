@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-using Ragon.Core.Time;
 using Ragon.Protocol;
+using Ragon.Server.Plugin;
+using Ragon.Server.Time;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Room;
 
-public class RagonRoom: IRagonAction
+public class RagonRoom : IRagonAction
 {
   public string Id { get; private set; }
-  public RoomInformation Info { get; private set; }
+  public string Map { get; private set; }
+  public int PlayerMax { get; private set; }
+  public int PlayerMin { get; private set; }
+  public int PlayerCount => WaitPlayersList.Count;
+  
   public RagonRoomPlayer Owner { get; private set; }
-  public RagonBuffer  Writer { get; }
+  public RagonBuffer Writer { get; }
+  public IRoomPlugin Plugin { get; private set; }
+  
   public Dictionary<ushort, RagonRoomPlayer> Players { get; private set; }
   public List<RagonRoomPlayer> WaitPlayersList { get; private set; }
   public List<RagonRoomPlayer> ReadyPlayersList { get; private set; }
@@ -37,10 +44,13 @@ public class RagonRoom: IRagonAction
 
   private readonly HashSet<RagonEntity> _entitiesDirtySet;
 
-  public RagonRoom(string roomId, RoomInformation info)
+  public RagonRoom(string roomId, RoomInformation info, IRoomPlugin roomPlugin)
   {
     Id = roomId;
-    Info = info;
+    Map = info.Map;
+    PlayerMax = info.Max;
+    PlayerMin = info.Min;
+    Plugin = roomPlugin;
 
     Players = new Dictionary<ushort, RagonRoomPlayer>(info.Max);
     WaitPlayersList = new List<RagonRoomPlayer>(info.Max);
@@ -53,7 +63,7 @@ public class RagonRoom: IRagonAction
     EntityList = new List<RagonEntity>();
 
     _entitiesDirtySet = new HashSet<RagonEntity>();
-    
+
     Writer = new RagonBuffer();
   }
 
@@ -74,13 +84,13 @@ public class RagonRoom: IRagonAction
     EntityList.Remove(entity);
     StaticEntitiesList.Remove(entity);
     DynamicEntitiesList.Remove(entity);
-    
+
     _entitiesDirtySet.Remove(entity);
   }
 
-  public void Tick()
+  public void Tick(float dt)
   {
-    var entities = (ushort) _entitiesDirtySet.Count;
+    var entities = (ushort)_entitiesDirtySet.Count;
     if (entities > 0)
     {
       Writer.Clear();
@@ -88,10 +98,10 @@ public class RagonRoom: IRagonAction
       Writer.WriteUShort(entities);
 
       foreach (var entity in _entitiesDirtySet)
-        entity.State.Write(Writer);
+        entity.Write(Writer);
 
       _entitiesDirtySet.Clear();
-      
+
       var sendData = Writer.ToArray();
       foreach (var roomPlayer in ReadyPlayersList)
         roomPlayer.Connection.Unreliable.Send(sendData);
@@ -121,7 +131,7 @@ public class RagonRoom: IRagonAction
         Writer.WriteString(player.Id);
 
         var entitiesToDelete = player.Entities.DynamicList;
-        Writer.WriteUShort((ushort) entitiesToDelete.Count);
+        Writer.WriteUShort((ushort)entitiesToDelete.Count);
         foreach (var entity in entitiesToDelete)
         {
           Writer.WriteUShort(entity.Id);
@@ -131,34 +141,34 @@ public class RagonRoom: IRagonAction
         var sendData = Writer.ToArray();
         Broadcast(sendData);
       }
-      
+
       if (roomPlayer.Connection.Id == Owner.Connection.Id && PlayerList.Count > 0)
       {
         var nextOwner = PlayerList[0];
-        
+
         Owner = nextOwner;
-        
-        var entitiesToUpdate =  roomPlayer.Entities.StaticList;
-        
+
+        var entitiesToUpdate = roomPlayer.Entities.StaticList;
+
         Writer.Clear();
         Writer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
         Writer.WriteString(Owner.Id);
-        Writer.WriteUShort((ushort) entitiesToUpdate.Count);
-      
+        Writer.WriteUShort((ushort)entitiesToUpdate.Count);
+
         foreach (var entity in entitiesToUpdate)
         {
           Writer.WriteUShort(entity.Id);
-        
-          entity.SetOwner(nextOwner);
+
+          entity.Attach(nextOwner);
           nextOwner.Entities.Add(entity);
         }
 
         var sendData = Writer.ToArray();
         Broadcast(sendData);
       }
-      
+
       player.OnDetached();
-      
+
       UpdateReadyPlayerList();
     }
   }
@@ -170,21 +180,16 @@ public class RagonRoom: IRagonAction
 
   public void UpdateMap(string sceneName)
   {
-    Info = new RoomInformation()
-    {
-      Max = Info.Max,
-      Min = Info.Min,
-      Map = sceneName,
-    };
-      
+    Map = sceneName;
+
     DynamicEntitiesList.Clear();
     StaticEntitiesList.Clear();
     Entities.Clear();
     EntityList.Clear();
-    
+
     foreach (var player in PlayerList)
       player.UnsetReady();
-    
+
     UpdateReadyPlayerList();
   }
 

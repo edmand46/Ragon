@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-namespace Ragon.Server.IO;
+using Ragon.Server.Lobby;
+using Ragon.Server.Room;
 
-public interface INetworkServer
+namespace Ragon.Server.Plugin;
+
+public interface IServerPlugin
 {
-  public Executor Executor { get; }
-  public void Stop();
-  public void Update();
-  public void Start(INetworkListener listener, NetworkConfiguration configuration);
+  bool OnRoomCreate(RagonLobbyPlayer player, RagonRoom room);
+  bool OnRoomRemove(RagonLobbyPlayer player, RagonRoom room);
+  bool OnRoomLeave(RagonRoomPlayer player, RagonRoom room);
+  bool OnRoomJoin(RagonRoomPlayer player, RagonRoom room);
+  
+  IRoomPlugin CreateRoomPlugin(RoomInformation information);
 }

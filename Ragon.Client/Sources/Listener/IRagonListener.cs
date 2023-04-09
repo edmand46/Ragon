@@ -18,7 +18,7 @@ namespace Ragon.Client
 {
   public interface IRagonListener : 
     IRagonAuthorizationListener, 
-    IRagonConnectedListener, 
+    IRagonConnectionListener, 
     IRagonFailedListener,
     IRagonJoinListener, 
     IRagonLeftListener, 

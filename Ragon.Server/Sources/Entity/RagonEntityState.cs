@@ -17,7 +17,7 @@
 
 using Ragon.Protocol;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Entity;
 
 public class RagonEntityState
 {

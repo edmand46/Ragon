@@ -18,11 +18,11 @@
 using NLog;
 using Ragon.Protocol;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Handler;
 
 public class SceneLoadOperation: IRagonOperation
 {
-  private Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
   {

@@ -16,18 +16,30 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.Plugin;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Handler;
 
 public sealed class RoomLeaveOperation: IRagonOperation
 {
-  private Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IServerPlugin _serverPlugin;
+  private readonly WebHookPlugin _webHookPlugin;
+  public RoomLeaveOperation(IServerPlugin serverPlugin, WebHookPlugin plugin)
+  {
+    _serverPlugin = serverPlugin;
+    _webHookPlugin = plugin;
+  }
+
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
   {
     var room = context.Room;
     var roomPlayer = context.RoomPlayer;
+    
     if (room != null)
-    { 
+    {
+      _serverPlugin.OnRoomLeave(roomPlayer, room);
+      _webHookPlugin.RoomLeaved(context, room, roomPlayer);
       context.Room?.DetachPlayer(roomPlayer);
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} leaved from {room.Id}");
     }

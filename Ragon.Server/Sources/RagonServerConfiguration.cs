@@ -25,6 +25,11 @@ public enum ServerType
   WEBSOCKET,
 }
 
+public class WebHook
+{
+  
+}
+
 [Serializable]
 public struct Configuration
 {
@@ -36,6 +41,7 @@ public struct Configuration
   public int LimitConnections;
   public int LimitPlayersPerRoom;
   public int LimitRooms;
+  public Dictionary<string, string> WebHooks;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
   private static readonly string ServerVersion = "1.1.3-rc";
@@ -45,6 +51,15 @@ public struct Configuration
     {"websocket", Server.ServerType.WEBSOCKET}
   };
 
+  public static Configuration Load(string filePath)
+  {
+    CopyrightInfo();
+      
+    var data = File.ReadAllText(filePath);
+    var configuration = JsonConvert.DeserializeObject<Configuration>(data);
+    return configuration;
+  }
+
   private static void CopyrightInfo()
   {
     Logger.Info($"Server Version: {ServerVersion}");
@@ -53,19 +68,11 @@ public struct Configuration
     Logger.Info($"Processors: {Environment.ProcessorCount}");
     Logger.Info($"Runtime Version: {Environment.Version}");
     Logger.Info("==================================");
-    Logger.Info("|                                |");
-    Logger.Info("|            Ragon               |");
-    Logger.Info("|                                |");
+    Logger.Info(@"   ___    _   ___  ___  _  _ ");
+    Logger.Info(@"  | _ \  /_\ / __|/ _ \| \| |");
+    Logger.Info(@"  |   / / _ \ (_ | (_) | .` |");
+    Logger.Info(@"  |_|_\/_/ \_\___|\___/|_|\_|");
     Logger.Info("==================================");
-  }
-
-  public static Configuration Load(string filePath)
-  {
-    CopyrightInfo();
-      
-    var data = File.ReadAllText(filePath);
-    var configuration = JsonConvert.DeserializeObject<Configuration>(data);
-    return configuration;
   }
 
   public static ServerType GetServerType(string type) => _serverTypes[type];

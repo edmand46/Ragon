@@ -16,7 +16,7 @@
 
 using System.Threading.Channels;
 
-namespace Ragon.Server;
+namespace Ragon.Server.IO;
 
 public class Executor: TaskScheduler, IExecutor
 {
@@ -25,9 +25,9 @@ public class Executor: TaskScheduler, IExecutor
   private Queue<Task> _pendingTasks;
   private TaskFactory _taskFactory;
 
-  public void Run(Action action)
+  public Task Run(Action action)
   {
-    _taskFactory.StartNew(action);
+    return _taskFactory.StartNew(action);
   }
 
   public Executor()

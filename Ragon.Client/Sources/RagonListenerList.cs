@@ -20,7 +20,7 @@ namespace Ragon.Client
   {
     private readonly RagonClient _client;
     private readonly List<IRagonAuthorizationListener> _authorizationListeners = new();
-    private readonly List<IRagonConnectedListener> _connectionListeners = new();
+    private readonly List<IRagonConnectionListener> _connectionListeners = new();
     private readonly List<IRagonFailedListener> _failedListeners = new();
     private readonly List<IRagonJoinListener> _joinListeners = new();
     private readonly List<IRagonLeftListener> _leftListeners = new();
@@ -65,7 +65,7 @@ namespace Ragon.Client
       _authorizationListeners.Add(listener);
     }
     
-    public void Add(IRagonConnectedListener listener)
+    public void Add(IRagonConnectionListener listener)
     {
       _connectionListeners.Add(listener);
     }
@@ -110,7 +110,7 @@ namespace Ragon.Client
       _authorizationListeners.Remove(listener);
     }
     
-    public void Remove(IRagonConnectedListener listener)
+    public void Remove(IRagonConnectionListener listener)
     {
       _connectionListeners.Remove(listener);
     }

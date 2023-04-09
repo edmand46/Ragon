@@ -16,16 +16,23 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.Entity;
+using Ragon.Server.Room;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Handler;
 
 public sealed class SceneLoadedOperation : IRagonOperation
 {
-  private Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  
+  public SceneLoadedOperation()
+  {
+   
+  }
 
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
   {
-    if (context.LobbyPlayer.Status == LobbyPlayerStatus.Unauthorized)
+    if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
       return;
 
     var owner = context.Room.Owner;
@@ -34,6 +41,7 @@ public sealed class SceneLoadedOperation : IRagonOperation
 
     if (player == owner)
     {
+      
       var statics = reader.ReadUShort();
       for (var staticIndex = 0; staticIndex < statics; staticIndex++)
       {
@@ -41,20 +49,32 @@ public sealed class SceneLoadedOperation : IRagonOperation
         var eventAuthority = (RagonAuthority)reader.ReadByte();
         var staticId = reader.ReadUShort();
         var propertiesCount = reader.ReadUShort();
-    
-        var entity = new RagonEntity(player, entityType, staticId, 0, eventAuthority);
+
+        var entityParameters = new RagonEntityParameters()
+        {
+          Type = entityType,
+          Authority = eventAuthority,
+          AttachId = 0,
+          StaticId = staticId,
+        };
+
+        var entity = new RagonEntity(entityParameters);
         for (var propertyIndex = 0; propertyIndex < propertiesCount; propertyIndex++)
         {
           var propertyType = reader.ReadBool();
           var propertySize = reader.ReadUShort();
           entity.State.AddProperty(new RagonProperty(propertySize, propertyType));
         }
+        
+        var roomPlugin = room.Plugin;
+        if (roomPlugin.OnEntityCreate(player, entity)) continue;
+        
+        var playerInfo = $"Player {context.Connection.Id}|{context.LobbyPlayer.Name}";
+        var entityInfo = $"{entity.Id}:{entity.Type}";
 
-        var playerInfo = $"Player {context.Connection.Id}|{context.LobbyPlayer.Name}"; 
-        var entityInfo = $"{entity.Id}:{entity.Type}"; 
-        
         _logger.Trace($"{playerInfo} created entity {entityInfo}");
-        
+
+        entity.Attach(player);
         room.AttachEntity(entity);
         player.AttachEntity(entity);
       }
@@ -123,7 +143,7 @@ public sealed class SceneLoadedOperation : IRagonOperation
       writer.WriteString(roomPlayer.Id);
       writer.WriteString(roomPlayer.Name);
     }
-    
+
     var dynamicEntities = room.DynamicEntitiesList;
     var dynamicEntitiesCount = (ushort)dynamicEntities.Count;
     writer.WriteUShort(dynamicEntitiesCount);
@@ -135,7 +155,7 @@ public sealed class SceneLoadedOperation : IRagonOperation
     writer.WriteUShort(staticEntitiesCount);
     foreach (var entity in staticEntities)
       entity.Snapshot(writer);
-    
+
     var sendData = writer.ToArray();
     foreach (var player in receviersList)
       player.Connection.Reliable.Send(sendData);

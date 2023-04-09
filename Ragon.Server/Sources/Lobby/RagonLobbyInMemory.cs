@@ -16,8 +16,9 @@
 
 using System.Diagnostics.CodeAnalysis;
 using NLog;
+using Ragon.Server.Room;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Lobby;
 
 public class LobbyInMemory : IRagonLobby
 {
@@ -28,8 +29,7 @@ public class LobbyInMemory : IRagonLobby
   {
     foreach (var existRagonRoom in _rooms)
     {
-      var info = existRagonRoom.Info;
-      if (existRagonRoom.Id == RagonRoomId && info.Min < info.Max)
+      if (existRagonRoom.Id == RagonRoomId && existRagonRoom.PlayerMin < existRagonRoom.PlayerMax)
       {
         room = existRagonRoom;
         return true;
@@ -44,8 +44,7 @@ public class LobbyInMemory : IRagonLobby
   {
     foreach (var existsRoom in _rooms)
     {
-      var info = existsRoom.Info;
-      if (info.Map == map && existsRoom.Players.Count < info.Max)
+      if (existsRoom.Map == map && existsRoom.PlayerCount < existsRoom.PlayerMax)
       {
         room = existsRoom;
         return true;
@@ -62,18 +61,23 @@ public class LobbyInMemory : IRagonLobby
     _logger.Trace($"New room: {room.Id}");
     
     foreach (var r in _rooms)
-      _logger.Trace($"Room: {r.Id} {r.Info} Players: {r.Players.Count} Entities: {r.Entities.Count}");
+      _logger.Trace($"Room: {r.Id} Map: {r.Map} Players: {r.Players.Count} Entities: {r.Entities.Count}");
   }
 
-  public void RemoveIfEmpty(RagonRoom room)
+  public bool RemoveIfEmpty(RagonRoom room)
   {
+    var result = false;
     if (room.Players.Count == 0)
     {
       _rooms.Remove(room);
       _logger.Trace($"Room {room.Id} removed");
+
+      result = true;
     }
 
     foreach (var r in _rooms)
-      _logger.Trace($"Room: {r.Id} {r.Info} Players: {r.Players.Count} Entities: {r.Entities.Count}");
+      _logger.Trace($"Room: {r.Id} Map: {r.Map} Players: {r.Players.Count} Entities: {r.Entities.Count}");
+
+    return result;
   }
 }
