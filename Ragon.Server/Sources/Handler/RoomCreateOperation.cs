@@ -28,12 +28,12 @@ public sealed class RoomCreateOperation: IRagonOperation
   private readonly RagonRoomParameters _roomParameters = new();
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   private readonly IServerPlugin _serverPlugin;
-  private readonly WebHookPlugin _webHookPlugin;
+  private readonly RagonWebHookPlugin _ragonWebHookPlugin;
   
-  public RoomCreateOperation(IServerPlugin serverPlugin, WebHookPlugin webHook)
+  public RoomCreateOperation(IServerPlugin serverPlugin, RagonWebHookPlugin ragonWebHook)
   {
     _serverPlugin = serverPlugin;
-    _webHookPlugin = webHook;
+    _ragonWebHookPlugin = ragonWebHook;
   }
 
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
@@ -79,11 +79,13 @@ public sealed class RoomCreateOperation: IRagonOperation
     var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
     var room = new RagonRoom(roomId, information, roomPlugin);
     
+    roomPlayer.OnAttached(room);
+    
     context.Scheduler.Run(room);
     context.Lobby.Persist(room);
     context.SetRoom(room, roomPlayer);
     
-    _webHookPlugin.RoomCreated(context, room);
+    _ragonWebHookPlugin.RoomCreated(context, room, roomPlayer);
     
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with map {information.Map}");
     

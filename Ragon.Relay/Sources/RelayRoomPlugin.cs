@@ -6,7 +6,7 @@ using Ragon.Server.Room;
 
 namespace Ragon.Relay;
 
-public class RelayRoomPlugin: IRoomPlugin
+public class RelayRoomPlugin: BaseRoomPlugin
 {
   public void Tick(float dt)
   {

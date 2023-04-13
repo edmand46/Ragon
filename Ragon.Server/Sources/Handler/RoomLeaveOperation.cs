@@ -25,11 +25,11 @@ public sealed class RoomLeaveOperation: IRagonOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   private readonly IServerPlugin _serverPlugin;
-  private readonly WebHookPlugin _webHookPlugin;
-  public RoomLeaveOperation(IServerPlugin serverPlugin, WebHookPlugin plugin)
+  private readonly RagonWebHookPlugin _ragonWebHookPlugin;
+  public RoomLeaveOperation(IServerPlugin serverPlugin, RagonWebHookPlugin plugin)
   {
     _serverPlugin = serverPlugin;
-    _webHookPlugin = plugin;
+    _ragonWebHookPlugin = plugin;
   }
 
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
@@ -40,7 +40,7 @@ public sealed class RoomLeaveOperation: IRagonOperation
     if (room != null)
     {
       _serverPlugin.OnRoomLeave(roomPlayer, room);
-      _webHookPlugin.RoomLeaved(context, room, roomPlayer);
+      _ragonWebHookPlugin.RoomLeaved(context, room, roomPlayer);
       context.Room?.DetachPlayer(roomPlayer);
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} leaved from {room.Id}");
     }

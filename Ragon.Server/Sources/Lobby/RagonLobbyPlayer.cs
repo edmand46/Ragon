@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Ragon.Server.IO;
+
 namespace Ragon.Server.Lobby;
 
 public enum ConnectionStatus
@@ -25,14 +27,16 @@ public enum ConnectionStatus
 
 public class RagonLobbyPlayer
 {
+  public INetworkConnection Connection { get; }
   public string Id { get; private set; }
   public string Name { get; private set; }
   public string Payload { get; private set; }
   
-  public RagonLobbyPlayer(string id, string name, string payload)
+  public RagonLobbyPlayer(INetworkConnection connection, string id, string name, string payload)
   {
     Id = id;
     Name = name;
     Payload = payload;
+    Connection = connection;
   }
 }

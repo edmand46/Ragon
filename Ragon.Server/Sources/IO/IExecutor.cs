@@ -18,5 +18,5 @@ namespace Ragon.Server.IO;
 
 public interface IExecutor
 {
-  public Task Run(Action action);
+  public Task Run(Action action, TaskCreationOptions task = TaskCreationOptions.None);
 }

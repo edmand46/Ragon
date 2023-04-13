@@ -38,6 +38,8 @@ public struct Configuration
   public ushort ServerTickRate;
   public string GameProtocol;
   public ushort Port;
+  public ushort HttpPort;
+  public string HttpKey;
   public int LimitConnections;
   public int LimitPlayersPerRoom;
   public int LimitRooms;

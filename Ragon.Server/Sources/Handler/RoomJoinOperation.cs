@@ -26,12 +26,12 @@ public sealed class RoomJoinOperation : IRagonOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   private readonly IServerPlugin _serverPlugin;
-  private readonly WebHookPlugin _webHookPlugin;
+  private readonly RagonWebHookPlugin _ragonWebHookPlugin;
   
-  public RoomJoinOperation(IServerPlugin serverPlugin, WebHookPlugin plugin)
+  public RoomJoinOperation(IServerPlugin serverPlugin, RagonWebHookPlugin plugin)
   {
     _serverPlugin = serverPlugin;
-    _webHookPlugin = plugin;
+    _ragonWebHookPlugin = plugin;
   }
 
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
@@ -53,7 +53,7 @@ public sealed class RoomJoinOperation : IRagonOperation
     if (!_serverPlugin.OnRoomJoin(player, existsRoom))
       return;
     
-    _webHookPlugin.RoomJoined(context, existsRoom, player);
+    _ragonWebHookPlugin.RoomJoined(context, existsRoom, player);
     
     JoinSuccess(context, existsRoom, writer);
     

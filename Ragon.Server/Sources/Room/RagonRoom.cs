@@ -16,12 +16,13 @@
 
 using Ragon.Protocol;
 using Ragon.Server.Entity;
+using Ragon.Server.IO;
 using Ragon.Server.Plugin;
 using Ragon.Server.Time;
 
 namespace Ragon.Server.Room;
 
-public class RagonRoom : IRagonAction
+public class RagonRoom : IRagonRoom, IRagonAction
 {
   public string Id { get; private set; }
   public string Map { get; private set; }
@@ -44,7 +45,7 @@ public class RagonRoom : IRagonAction
   public List<RagonEntity> EntityList { get; private set; }
 
   private readonly HashSet<RagonEntity> _entitiesDirtySet;
-
+  
   public RagonRoom(string roomId, RoomInformation info, IRoomPlugin roomPlugin)
   {
     Id = roomId;
@@ -204,4 +205,7 @@ public class RagonRoom : IRagonAction
     foreach (var readyPlayer in ReadyPlayersList)
       readyPlayer.Connection.Reliable.Send(data);
   }
+  
+  public RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection) => Players[connection.Id];
+  public RagonRoomPlayer GetPlayerById(string id) => PlayerList.First(p => p.Id == id);
 }

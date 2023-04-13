@@ -23,9 +23,8 @@ namespace Ragon.Server;
 
 public class RagonContext
 {
-  public INetworkConnection Connection { get; }
   public ConnectionStatus ConnectionStatus { get; set; }
-  
+  public INetworkConnection Connection { get; }
   public IExecutor Executor { get; private set; }
   
   public IRagonLobby Lobby { get; private set; }

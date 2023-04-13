@@ -26,17 +26,19 @@ namespace Ragon.Server.Handler;
 public sealed class AuthorizationOperation: IRagonOperation
 {
   private Logger _logger = LogManager.GetCurrentClassLogger();
-  private readonly WebHookPlugin _webHook;
+  private readonly RagonWebHookPlugin _ragonWebHook;
+  private readonly RagonContextObserver _contextObserver;
   private readonly Configuration _configuration;
   private readonly RagonBuffer _writer;
   
-  public AuthorizationOperation(
-    WebHookPlugin webHook,
+  public AuthorizationOperation(RagonWebHookPlugin ragonWebHook,
+    RagonContextObserver contextObserver,
     RagonBuffer writer,
     Configuration configuration)
   {
-    _webHook = webHook;
+    _ragonWebHook = ragonWebHook;
     _configuration = configuration;
+    _contextObserver = contextObserver;
     _writer = writer;
   }
   
@@ -60,10 +62,10 @@ public sealed class AuthorizationOperation: IRagonOperation
     
     if (key == _configuration.ServerKey)
     {
-      if (_webHook.RequestAuthorization(context, name, payload)) 
+      if (_ragonWebHook.RequestAuthorization(context, name, payload)) 
         return;
       
-      var lobbyPlayer = new RagonLobbyPlayer(Guid.NewGuid().ToString(), name, payload);
+      var lobbyPlayer = new RagonLobbyPlayer(context.Connection, Guid.NewGuid().ToString(), name, payload);
       context.SetPlayer(lobbyPlayer);
       
       Approve(context);
@@ -77,7 +79,9 @@ public sealed class AuthorizationOperation: IRagonOperation
   public void Approve(RagonContext context)
   {
     context.ConnectionStatus  = ConnectionStatus.Authorized;
-  
+
+    _contextObserver.OnAuthorized(context);
+    
     var playerId = context.LobbyPlayer.Id;
     var playerName = context.LobbyPlayer.Name;
     var playerPayload = context.LobbyPlayer.Payload;

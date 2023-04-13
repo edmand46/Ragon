@@ -22,7 +22,7 @@ namespace Ragon.Server.Plugin;
 public interface IRoomPlugin
 {
   void Tick(float dt);
-  void OnAttached();
+  void OnAttached(IRagonRoom room);
   void OnDetached();
   bool OnEntityCreate(RagonRoomPlayer creator, RagonEntity entity);
   bool OnEntityRemove(RagonRoomPlayer remover, RagonEntity entity);

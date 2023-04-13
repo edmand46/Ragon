@@ -1,41 +1,24 @@
-using System.Net.Http;
-using Ragon.Server;
-using Ragon.Server.Lobby;
+using System;
+using Newtonsoft.Json;
 using Ragon.Server.Plugin;
-using Ragon.Server.Room;
 
 namespace Ragon.Relay;
 
-public class RelayServerPlugin: IServerPlugin
+public class RelayServerPlugin: BaseServerPlugin
 {
-  private HttpClient httpClient;
-  public IRoomPlugin CreateRoomPlugin(RoomInformation information)
+  public override bool OnCommand(string command, string payload)
   {
-    return new RelayRoomPlugin();
-  }
-
-  public RelayServerPlugin()
-  {
-    httpClient = new HttpClient();
-  }
-
-  public bool OnRoomCreate(RagonLobbyPlayer player, RagonRoom room)
-  {
-    return true;
-  }
-
-  public bool OnRoomRemove(RagonLobbyPlayer player, RagonRoom room)
-  {
-    return true;
-  }
-
-  public bool OnRoomLeave(RagonRoomPlayer player, RagonRoom room)
-  {
-    return true;
-  }
-
-  public bool OnRoomJoin(RagonRoomPlayer player, RagonRoom room)
-  {
+    Console.WriteLine(command);
+    if (command == "kick-player")
+    {
+      var commandPayload = JsonConvert.DeserializeObject<KickPlayerCommand>(payload);
+      var player = GetPlayerById(commandPayload.Id);
+      if (player != null)
+        player.Connection.Close();
+      else
+        Console.WriteLine($"Player not found with Id {commandPayload.Id}");
+    }
+    
     return true;
   }
 }

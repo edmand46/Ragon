@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Ragon.Server.Http;
 using Ragon.Server.Lobby;
 using Ragon.Server.Room;
 
@@ -21,10 +22,12 @@ namespace Ragon.Server.Plugin;
 
 public interface IServerPlugin
 {
+  void OnAttached(IRagonServer server);
+  void OnDetached();
   bool OnRoomCreate(RagonLobbyPlayer player, RagonRoom room);
   bool OnRoomRemove(RagonLobbyPlayer player, RagonRoom room);
   bool OnRoomLeave(RagonRoomPlayer player, RagonRoom room);
   bool OnRoomJoin(RagonRoomPlayer player, RagonRoom room);
-  
+  bool OnCommand(string command, string payload);
   IRoomPlugin CreateRoomPlugin(RoomInformation information);
 }

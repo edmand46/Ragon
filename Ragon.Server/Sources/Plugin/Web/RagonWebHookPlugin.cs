@@ -8,14 +8,14 @@ using Ragon.Server.Room;
 
 namespace Ragon.Server.Plugin.Web;
 
-public class WebHookPlugin
+public class RagonWebHookPlugin
 {
   private Dictionary<string, string> _webHooks;
 
   private RagonServer _server;
   private HttpClient _httpClient;
 
-  public WebHookPlugin(RagonServer server, Configuration configuration)
+  public RagonWebHookPlugin(RagonServer server, Configuration configuration)
   {
     _webHooks = new Dictionary<string, string>(configuration.WebHooks);
     _httpClient = new HttpClient();
@@ -30,7 +30,7 @@ public class WebHookPlugin
       var executor = context.Executor;
       executor.Run(async () =>
       {
-        var authorizationOperation = (AuthorizationOperation) _server.Resolve(RagonOperation.AUTHORIZE);
+        var authorizationOperation = (AuthorizationOperation) _server.ResolveOperation(RagonOperation.AUTHORIZE);
         var response = await _httpClient.PostAsync(new Uri(value), httpContent);
         if (response.StatusCode != HttpStatusCode.OK)
         {
@@ -42,7 +42,7 @@ public class WebHookPlugin
         var authorizationResponse = JsonConvert.DeserializeObject<AuthorizationResponse>(content);
         if (authorizationResponse != null)
         {
-          var lobbyPlayer = new RagonLobbyPlayer(authorizationResponse.Id, authorizationResponse.Name, authorizationResponse.Payload);
+          var lobbyPlayer = new RagonLobbyPlayer(context.Connection, authorizationResponse.Id, authorizationResponse.Name, authorizationResponse.Payload);
 
           context.SetPlayer(lobbyPlayer);
           authorizationOperation.Approve(context);
@@ -58,12 +58,14 @@ public class WebHookPlugin
     return false;
   }
 
-  public void RoomCreated(RagonContext context, RagonRoom room)
+  public void RoomCreated(RagonContext context, RagonRoom room, RagonRoomPlayer player)
   {
     if (_webHooks.TryGetValue("room-created", out var value) && !string.IsNullOrEmpty(value))
     {
       var request = new RoomCreatedRequest()
       {
+        Room = new RoomDto(room),
+        Player = new PlayerDto(player)
       };
       var content = JsonContent.Create(request);
       var executor = context.Executor;
@@ -75,8 +77,9 @@ public class WebHookPlugin
   {
     if (_webHooks.TryGetValue("room-removed", out var value) && !string.IsNullOrEmpty(value))
     {
-      var request = new RoomCreatedRequest()
+      var request = new RoomRemovedRequest()
       {
+        Room = new RoomDto(ragonRoom)
       };
       var content = JsonContent.Create(request);
       var executor = context.Executor;
@@ -88,8 +91,10 @@ public class WebHookPlugin
   {
     if (_webHooks.TryGetValue("room-joined", out var value) && !string.IsNullOrEmpty(value))
     {
-      var request = new RoomCreatedRequest()
+      var request = new RoomJoinedRequest()
       {
+        Room = new RoomDto(existsRoom),
+        Player = new PlayerDto(player)
       };
       var content = JsonContent.Create(request);
       var executor = context.Executor;
@@ -101,8 +106,10 @@ public class WebHookPlugin
   {
     if (_webHooks.TryGetValue("room-leaved", out var value) && !string.IsNullOrEmpty(value))
     {
-      var request = new RoomCreatedRequest()
+      var request = new RoomLeavedRequest()
       {
+        Room = new RoomDto(room),
+        Player = new PlayerDto(roomPlayer)
       };
       var content = JsonContent.Create(request);
       var executor = context.Executor;
