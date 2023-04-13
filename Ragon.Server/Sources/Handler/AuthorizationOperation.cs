@@ -16,40 +16,98 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.Lobby;
+using Ragon.Server.Plugin;
+using Ragon.Server.Plugin.Web;
 
-namespace Ragon.Server;
+
+namespace Ragon.Server.Handler;
 
 public sealed class AuthorizationOperation: IRagonOperation
 {
   private Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly RagonWebHookPlugin _ragonWebHook;
+  private readonly RagonContextObserver _contextObserver;
+  private readonly Configuration _configuration;
+  private readonly RagonBuffer _writer;
+  
+  public AuthorizationOperation(RagonWebHookPlugin ragonWebHook,
+    RagonContextObserver contextObserver,
+    RagonBuffer writer,
+    Configuration configuration)
+  {
+    _ragonWebHook = ragonWebHook;
+    _configuration = configuration;
+    _contextObserver = contextObserver;
+    _writer = writer;
+  }
   
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
   {
-    if (context.LobbyPlayer.Status == LobbyPlayerStatus.Authorized)
+    if (context.ConnectionStatus == ConnectionStatus.Authorized)
     {
-      _logger.Warn("Player already authorized");    
+      _logger.Warn("Player already authorized!");    
+      return;
+    }
+
+    if (context.ConnectionStatus == ConnectionStatus.InProcess)
+    {
+      _logger.Warn("Player already request authorization!");    
       return;
     }
     
     var key = reader.ReadString();
-    var playerName = reader.ReadString();
-    var additionalPayload = new RagonPayload();
-    additionalPayload.Read(reader);
+    var name = reader.ReadString();
+    var payload = reader.ReadString();
+    
+    if (key == _configuration.ServerKey)
+    {
+      if (_ragonWebHook.RequestAuthorization(context, name, payload)) 
+        return;
+      
+      var lobbyPlayer = new RagonLobbyPlayer(context.Connection, Guid.NewGuid().ToString(), name, payload);
+      context.SetPlayer(lobbyPlayer);
+      
+      Approve(context);
+    }
+    else
+    {
+      Reject(context);
+    }
+  }
 
-    context.LobbyPlayer.Name = playerName;
-    context.LobbyPlayer.AdditionalData = Array.Empty<byte>();
-    context.LobbyPlayer.Status = LobbyPlayerStatus.Authorized;
+  public void Approve(RagonContext context)
+  {
+    context.ConnectionStatus  = ConnectionStatus.Authorized;
 
+    _contextObserver.OnAuthorized(context);
+    
     var playerId = context.LobbyPlayer.Id;
+    var playerName = context.LobbyPlayer.Name;
+    var playerPayload = context.LobbyPlayer.Payload;
+
+    _writer.Clear();
+    _writer.WriteOperation(RagonOperation.AUTHORIZED_SUCCESS);
+    _writer.WriteString(playerId);
+    _writer.WriteString(playerName);
+    _writer.WriteString(playerPayload);
     
-    writer.Clear();
-    writer.WriteOperation(RagonOperation.AUTHORIZED_SUCCESS);
-    writer.WriteString(playerId);
-    writer.WriteString(playerName);
-    
-    var sendData = writer.ToArray();
+    var sendData = _writer.ToArray();
     context.Connection.Reliable.Send(sendData);
     
-    _logger.Trace($"Connection {context.Connection.Id} as {playerId}|{context.LobbyPlayer.Name} authorized");
+    _logger.Trace($"Connection {context.Connection.Id} as {playerId}|{context.LobbyPlayer.Name} authorized");   
+  }
+
+  public void Reject(RagonContext context)
+  {
+    _writer.Clear();
+    _writer.WriteOperation(RagonOperation.AUTHORIZED_FAILED);
+
+    var sendData = _writer.ToArray();
+    
+    context.Connection.Reliable.Send(sendData);
+    context.Connection.Close();
+      
+    _logger.Trace($"Connection {context.Connection.Id}");
   }
 }

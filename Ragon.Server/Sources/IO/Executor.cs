@@ -16,26 +16,31 @@
 
 using System.Threading.Channels;
 
-namespace Ragon.Server;
+namespace Ragon.Server.IO;
 
-public class Executor: TaskScheduler, IExecutor
+public class Executor : TaskScheduler, IExecutor
 {
-  private ChannelReader<Task> _reader;
-  private ChannelWriter<Task> _writer;
-  private Queue<Task> _pendingTasks;
-  private TaskFactory _taskFactory;
+  private readonly ChannelReader<Task> _reader;
+  private readonly ChannelWriter<Task> _writer;
+  private readonly Queue<Task> _pendingTasks;
+  private readonly TaskFactory _taskFactory;
 
-  public void Run(Action action)
+  public Task Run(Action action, TaskCreationOptions task = TaskCreationOptions.None)
   {
-    _taskFactory.StartNew(action);
+    return _taskFactory.StartNew(action, task);
   }
 
   public Executor()
   {
-    var channel = Channel.CreateUnbounded<Task>();
+    var channel = Channel.CreateUnbounded<Task>(new UnboundedChannelOptions()
+    {
+      SingleReader = true, 
+      SingleWriter = true,
+    });
+    
     _reader = channel.Reader;
     _writer = channel.Writer;
-    
+
     _taskFactory = new TaskFactory(this);
     _pendingTasks = new Queue<Task>();
   }
@@ -60,7 +65,7 @@ public class Executor: TaskScheduler, IExecutor
     while (_reader.TryRead(out var task))
     {
       TryExecuteTask(task);
-      
+
       if (task.Status == TaskStatus.Running)
         _pendingTasks.Enqueue(task);
     }

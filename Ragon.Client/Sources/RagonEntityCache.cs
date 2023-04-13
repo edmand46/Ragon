@@ -81,7 +81,7 @@ public sealed class RagonEntityCache
     var buffer = _client.Buffer;
     
     buffer.Clear();
-    buffer.WriteOperation(RagonOperation.DESTROY_ENTITY);
+    buffer.WriteOperation(RagonOperation.REMOVE_ENTITY);
     buffer.WriteUShort(entity.Id);
 
     destroyPayload?.Serialize(buffer);

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-using System.Net.WebSockets;
 using NLog;
+using System.Net.WebSockets;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.DotNetWebsockets;
 
@@ -43,6 +44,11 @@ public sealed class WebSocketConnection : INetworkConnection
         Unreliable = unreliableChannel;
     }
 
+    public void Close()
+    {
+        Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+    }
+    
     public async Task Flush()
     {
         foreach (var channel in _channels)

@@ -16,8 +16,9 @@
 
 
 using Ragon.Protocol;
+using Ragon.Server.Room;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Entity;
 
 public class RagonEntity
 {
@@ -30,28 +31,32 @@ public class RagonEntity
   public RagonAuthority Authority { get; private set; }
   public RagonPayload Payload { get; private set; }
   public RagonEntityState State { get; private set; }
-
   private readonly List<RagonEvent> _bufferedEvents;
-
-  public RagonEntity(RagonRoomPlayer owner, ushort type, ushort staticId, ushort attachId, RagonAuthority eventAuthority)
+  
+  public RagonEntity(RagonEntityParameters parameters)
   {
-    Owner = owner;
-    StaticId = staticId;
-    Type = type;
-    AttachId = attachId;
     Id = _idGenerator++;
-    Authority = eventAuthority;
+    
+    StaticId = parameters.StaticId;
+    Type = parameters.Type;
+    AttachId = parameters.AttachId;
+    Authority = parameters.Authority;
+    
     State = new RagonEntityState(this);
     Payload = new RagonPayload();
-
+    
     _bufferedEvents = new List<RagonEvent>();
   }
-
-
-  public void SetOwner(RagonRoomPlayer owner)
+  
+  public void Attach(RagonRoomPlayer owner)
   {
     Owner = owner;
   }
+
+  public void Detach()
+  {
+    
+  } 
 
   public void RestoreBufferedEvents(RagonRoomPlayer roomPlayer, RagonBuffer writer)
   {
@@ -96,7 +101,7 @@ public class RagonEntity
     var buffer = room.Writer;
 
     buffer.Clear();
-    buffer.WriteOperation(RagonOperation.DESTROY_ENTITY);
+    buffer.WriteOperation(RagonOperation.REMOVE_ENTITY);
     buffer.WriteUShort(Id);
 
     Payload.Write(buffer);
@@ -208,5 +213,18 @@ public class RagonEntity
         break;
       }
     }
+  }
+
+  public void Write(RagonBuffer writer)
+  {
+    State.Write(writer);
+  }
+
+  public void Read(RagonRoomPlayer player, RagonBuffer reader)
+  {
+    if (Owner.Connection.Id != player.Connection.Id)
+      return;
+    
+    State.Read(reader);
   }
 }

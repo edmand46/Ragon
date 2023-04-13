@@ -25,6 +25,11 @@ public enum ServerType
   WEBSOCKET,
 }
 
+public class WebHook
+{
+  
+}
+
 [Serializable]
 public struct Configuration
 {
@@ -33,17 +38,29 @@ public struct Configuration
   public ushort ServerTickRate;
   public string GameProtocol;
   public ushort Port;
+  public ushort HttpPort;
+  public string HttpKey;
   public int LimitConnections;
   public int LimitPlayersPerRoom;
   public int LimitRooms;
+  public Dictionary<string, string> WebHooks;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-  private static readonly string ServerVersion = "1.1.3-rc";
+  private static readonly string ServerVersion = "1.2.0-rc";
   private static Dictionary<string, ServerType> _serverTypes = new Dictionary<string, ServerType>()
   {
     {"enet", Server.ServerType.ENET},
     {"websocket", Server.ServerType.WEBSOCKET}
   };
+
+  public static Configuration Load(string filePath)
+  {
+    CopyrightInfo();
+      
+    var data = File.ReadAllText(filePath);
+    var configuration = JsonConvert.DeserializeObject<Configuration>(data);
+    return configuration;
+  }
 
   private static void CopyrightInfo()
   {
@@ -53,19 +70,11 @@ public struct Configuration
     Logger.Info($"Processors: {Environment.ProcessorCount}");
     Logger.Info($"Runtime Version: {Environment.Version}");
     Logger.Info("==================================");
-    Logger.Info("|                                |");
-    Logger.Info("|            Ragon               |");
-    Logger.Info("|                                |");
+    Logger.Info(@"   ___    _   ___  ___  _  _ ");
+    Logger.Info(@"  | _ \  /_\ / __|/ _ \| \| |");
+    Logger.Info(@"  |   / / _ \ (_ | (_) | .` |");
+    Logger.Info(@"  |_|_\/_/ \_\___|\___/|_|\_|");
     Logger.Info("==================================");
-  }
-
-  public static Configuration Load(string filePath)
-  {
-    CopyrightInfo();
-      
-    var data = File.ReadAllText(filePath);
-    var configuration = JsonConvert.DeserializeObject<Configuration>(data);
-    return configuration;
   }
 
   public static ServerType GetServerType(string type) => _serverTypes[type];

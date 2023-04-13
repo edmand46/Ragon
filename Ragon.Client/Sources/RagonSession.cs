@@ -93,13 +93,13 @@ namespace Ragon.Client
       _client.Reliable.Send(sendData);
     }
 
-    public  void AuthorizeWithKey(string key, string playerName, byte[] additonalData)
+    public  void AuthorizeWithKey(string key, string playerName, string payload = "")
     {
       _buffer.Clear();
       _buffer.WriteOperation(RagonOperation.AUTHORIZE);
       _buffer.WriteString(key);
       _buffer.WriteString(playerName);
-      _buffer.WriteBytes(additonalData);
+      _buffer.WriteString(payload);
 
       var sendData = _buffer.ToArray();
       _client.Reliable.Send(sendData);

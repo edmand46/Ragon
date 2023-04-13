@@ -16,17 +16,29 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.Lobby;
+using Ragon.Server.Plugin;
+using Ragon.Server.Plugin.Web;
+using Ragon.Server.Room;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Handler;
 
 public sealed class RoomJoinOrCreateOperation : IRagonOperation
 {
-  private RagonRoomParameters _roomParameters = new();
-  private Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly RagonRoomParameters _roomParameters = new();
+  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IServerPlugin _serverPlugin;
+  private readonly RagonWebHookPlugin _ragonWebHookPlugin;
   
+  public RoomJoinOrCreateOperation(IServerPlugin serverPlugin, RagonWebHookPlugin plugin)
+  {
+    _serverPlugin = serverPlugin;
+    _ragonWebHookPlugin = plugin;
+  }
+
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
   {
-    if (context.LobbyPlayer.Status == LobbyPlayerStatus.Unauthorized)
+    if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
     {
       _logger.Warn("Player not authorized for this request");
       return;
@@ -39,8 +51,10 @@ public sealed class RoomJoinOrCreateOperation : IRagonOperation
 
     if (context.Lobby.FindRoomByMap(_roomParameters.Map, out var existsRoom))
     {
-      var player = new RagonRoomPlayer(lobbyPlayer.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
+      var player = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
       context.SetRoom(existsRoom, player);
+      
+      _ragonWebHookPlugin.RoomJoined(context, existsRoom, player);
       
       JoinSuccess(player, existsRoom, writer);
     }
@@ -53,14 +67,17 @@ public sealed class RoomJoinOrCreateOperation : IRagonOperation
         Min = _roomParameters.Min,
       };
 
-      var room = new RagonRoom(roomId, information);
+      var roomPlayer = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
+      var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
+      var room = new RagonRoom(roomId, information, roomPlugin);
+      
+      _ragonWebHookPlugin.RoomCreated(context, room, roomPlayer);
+      
       context.Lobby.Persist(room);
       context.Scheduler.Run(room);
-      
-      var roomPlayer = new RagonRoomPlayer(lobbyPlayer.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
       context.SetRoom(room, roomPlayer);
       
-      _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} {information}");
+      _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with map {information.Map}");
 
       JoinSuccess(roomPlayer, room, writer);
     }
@@ -73,9 +90,9 @@ public sealed class RoomJoinOrCreateOperation : IRagonOperation
     writer.WriteString(room.Id);
     writer.WriteString(player.Id);
     writer.WriteString(room.Owner.Id);
-    writer.WriteUShort((ushort) room.Info.Min);
-    writer.WriteUShort((ushort) room.Info.Max);
-    writer.WriteString(room.Info.Map);
+    writer.WriteUShort((ushort) room.PlayerMin);
+    writer.WriteUShort((ushort) room.PlayerMax);
+    writer.WriteString(room.Map);
 
     var sendData = writer.ToArray();
     player.Connection.Reliable.Send(sendData);

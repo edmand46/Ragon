@@ -16,17 +16,29 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.Lobby;
+using Ragon.Server.Plugin;
+using Ragon.Server.Plugin.Web;
+using Ragon.Server.Room;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Handler;
 
 public sealed class RoomCreateOperation: IRagonOperation
 {
-  private RagonRoomParameters _roomParameters = new();
-  private Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly RagonRoomParameters _roomParameters = new();
+  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IServerPlugin _serverPlugin;
+  private readonly RagonWebHookPlugin _ragonWebHookPlugin;
   
+  public RoomCreateOperation(IServerPlugin serverPlugin, RagonWebHookPlugin ragonWebHook)
+  {
+    _serverPlugin = serverPlugin;
+    _ragonWebHookPlugin = ragonWebHook;
+  }
+
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
   {
-    if (context.LobbyPlayer.Status == LobbyPlayerStatus.Unauthorized)
+    if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
     {
       _logger.Warn($"Player {context.Connection.Id} not authorized for this request");
       return;
@@ -62,17 +74,22 @@ public sealed class RoomCreateOperation: IRagonOperation
     };
 
     var lobbyPlayer = context.LobbyPlayer;
+    var roomPlayer = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
     
-    var room = new RagonRoom(roomId, information);
+    var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
+    var room = new RagonRoom(roomId, information, roomPlugin);
+    
+    roomPlayer.OnAttached(room);
+    
     context.Scheduler.Run(room);
     context.Lobby.Persist(room);
+    context.SetRoom(room, roomPlayer);
     
-    var player = new RagonRoomPlayer(lobbyPlayer.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
-    context.SetRoom(room, player);
+    _ragonWebHookPlugin.RoomCreated(context, room, roomPlayer);
     
-    _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} {information}");
+    _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with map {information.Map}");
     
-    JoinSuccess(player, room, writer);
+    JoinSuccess(roomPlayer, room, writer);
     
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to room {room.Id}");
   }
@@ -84,9 +101,9 @@ public sealed class RoomCreateOperation: IRagonOperation
     writer.WriteString(room.Id);
     writer.WriteString(player.Id);
     writer.WriteString(room.Owner.Id);
-    writer.WriteUShort((ushort) room.Info.Min);
-    writer.WriteUShort((ushort) room.Info.Max);
-    writer.WriteString(room.Info.Map);
+    writer.WriteUShort((ushort) room.PlayerMin);
+    writer.WriteUShort((ushort) room.PlayerMax);
+    writer.WriteString(room.Map);
 
     var sendData = writer.ToArray();
     player.Connection.Reliable.Send(sendData);

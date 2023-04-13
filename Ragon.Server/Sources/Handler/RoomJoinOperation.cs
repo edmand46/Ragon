@@ -16,12 +16,23 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.Plugin;
+using Ragon.Server.Plugin.Web;
+using Ragon.Server.Room;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Handler;
 
 public sealed class RoomJoinOperation : IRagonOperation
 {
-  private Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IServerPlugin _serverPlugin;
+  private readonly RagonWebHookPlugin _ragonWebHookPlugin;
+  
+  public RoomJoinOperation(IServerPlugin serverPlugin, RagonWebHookPlugin plugin)
+  {
+    _serverPlugin = serverPlugin;
+    _ragonWebHookPlugin = plugin;
+  }
 
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
   {
@@ -30,42 +41,47 @@ public sealed class RoomJoinOperation : IRagonOperation
 
     if (!context.Lobby.FindRoomById(roomId, out var existsRoom))
     {
-      JoinFailed(lobbyPlayer, writer);
+      JoinFailed(context, writer);
       
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} failed to join room {roomId}");
       return;
     }
 
-    var player = new RagonRoomPlayer(lobbyPlayer.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
+    var player = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
     context.SetRoom(existsRoom, player);
     
-    JoinSuccess(player, existsRoom, writer);
+    if (!_serverPlugin.OnRoomJoin(player, existsRoom))
+      return;
+    
+    _ragonWebHookPlugin.RoomJoined(context, existsRoom, player);
+    
+    JoinSuccess(context, existsRoom, writer);
     
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to {existsRoom.Id}");
   }
 
-  private void JoinSuccess(RagonRoomPlayer player, RagonRoom room, RagonBuffer writer)
+  private void JoinSuccess(RagonContext context, RagonRoom room, RagonBuffer writer)
   {
     writer.Clear();
     writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
     writer.WriteString(room.Id);
-    writer.WriteString(player.Id);
+    writer.WriteString(context.RoomPlayer.Id);
     writer.WriteString(room.Owner.Id);
-    writer.WriteUShort((ushort) room.Info.Min);
-    writer.WriteUShort((ushort) room.Info.Max);
-    writer.WriteString(room.Info.Map);
+    writer.WriteUShort((ushort) room.PlayerMin);
+    writer.WriteUShort((ushort) room.PlayerMax);
+    writer.WriteString(room.Map);
 
     var sendData = writer.ToArray();
-    player.Connection.Reliable.Send(sendData);
+    context.Connection.Reliable.Send(sendData);
   }
 
-  private void JoinFailed(RagonLobbyPlayer player, RagonBuffer writer)
+  private void JoinFailed(RagonContext context, RagonBuffer writer)
   {
     writer.Clear();
     writer.WriteOperation(RagonOperation.JOIN_FAILED);
     writer.WriteString($"Room not exists");
 
     var sendData = writer.ToArray();
-    player.Connection.Reliable.Send(sendData);
+    context.Connection.Reliable.Send(sendData);
   }
 }

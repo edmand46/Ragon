@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-namespace Ragon.Server;
+namespace Ragon.Server.IO;
 
 public interface INetworkConnection
 {
     public ushort Id { get; }
     public INetworkChannel Reliable { get; }
     public INetworkChannel Unreliable { get; }
+    public void Close();
 }

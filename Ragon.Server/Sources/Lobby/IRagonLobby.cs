@@ -15,13 +15,14 @@
  */
 
 using System.Diagnostics.CodeAnalysis;
+using Ragon.Server.Room;
 
-namespace Ragon.Server;
+namespace Ragon.Server.Lobby;
 
 public interface IRagonLobby
 {
   public bool FindRoomById(string roomId, [MaybeNullWhen(false)] out RagonRoom room);
   public bool FindRoomByMap(string map, [MaybeNullWhen(false)] out RagonRoom room);
   public void Persist(RagonRoom room);
-  public void RemoveIfEmpty(RagonRoom room);
+  public bool RemoveIfEmpty(RagonRoom room);
 }

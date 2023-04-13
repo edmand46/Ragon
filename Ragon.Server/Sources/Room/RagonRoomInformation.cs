@@ -16,14 +16,9 @@
 
 namespace Ragon.Server;
 
-public class RoomInformation
+public ref struct RoomInformation
 {
-  public string Map { get; init; } = "none";
-  public int Min { get; init; }
-  public int Max { get; init; }
-
-  public override string ToString()
-  {
-    return $"Map: {Map} Count: {Min}/{Max}";
-  }
+  public string Map;
+  public int Min;
+  public int Max;
 }

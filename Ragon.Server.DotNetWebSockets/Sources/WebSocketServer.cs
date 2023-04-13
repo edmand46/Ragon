@@ -18,6 +18,7 @@ using System.Net;
 using System.Net.WebSockets;
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.DotNetWebsockets;
 

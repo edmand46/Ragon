@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Ragon.Core.Time;
+namespace Ragon.Server.Time;
 
 public class RagonScheduler
 {
@@ -35,9 +35,9 @@ public class RagonScheduler
     _tasks.Remove(task);
   }
 
-  public void Update()
+  public void Update(float dt)
   {
     foreach (var task in _tasks)
-      task.Tick();
+      task.Tick(dt);
   }
 }

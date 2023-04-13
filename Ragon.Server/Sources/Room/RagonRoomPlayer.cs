@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-namespace Ragon.Server;
+using Ragon.Server.Entity;
+using Ragon.Server.IO;
+
+namespace Ragon.Server.Room;
 
 public class RagonRoomPlayer
 {

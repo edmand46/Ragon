@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Ragon.Server;
+namespace Ragon.Server.IO;
 
 public interface INetworkServer
 {

@@ -18,7 +18,7 @@ public class Game : IRagonListener
     public void OnConnected(RagonClient client)
     {
         RagonLog.Trace("Connected");
-        _client.Session.AuthorizeWithKey("defaultkey", "Player Eduard", Array.Empty<byte>());
+        _client.Session.AuthorizeWithKey("defaultkey", "Player Eduard");
     }
 
     public void OnAuthorizationSuccess(RagonClient client, string playerId, string playerName)

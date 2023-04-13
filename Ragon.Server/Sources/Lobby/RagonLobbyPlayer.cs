@@ -14,28 +14,29 @@
  * limitations under the License.
  */
 
-namespace Ragon.Server;
+using Ragon.Server.IO;
 
-public enum LobbyPlayerStatus
+namespace Ragon.Server.Lobby;
+
+public enum ConnectionStatus
 {
   Unauthorized,
+  InProcess,
   Authorized,
 }
 
 public class RagonLobbyPlayer
 {
+  public INetworkConnection Connection { get; }
   public string Id { get; private set; }
-  public string Name { get; set; }
-  public byte[] AdditionalData { get; set; }
-  public LobbyPlayerStatus Status { get; set; }
-  public INetworkConnection Connection { get; private set; }
+  public string Name { get; private set; }
+  public string Payload { get; private set; }
   
-  public RagonLobbyPlayer(INetworkConnection connection)
+  public RagonLobbyPlayer(INetworkConnection connection, string id, string name, string payload)
   {
-    Id = Guid.NewGuid().ToString();
+    Id = id;
+    Name = name;
+    Payload = payload;
     Connection = connection;
-    Status = LobbyPlayerStatus.Unauthorized;
-    Name = "None";
-    AdditionalData = Array.Empty<byte>();
   }
 }

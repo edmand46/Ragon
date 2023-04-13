@@ -16,7 +16,7 @@
 
 namespace Ragon.Client;
 
-public interface IRagonConnectedListener
+public interface IRagonConnectionListener
 {
   void OnConnected(RagonClient client);
   void OnDisconnected(RagonClient client);

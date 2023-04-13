@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-using Ragon.Protocol;
+using Ragon.Server.IO;
 
 namespace Ragon.Server;
 
-public interface IRagonOperation
+public interface IRagonServer
 {
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer);
+  RagonContext? ResolveContext(INetworkConnection connection);
+  RagonContext? ResolveContext(string id);
 }
