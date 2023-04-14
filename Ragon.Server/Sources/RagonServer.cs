@@ -77,8 +77,8 @@ public class RagonServer : IRagonServer, INetworkListener
     _handlers[(byte) RagonOperation.AUTHORIZE] = new AuthorizationOperation(_webhooks, contextObserver, _writer, configuration);
     _handlers[(byte) RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation(plugin, _webhooks);
     _handlers[(byte) RagonOperation.CREATE_ROOM] = new RoomCreateOperation(plugin, _webhooks);
-    _handlers[(byte) RagonOperation.JOIN_ROOM] = new RoomJoinOperation(plugin, _webhooks);
-    _handlers[(byte) RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation(plugin, _webhooks);
+    _handlers[(byte) RagonOperation.JOIN_ROOM] = new RoomJoinOperation(_webhooks);
+    _handlers[(byte) RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation(_webhooks);
     _handlers[(byte) RagonOperation.LOAD_SCENE] = new SceneLoadOperation();
     _handlers[(byte) RagonOperation.SCENE_LOADED] = new SceneLoadedOperation();
     _handlers[(byte) RagonOperation.CREATE_ENTITY] = new EntityCreateOperation();
@@ -198,7 +198,23 @@ public class RagonServer : IRagonServer, INetworkListener
       _logger.Error(ex);
     }
   }
-  public IRagonOperation ResolveOperation(RagonOperation operation) => _handlers[(byte)operation];
-  public RagonContext? ResolveContext(INetworkConnection connection) => _contextsByConnection.TryGetValue(connection.Id, out var context) ? context : null;
-  public RagonContext? ResolveContext(string playerId) => _contextsByPlayerId.TryGetValue(playerId, out var context) ? context : null;
+
+  public IRagonOperation ResolveOperation(RagonOperation operation)
+  {
+    return _handlers[(byte)operation];
+  }
+
+  public RagonLobbyPlayer? GetPlayerByConnection(INetworkConnection connection)
+  {
+    return _contextsByConnection.TryGetValue(connection.Id, out var context) ? 
+      context.LobbyPlayer : 
+      null;
+  }
+
+  public RagonLobbyPlayer? GetPlayerById(string playerId)
+  {
+    return _contextsByPlayerId.TryGetValue(playerId, out var context) ? 
+      context.LobbyPlayer :
+      null;
+  }
 }

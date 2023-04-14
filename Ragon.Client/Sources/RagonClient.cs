@@ -95,7 +95,7 @@ namespace Ragon.Client
       _handlers[(byte)RagonOperation.PLAYER_LEAVED] = new PlayerLeftHandler(_entityCache, _playerCache, _listenerList);
       _handlers[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadHandler(this, _listenerList);
       _handlers[(byte)RagonOperation.CREATE_ENTITY] = new EntityCreateHandler(this, _playerCache, _entityCache);
-      _handlers[(byte)RagonOperation.REMOVE_ENTITY] = new EntityDestroyHandler(_entityCache);
+      _handlers[(byte)RagonOperation.REMOVE_ENTITY] = new EntityRemoveHandler(_entityCache);
       _handlers[(byte)RagonOperation.REPLICATE_ENTITY_STATE] = new StateEntityHandler(_entityCache);
       _handlers[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventHandler(this, _playerCache, _entityCache);
       _handlers[(byte)RagonOperation.SNAPSHOT] = new SnapshotHandler(this, _listenerList, _entityCache, _playerCache);

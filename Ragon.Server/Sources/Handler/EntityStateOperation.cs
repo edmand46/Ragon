@@ -32,10 +32,14 @@ public sealed class EntityStateOperation: IRagonOperation
     for (var entityIndex = 0; entityIndex < entitiesCount; entityIndex++)
     {
       var entityId = reader.ReadUShort();
-      if (room.Entities.TryGetValue(entityId, out var entity))
-        entity.Read(player, reader);
+      if (room.Entities.TryGetValue(entityId, out var entity) && entity.TryReadState(player, reader))
+      {
+        room.Track(entity);
+      }
       else
+      {
         _logger.Error($"Entity with Id {entityId} not found, replication interrupted");
+      }
     }
   }
 }

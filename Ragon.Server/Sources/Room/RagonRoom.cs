@@ -100,7 +100,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
       Writer.WriteUShort(entities);
 
       foreach (var entity in _entitiesDirtySet)
-        entity.Write(Writer);
+        entity.WriteState(Writer);
 
       _entitiesDirtySet.Clear();
 
@@ -205,7 +205,26 @@ public class RagonRoom : IRagonRoom, IRagonAction
     foreach (var readyPlayer in ReadyPlayersList)
       readyPlayer.Connection.Reliable.Send(data);
   }
-  
-  public RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection) => Players[connection.Id];
-  public RagonRoomPlayer GetPlayerById(string id) => PlayerList.First(p => p.Id == id);
+
+  public RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection)
+  {
+    return Players[connection.Id];
+  }
+
+  public RagonRoomPlayer? GetPlayerById(string id)
+  {
+    return PlayerList.FirstOrDefault(p => p.Id == id);
+  }
+
+  public IRagonEntity? GetEntityById(ushort id)
+  {
+    return Entities.TryGetValue(id, out var entity) ? 
+      entity : 
+      null;
+  }
+
+  public IRagonEntity[] GetEntitiesOfPlayer(RagonRoomPlayer player)
+  {
+    return EntityList.Where(e => e.Owner.Connection.Id == player.Connection.Id).ToArray();
+  }
 }

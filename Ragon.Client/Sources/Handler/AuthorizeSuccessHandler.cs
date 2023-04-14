@@ -32,7 +32,8 @@ internal  class AuthorizeSuccessHandler: Handler
   {
     var playerId = buffer.ReadString();
     var playerName = buffer.ReadString();
+    var playerPayload = buffer.ReadString();
 
-    _listenerList.OnAuthorizationSuccess(playerId, playerName);
+    _listenerList.OnAuthorizationSuccess(playerId, playerName, playerPayload);
   }
 }

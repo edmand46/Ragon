@@ -22,26 +22,14 @@ namespace Ragon.Server.Plugin;
 
 public class BaseServerPlugin: IServerPlugin
 {
-  private IRagonServer _ragonServer;
+  public IRagonServer Server { get; protected set; }
   
-  public RagonLobbyPlayer? GetPlayerById(string id)
+  public virtual void OnAttached(IRagonServer server)
   {
-    var context = _ragonServer.ResolveContext(id);
-    return context?.LobbyPlayer;
+    Server  = server;
   }
 
-  public RagonLobbyPlayer? GetPlayerByConnection(INetworkConnection connection)
-  {
-    var context = _ragonServer.ResolveContext(connection);
-    return context?.LobbyPlayer;
-  }
-
-  public void OnAttached(IRagonServer server)
-  {
-    _ragonServer = server;
-  }
-
-  public void OnDetached()
+  public virtual void OnDetached()
   {
     
   }
@@ -52,16 +40,6 @@ public class BaseServerPlugin: IServerPlugin
   }
 
   public virtual bool OnRoomRemove(RagonLobbyPlayer player, RagonRoom room)
-  {
-    return true;
-  }
-
-  public virtual bool OnRoomLeave(RagonRoomPlayer player, RagonRoom room)
-  {
-    return true;
-  }
-
-  public virtual bool OnRoomJoin(RagonRoomPlayer player, RagonRoom room)
   {
     return true;
   }

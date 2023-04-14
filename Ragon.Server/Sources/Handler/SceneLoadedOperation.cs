@@ -64,7 +64,7 @@ public sealed class SceneLoadedOperation : IRagonOperation
         {
           var propertyType = reader.ReadBool();
           var propertySize = reader.ReadUShort();
-          entity.State.AddProperty(new RagonProperty(propertySize, propertyType));
+          entity.AddProperty(new RagonProperty(propertySize, propertyType));
         }
         
         var roomPlugin = room.Plugin;

@@ -20,7 +20,7 @@ using Ragon.Server.Room;
 
 namespace Ragon.Server.Entity;
 
-public class RagonEntity
+public class RagonEntity: IRagonEntity
 {
   private static ushort _idGenerator = 100;
   public ushort Id { get; private set; }
@@ -30,8 +30,10 @@ public class RagonEntity
   public RagonRoomPlayer Owner { get; private set; }
   public RagonAuthority Authority { get; private set; }
   public RagonPayload Payload { get; private set; }
-  public RagonEntityState State { get; private set; }
+  public IRagonEntityState State => _state;
+  
   private readonly List<RagonEvent> _bufferedEvents;
+  private readonly RagonEntityState _state;
   
   public RagonEntity(RagonEntityParameters parameters)
   {
@@ -41,10 +43,9 @@ public class RagonEntity
     Type = parameters.Type;
     AttachId = parameters.AttachId;
     Authority = parameters.Authority;
-    
-    State = new RagonEntityState(this);
     Payload = new RagonPayload();
     
+    _state = new RagonEntityState(this);
     _bufferedEvents = new List<RagonEvent>();
   }
   
@@ -121,7 +122,8 @@ public class RagonEntity
 
     buffer.WriteUShort(Payload.Size);
     Payload.Write(buffer);
-    State.Snapshot(buffer);
+    
+    _state.Snapshot(buffer);
   }
 
   public void ReplicateEvent(
@@ -215,16 +217,23 @@ public class RagonEntity
     }
   }
 
-  public void Write(RagonBuffer writer)
+  public void AddProperty(RagonProperty property)
   {
-    State.Write(writer);
+    _state.AddProperty(property);
+  }
+  
+  public void WriteState(RagonBuffer writer)
+  {
+    _state.Write(writer);
   }
 
-  public void Read(RagonRoomPlayer player, RagonBuffer reader)
+  public bool TryReadState(RagonRoomPlayer player, RagonBuffer reader)
   {
     if (Owner.Connection.Id != player.Connection.Id)
-      return;
+      return false;
     
-    State.Read(reader);
+    _state.Read(reader);
+    
+    return true;
   }
 }

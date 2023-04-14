@@ -24,6 +24,8 @@ public interface IRoomPlugin
   void Tick(float dt);
   void OnAttached(IRagonRoom room);
   void OnDetached();
-  bool OnEntityCreate(RagonRoomPlayer creator, RagonEntity entity);
-  bool OnEntityRemove(RagonRoomPlayer remover, RagonEntity entity);
+  bool OnPlayerJoined(RagonRoomPlayer player);
+  bool OnPlayerLeaved(RagonRoomPlayer player);
+  bool OnEntityCreate(RagonRoomPlayer player, IRagonEntity entity);
+  bool OnEntityRemove(RagonRoomPlayer player, IRagonEntity entity);
 }

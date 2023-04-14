@@ -150,7 +150,7 @@ namespace Ragon.Client
       _playerLeftListeners.Remove(listener);
     }
 
-    public void OnAuthorizationSuccess(string playerId, string playerName)
+    public void OnAuthorizationSuccess(string playerId, string playerName, string payload)
     {
       foreach (var listener in _authorizationListeners)
         listener.OnAuthorizationSuccess(_client, playerId, playerName);

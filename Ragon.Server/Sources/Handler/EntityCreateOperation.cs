@@ -47,7 +47,7 @@ public sealed class EntityCreateOperation : IRagonOperation
       var propertyType = reader.ReadBool();
       var propertySize = reader.ReadUShort();
 
-      entity.State.AddProperty(new RagonProperty(propertySize, propertyType));
+      entity.AddProperty(new RagonProperty(propertySize, propertyType));
     }
     
     if (reader.Capacity > 0)

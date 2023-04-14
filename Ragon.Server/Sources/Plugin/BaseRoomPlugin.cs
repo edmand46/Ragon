@@ -22,44 +22,44 @@ namespace Ragon.Server.Plugin;
 
 public class BaseRoomPlugin: IRoomPlugin
 {
-  private IRagonRoom _ragonRoom;
-  
-  public RagonRoomPlayer GetPlayerById(string id)
-  {
-    var player = _ragonRoom.GetPlayerById(id);
-    return player;
-  }
-
-  public RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection)
-  {
-    var player = _ragonRoom.GetPlayerByConnection(connection);
-    return player;
-  }
+  public IRagonRoom Room { get; private set; }
   
   public virtual void OnAttached(IRagonRoom room)
   {
-    _ragonRoom = room;
+    Room = room;
   }
   
   public virtual void OnDetached()
   {
     
   }
-
-  #region VIRTUAL
   
+  #region VIRTUAL
+
+  public virtual bool OnPlayerJoined(RagonRoomPlayer player)
+  {
+    return true;
+  }
+
+  public virtual bool OnPlayerLeaved(RagonRoomPlayer player)
+  {
+    return true;
+  }
+
   public virtual void Tick(float dt)
   {
     
   }
   
-  public virtual bool OnEntityCreate(RagonRoomPlayer creator, RagonEntity entity)
+  public virtual bool OnEntityCreate(RagonRoomPlayer creator, IRagonEntity entity)
   {
+    
     return true;
   }
 
-  public virtual bool OnEntityRemove(RagonRoomPlayer remover, RagonEntity entity)
+  public virtual bool OnEntityRemove(RagonRoomPlayer remover, IRagonEntity entity)
   {
+    
     return true;
   }
   

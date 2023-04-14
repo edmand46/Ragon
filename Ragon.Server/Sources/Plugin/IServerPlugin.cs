@@ -26,8 +26,6 @@ public interface IServerPlugin
   void OnDetached();
   bool OnRoomCreate(RagonLobbyPlayer player, RagonRoom room);
   bool OnRoomRemove(RagonLobbyPlayer player, RagonRoom room);
-  bool OnRoomLeave(RagonRoomPlayer player, RagonRoom room);
-  bool OnRoomJoin(RagonRoomPlayer player, RagonRoom room);
   bool OnCommand(string command, string payload);
   IRoomPlugin CreateRoomPlugin(RoomInformation information);
 }

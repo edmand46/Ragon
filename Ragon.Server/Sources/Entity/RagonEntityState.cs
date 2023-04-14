@@ -19,14 +19,16 @@ using Ragon.Protocol;
 
 namespace Ragon.Server.Entity;
 
-public class RagonEntityState
+public class RagonEntityState: IRagonEntityState
 {
   private List<RagonProperty> _properties;
   private RagonEntity _entity;
-
+  private RagonBuffer _buffer;
+  
   public RagonEntityState(RagonEntity entity, int capacity = 10)
   {
     _entity = entity;
+    _buffer = new RagonBuffer(8);
     _properties = new List<RagonProperty>(capacity);
   }
 
@@ -65,8 +67,8 @@ public class RagonEntityState
   {
     foreach (var property in _properties)
     {
-      var hasPayload = property.IsFixed || !property.IsFixed && property.Size > 0;
-      if (hasPayload)
+      var hasPayloadOrFixed = property.IsFixed || property is { IsFixed: false, Size: > 0 };
+      if (hasPayloadOrFixed)
       {
         buffer.WriteBool(true);
         property.Write(buffer);
