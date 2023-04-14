@@ -12,7 +12,7 @@ public class RelayServerPlugin: BaseServerPlugin
     if (command == "kick-player")
     {
       var commandPayload = JsonConvert.DeserializeObject<KickPlayerCommand>(payload);
-      var player = GetPlayerById(commandPayload.Id);
+      var player = Server.GetPlayerById(commandPayload.Id);
       if (player != null)
         player.Connection.Close();
       else
