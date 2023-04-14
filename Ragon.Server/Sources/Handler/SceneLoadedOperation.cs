@@ -68,7 +68,7 @@ public sealed class SceneLoadedOperation : IRagonOperation
         }
         
         var roomPlugin = room.Plugin;
-        if (roomPlugin.OnEntityCreate(player, entity)) continue;
+        if (!roomPlugin.OnEntityCreate(player, entity)) continue;
         
         var playerInfo = $"Player {context.Connection.Id}|{context.LobbyPlayer.Name}";
         var entityInfo = $"{entity.Id}:{entity.Type}";
