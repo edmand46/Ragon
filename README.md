@@ -6,7 +6,7 @@
 
 Ragon is fully free, small and high perfomance room based game server with plugin based architecture.
 
-<a href="https://www.ragon-server.com/docs/installation">Documentation</a>
+  <a href="https://www.ragon-server.com/docs/overview">Documentation</a>
 
 ### Features:
 - Effective
