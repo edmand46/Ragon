@@ -92,12 +92,12 @@ namespace Ragon.Client
       return payload;
     }
 
-    public T GetSpawnPayload<T>() where T : IRagonPayload, new()
+    public T GetAttachPayload<T>() where T : IRagonPayload, new()
     {
       return GetPayload<T>(_spawnPayload);
     }
 
-    public T GetDestroyPayload<T>() where T : IRagonPayload, new()
+    public T GetDetachPayload<T>() where T : IRagonPayload, new()
     {
       return GetPayload<T>(_destroyPayload);
     }
