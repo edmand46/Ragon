@@ -4,3 +4,5 @@
 obj
 bin
 *.user
+*.dylib
+*.dll

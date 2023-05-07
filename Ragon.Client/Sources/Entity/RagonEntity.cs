@@ -105,6 +105,12 @@ namespace Ragon.Client
     public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode replicationMode)
       where TEvent : IRagonEvent, new()
     {
+      if (!IsAttached)
+      {
+        RagonLog.Error("Entity not attached");
+        return;
+      }
+      
       var evntId = _client.Event.GetEventCode(evnt);
       var buffer = _client.Buffer;
 
@@ -114,7 +120,7 @@ namespace Ragon.Client
       buffer.WriteUShort(evntId);
       buffer.WriteByte((byte) replicationMode);
       buffer.WriteByte((byte) RagonTarget.Player);
-      buffer.WriteUShort((ushort) target.PeerId);
+      buffer.WriteUShort(target.PeerId);
 
       evnt.Serialize(buffer);
       
@@ -128,6 +134,12 @@ namespace Ragon.Client
       RagonReplicationMode replicationMode = RagonReplicationMode.Server)
       where TEvent : IRagonEvent, new()
     {
+      if (!IsAttached)
+      {
+        RagonLog.Error("Entity not attached");
+        return;
+      }
+      
       if (target != RagonTarget.ExceptOwner)
       {
         if (replicationMode == RagonReplicationMode.Local)
@@ -196,8 +208,10 @@ namespace Ragon.Client
 
     internal void Event(ushort eventCode, RagonPlayer caller, RagonBuffer buffer)
     {
-      if (_events.ContainsKey(eventCode))
-        _events[eventCode]?.Invoke(caller, buffer);
+      if (_events.TryGetValue(eventCode, out var evnt))
+        evnt?.Invoke(caller, buffer);
+      else 
+        RagonLog.Warn($"Handler event on entity {Id} with eventCode {eventCode} not defined");
     }
 
     internal void TrackChangedProperty(RagonProperty property)

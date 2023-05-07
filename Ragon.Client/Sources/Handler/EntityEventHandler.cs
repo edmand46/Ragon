@@ -49,7 +49,7 @@ internal class EntityEventHandler : Handler
             return;
         }
 
-        if (player.IsMe && executionMode == RagonReplicationMode.LocalAndServer)
+        if (player.IsLocal && executionMode == RagonReplicationMode.LocalAndServer)
             return;
 
         _entityCache.OnEvent(player, entityId, eventCode, buffer);

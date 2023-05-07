@@ -50,7 +50,7 @@ public sealed class RagonPlayerCache
 
     var player = new RagonPlayer(peerId, playerId, playerName, isOwner, isLocal);
 
-    if (player.IsMe)
+    if (player.IsLocal)
       LocalPlayer = player;
 
     if (player.IsRoomOwner)
