@@ -290,7 +290,7 @@ namespace Ragon.Protocol
 
       return data;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReadSpan(ref Span<uint> data, int size)
     {
@@ -320,7 +320,8 @@ namespace Ragon.Protocol
       
       _read += size;
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSpan(ref ReadOnlySpan<uint> data, int size)
     {
       var used = _write & 0x0000001F;
@@ -352,6 +353,20 @@ namespace Ragon.Protocol
       _write = 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FromBuffer(RagonBuffer buffer, int size)
+    {
+      ReadOnlySpan<uint> data = buffer._buckets.AsSpan();
+      WriteSpan(ref data, size);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ToBuffer(RagonBuffer buffer, int size)
+    {
+      var data = buffer._buckets.AsSpan();
+      ReadSpan(ref data, size);
+    }
+    
     public void FromArray(byte[] data)
     {
       var length = data.Length;

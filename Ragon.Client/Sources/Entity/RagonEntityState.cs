@@ -53,7 +53,7 @@ public sealed class RagonEntityState
     {
       var changed = buffer.ReadBool();
       if (changed)
-        property.Deserialize(buffer);
+        property.Read(buffer);
     }
   }
 

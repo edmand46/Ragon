@@ -29,22 +29,25 @@ namespace Ragon.Client
     public bool IsFixed => _fixed;
     public int Size => _size;
 
-    private bool _fixed;
-    private string _name;
-    protected bool _invokeLocal;
-
     private RagonEntity _entity;
+    private RagonBuffer _propertyBuffer;
     private bool _dirty;
     private int _size;
     private int _ticks;
     private int _priority;
+    private bool _fixed;
+    private string _name;
+    
+    protected bool InvokeLocal;
 
     protected RagonProperty(int priority, bool invokeLocal)
     {
       _size = 0;
       _priority = priority;
       _fixed = false;
-      _invokeLocal = invokeLocal;
+      _propertyBuffer = new RagonBuffer();
+      
+      InvokeLocal = invokeLocal;
     }
 
     public void SetName(string name)
@@ -60,7 +63,7 @@ namespace Ragon.Client
 
     protected void InvokeChanged()
     {
-      if (!_invokeLocal)
+      if (!InvokeLocal)
         return;
 
       Changed?.Invoke();
@@ -97,20 +100,38 @@ namespace Ragon.Client
 
     internal void Write(RagonBuffer buffer)
     {
+      _propertyBuffer.Clear();
+      
       if (_fixed)
       {
-        Serialize(buffer);
+        Serialize(_propertyBuffer);
+        
+        buffer.FromBuffer(_propertyBuffer, _size);
+      }
+      else
+      {
+        Serialize(_propertyBuffer);
+
+        var propSize = _propertyBuffer.WriteOffset;
+        buffer.WriteUShort((ushort) propSize);
+        buffer.FromBuffer(_propertyBuffer, propSize);
+      }
+    }
+
+    internal void Read(RagonBuffer buffer)
+    {
+      _propertyBuffer.Clear();
+      
+      if (_fixed)
+      {
+        buffer.ToBuffer(_propertyBuffer, _size);
+        Deserialize(_propertyBuffer);
         return;
       }
 
-      var sizeOffset = buffer.WriteOffset;
-      buffer.Write(0, 16);
-      var propOffset = buffer.WriteOffset;
-
-      Serialize(buffer);
-
-      var propSize = (uint)(buffer.WriteOffset - propOffset);
-      buffer.Write(propSize, 16, sizeOffset);
+      var propSize = buffer.ReadUShort();
+      buffer.ToBuffer(_propertyBuffer, propSize);
+      Deserialize(_propertyBuffer);
     }
 
     public virtual void Serialize(RagonBuffer buffer)
