@@ -15,6 +15,8 @@
  */
 
 
+using Ragon.Protocol;
+
 namespace Ragon.Client;
 
 public interface INetworkConnection: IRagonConnection
@@ -23,7 +25,7 @@ public interface INetworkConnection: IRagonConnection
     public INetworkChannel Unreliable { get; }
     public Action<byte[]> OnData { get; set; }
     public Action OnConnected { get; set; }
-    public Action<DisconnectReason> OnDisconnected { get; set; }
+    public Action<RagonDisconnect> OnDisconnected { get; set; }
     public ulong BytesSent { get; }
     public  ulong BytesReceived { get; }
     public int Ping { get;  }

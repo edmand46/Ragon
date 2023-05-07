@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Ragon.Protocol;
+
 namespace Ragon.Client
 {
   internal class RagonListenerList
@@ -210,10 +212,10 @@ namespace Ragon.Client
         listener.OnConnected(_client);
     }
 
-    public void OnDisconnected()
+    public void OnDisconnected(RagonDisconnect disconnect)
     {
       foreach (var listener in _connectionListeners)
-        listener.OnDisconnected(_client);
+        listener.OnDisconnected(_client, disconnect);
     }
   }
 }

@@ -16,6 +16,7 @@
 
 
 using ENet;
+using Ragon.Protocol;
 using Event = ENet.Event;
 using EventType = ENet.EventType;
 
@@ -31,7 +32,7 @@ namespace Ragon.Client
     
     public Action<byte[]> OnData { get; set; }
     public Action OnConnected { get; set; }
-    public Action<DisconnectReason> OnDisconnected { get; set; }
+    public Action<RagonDisconnect> OnDisconnected { get; set; }
     public ulong BytesSent { get; }
     public ulong BytesReceived { get; }
     public int Ping { get; }
@@ -99,10 +100,10 @@ namespace Ragon.Client
             OnConnected?.Invoke();
             break;
           case EventType.Disconnect:
-            OnDisconnected?.Invoke(DisconnectReason.MANUAL);
+            OnDisconnected?.Invoke(RagonDisconnect.SERVER);
             break;
           case EventType.Timeout:
-            OnDisconnected?.Invoke(DisconnectReason.TIMEOUT);
+            OnDisconnected?.Invoke(RagonDisconnect.TIMEOUT);
             break;
           case EventType.Receive:
             var data = new byte[_netEvent.Packet.Length];

@@ -110,7 +110,7 @@ namespace Ragon.Client
       _room.Cleanup();
       _connection.Disconnect();
       
-      OnDisconnected(DisconnectReason.MANUAL);
+      OnDisconnected(RagonDisconnect.MANUAL);
     }
 
     public void Update(float dt)
@@ -181,11 +181,11 @@ namespace Ragon.Client
       _status = RagonStatus.CONNECTED;
     }
 
-    private void OnDisconnected(DisconnectReason reason)
+    private void OnDisconnected(RagonDisconnect reason)
     {
       RagonLog.Trace($"Disconnected: {reason}");
 
-      _listenerList.OnDisconnected();
+      _listenerList.OnDisconnected(reason);
       _status = RagonStatus.DISCONNECTED;
     }
 

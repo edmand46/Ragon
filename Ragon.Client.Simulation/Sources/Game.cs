@@ -1,5 +1,7 @@
 ﻿
 
+using Ragon.Protocol;
+
 namespace Ragon.Client.Simulation;
 
 public class Game : IRagonListener
@@ -63,7 +65,7 @@ public class Game : IRagonListener
         RagonLog.Trace("Left");
     }
 
-    public void OnDisconnected(RagonClient client)
+    public void OnDisconnected(RagonClient client, RagonDisconnect ragonDisconnect)
     {
         RagonLog.Trace("Disconnected");
     }

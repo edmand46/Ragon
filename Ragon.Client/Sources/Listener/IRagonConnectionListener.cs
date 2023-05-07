@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+using Ragon.Protocol;
+
 namespace Ragon.Client;
 
 public interface IRagonConnectionListener
 {
   void OnConnected(RagonClient client);
-  void OnDisconnected(RagonClient client);
+  void OnDisconnected(RagonClient client, RagonDisconnect reason);
 }
