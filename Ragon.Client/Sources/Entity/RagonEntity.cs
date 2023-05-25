@@ -179,8 +179,10 @@ namespace Ragon.Client
 
       if (_events.ContainsKey(eventCode))
       {
-        RagonLog.Warn($"Event already {eventCode} subscribed");
-        return;
+        _events.Remove(eventCode);
+        _localEvents.Remove(eventCode);
+        
+        RagonLog.Warn($"Event already {eventCode} subscribed, removed old one!");
       }
     
       _localEvents.Add(eventCode, (player, eventData) => { callback.Invoke(player, (TEvent) eventData); });
@@ -190,7 +192,7 @@ namespace Ragon.Client
         callback.Invoke(player, t);
       });
     }
-
+    
     internal void Write(RagonBuffer buffer)
     {
       buffer.WriteUShort(Id);
