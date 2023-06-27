@@ -52,7 +52,7 @@ public sealed class RagonEntityCache
   
   public void Create(RagonEntity entity, IRagonPayload? spawnPayload)
   {
-    var attachId = (ushort) (_playerCache.LocalPlayer.PeerId + _localEntitiesCounter++) ;
+    var attachId = (ushort) (_playerCache.Local.PeerId + _localEntitiesCounter++) ;
     var buffer = _client.Buffer;
     
     buffer.Clear();
@@ -71,6 +71,19 @@ public sealed class RagonEntityCache
     _client.Reliable.Send(sendData);
   }
 
+  public void Transfer(RagonEntity entity, RagonPlayer player)
+  {
+    var buffer = _client.Buffer;
+    
+    buffer.Clear();
+    buffer.WriteOperation(RagonOperation.TRANSFER_ENTITY_OWNERSHIP);
+    buffer.WriteUShort(entity.Id);
+    buffer.WriteUShort(player.PeerId);
+    
+    var sendData = buffer.ToArray();
+    _client.Reliable.Send(sendData);
+  }
+  
   public void Destroy(RagonEntity entity, IRagonPayload? destroyPayload)
   {
     if (!entity.IsAttached)
@@ -78,6 +91,7 @@ public sealed class RagonEntityCache
       RagonLog.Warn("Can't destroy object, he is not created");
       return;
     }
+    
     var buffer = _client.Buffer;
     
     buffer.Clear();

@@ -19,13 +19,13 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class OwnershipHandler: Handler
+internal  class OwnershipRoomHandler: Handler
 {
   private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
   
-  public OwnershipHandler(
+  public OwnershipRoomHandler(
     RagonListenerList listenerList,
     RagonPlayerCache playerCache,
     RagonEntityCache entityCache)
@@ -42,12 +42,5 @@ internal  class OwnershipHandler: Handler
 
     _playerCache.OnOwnershipChanged(newOwnerId);
     _listenerList.OnOwnershipChanged(player);
-
-    var entities = buffer.ReadUShort();
-    for (var i = 0; i < entities; i++)
-    {
-      var entityId = buffer.ReadUShort();
-      _entityCache.OnOwnershipChanged(player, entityId);
-    }
   }
 }

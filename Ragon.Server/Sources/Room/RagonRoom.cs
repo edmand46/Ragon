@@ -153,7 +153,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
         var entitiesToUpdate = roomPlayer.Entities.StaticList;
 
         Writer.Clear();
-        Writer.WriteOperation(RagonOperation.OWNERSHIP_CHANGED);
+        Writer.WriteOperation(RagonOperation.OWNERSHIP_ENTITY_CHANGED);
         Writer.WriteString(Owner.Id);
         Writer.WriteUShort((ushort)entitiesToUpdate.Count);
 

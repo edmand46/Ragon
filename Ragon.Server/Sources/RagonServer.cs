@@ -85,6 +85,8 @@ public class RagonServer : IRagonServer, INetworkListener
     _handlers[(byte) RagonOperation.REMOVE_ENTITY] = new EntityDestroyOperation();
     _handlers[(byte) RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventOperation();
     _handlers[(byte) RagonOperation.REPLICATE_ENTITY_STATE] = new EntityStateOperation();
+    _handlers[(byte) RagonOperation.TRANSFER_ROOM_OWNERSHIP] = new EntityOwnershipOperation();
+    _handlers[(byte) RagonOperation.TRANSFER_ENTITY_OWNERSHIP] = new EntityOwnershipOperation();
     
     _logger.Trace($"Server Tick Rate: {_configuration.ServerTickRate}");
   }

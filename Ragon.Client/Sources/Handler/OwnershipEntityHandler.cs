@@ -14,45 +14,36 @@
  * limitations under the License.
  */
 
+
 using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class EntityCreateHandler : Handler
+internal class OwnershipEntityHandler: Handler
 {
-  private readonly RagonClient _client;
+  private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
   
-  public EntityCreateHandler(
-    RagonClient client,
+  public OwnershipEntityHandler(
+    RagonListenerList listenerList,
     RagonPlayerCache playerCache,
-    RagonEntityCache entityCache
-  )
+    RagonEntityCache entityCache)
   {
-    _client = client;
-    _entityCache = entityCache;
+    _listenerList = listenerList;
     _playerCache = playerCache;
+    _entityCache = entityCache;
   }
-
+  
   public void Handle(RagonBuffer buffer)
   {
-    var attachId = buffer.ReadUShort();
-    var entityType = buffer.ReadUShort();
-    var entityId = buffer.ReadUShort();
-    var ownerId = buffer.ReadUShort();
-    var player = _playerCache.GetPlayerByPeer(ownerId);
-    var payload = new RagonPayload(buffer.Capacity);
-    payload.Read(buffer);
-
-    if (player == null)
+    var newOwnerId = buffer.ReadString();
+    var player = _playerCache.GetPlayerById(newOwnerId);
+    var entities = buffer.ReadUShort();
+    for (var i = 0; i < entities; i++)
     {
-      RagonLog.Warn($"Owner {ownerId}|{player.Name} not found in players");
-      return;
+      var entityId = buffer.ReadUShort();
+      _entityCache.OnOwnershipChanged(player, entityId);
     }
-    
-    var hasAuthority = _playerCache.Local.Id == player.Id;
-    var entity = _entityCache.OnCreate(attachId, entityType, 0, entityId, hasAuthority);
-    entity.Attach(_client, entityId, entityType, hasAuthority, player, payload);
   }
 }

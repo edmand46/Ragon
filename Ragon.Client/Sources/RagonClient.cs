@@ -90,7 +90,8 @@ namespace Ragon.Client
       _handlers[(byte)RagonOperation.JOIN_SUCCESS] = new JoinSuccessHandler(this, _readBuffer, _listenerList, _playerCache, _entityCache);
       _handlers[(byte)RagonOperation.JOIN_FAILED] = new JoinFailedHandler(_listenerList);
       _handlers[(byte)RagonOperation.LEAVE_ROOM] = new LeaveRoomHandler(this, _listenerList, _entityCache);
-      _handlers[(byte)RagonOperation.OWNERSHIP_CHANGED] = new OwnershipHandler(_listenerList, _playerCache, _entityCache);
+      _handlers[(byte)RagonOperation.OWNERSHIP_ROOM_CHANGED] = new OwnershipRoomHandler(_listenerList, _playerCache, _entityCache);
+      _handlers[(byte)RagonOperation.OWNERSHIP_ENTITY_CHANGED] = new OwnershipEntityHandler(_listenerList, _playerCache, _entityCache);
       _handlers[(byte)RagonOperation.PLAYER_JOINED] = new PlayerJoinHandler(_playerCache, _listenerList);
       _handlers[(byte)RagonOperation.PLAYER_LEAVED] = new PlayerLeftHandler(_entityCache, _playerCache, _listenerList);
       _handlers[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadHandler(this, _listenerList);

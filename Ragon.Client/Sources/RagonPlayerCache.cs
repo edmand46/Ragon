@@ -18,12 +18,13 @@ namespace Ragon.Client;
 
 public sealed class RagonPlayerCache
 {
-  private List<RagonPlayer> _players = new List<RagonPlayer>();
-  private Dictionary<string, RagonPlayer> _playersById = new();
-  private Dictionary<ushort, RagonPlayer> _playersByConnection = new();
+  private readonly List<RagonPlayer> _players = new();
+  private readonly Dictionary<string, RagonPlayer> _playersById = new();
+  private readonly Dictionary<ushort, RagonPlayer> _playersByConnection = new();
 
+  public IReadOnlyList<RagonPlayer> Players => _players;
   public RagonPlayer Owner { get; private set; }
-  public RagonPlayer LocalPlayer { get; private set; }
+  public RagonPlayer Local { get; private set; }
   public bool IsRoomOwner => _ownerId == _localId;
   
   public RagonPlayer? GetPlayerById(string playerId) => _playersById[playerId];
@@ -51,7 +52,7 @@ public sealed class RagonPlayerCache
     var player = new RagonPlayer(peerId, playerId, playerName, isOwner, isLocal);
 
     if (player.IsLocal)
-      LocalPlayer = player;
+      Local = player;
 
     if (player.IsRoomOwner)
       Owner = player;

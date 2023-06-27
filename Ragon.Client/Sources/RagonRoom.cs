@@ -28,9 +28,10 @@ namespace Ragon.Client
     public int MinPlayers => _information.Min;
     public int MaxPlayers => _information.Max;
 
-    public RagonPlayer Local => _playerCache.LocalPlayer;
+    public IReadOnlyList<RagonPlayer> Players => _playerCache.Players;
+    public RagonPlayer Local => _playerCache.Local;
     public RagonPlayer Owner => _playerCache.Owner;
-
+    
     public RagonRoom(RagonClient client,
       RagonEntityCache entityCache,
       RagonPlayerCache playerCache,
@@ -55,6 +56,7 @@ namespace Ragon.Client
 
     public void CreateEntity(RagonEntity entity) => CreateEntity(entity, null);
     public void CreateEntity(RagonEntity entity, IRagonPayload? payload) => _entityCache.Create(entity, payload);
+    public void TransferEntity(RagonEntity entity, RagonPlayer player) => _entityCache.Transfer(entity, player);
 
     public void DestroyEntity(RagonEntity entityId) => DestroyEntity(entityId, null);
     public void DestroyEntity(RagonEntity entityId, IRagonPayload? payload) => _entityCache.Destroy(entityId, payload);

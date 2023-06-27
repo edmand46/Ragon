@@ -15,6 +15,7 @@
  */
 
 
+using System.Diagnostics;
 using Ragon.Protocol;
 
 namespace Ragon.Client;
@@ -64,7 +65,7 @@ internal class SnapshotHandler : Handler
       var payload = new RagonPayload(payloadSize);
       payload.Read(buffer);
 
-      var hasAuthority = _playerCache.LocalPlayer.Id == player.Id;
+      var hasAuthority = _playerCache.Local.Id == player.Id;
       var entity = _entityCache.OnCreate(0, entityType, 0, entityId, hasAuthority);
       
       entity.Read(buffer);
@@ -85,7 +86,7 @@ internal class SnapshotHandler : Handler
       var payload = new RagonPayload(payloadSize);
       payload.Read(buffer);
 
-      var hasAuthority = _playerCache.LocalPlayer.Id == player.Id;
+      var hasAuthority = _playerCache.Local.Id == player.Id;
       var entity = _entityCache.OnCreate(0, entityType, staticId, entityId, hasAuthority);
       
       entity.Read(buffer);
