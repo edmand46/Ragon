@@ -154,7 +154,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
 
         Writer.Clear();
         Writer.WriteOperation(RagonOperation.OWNERSHIP_ENTITY_CHANGED);
-        Writer.WriteString(Owner.Id);
+        Writer.WriteUShort(Owner.Connection.Id);
         Writer.WriteUShort((ushort)entitiesToUpdate.Count);
 
         foreach (var entity in entitiesToUpdate)

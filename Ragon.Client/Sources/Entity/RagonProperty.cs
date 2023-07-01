@@ -29,6 +29,7 @@ namespace Ragon.Client
     public bool IsFixed => _fixed;
     public int Size => _size;
 
+    private RagonBuffer _propertyBuffer;
     private RagonEntity _entity;    
     private bool _dirty;
     private int _size;
@@ -44,6 +45,7 @@ namespace Ragon.Client
       _size = 0;
       _priority = priority;
       _fixed = false;
+      _propertyBuffer = new RagonBuffer();
       
       InvokeLocal = invokeLocal;
     }
@@ -98,25 +100,38 @@ namespace Ragon.Client
 
     internal void Write(RagonBuffer buffer)
     {
+      _propertyBuffer.Clear();
+      
       if (_fixed)
       {
-        Serialize(buffer);
+        Serialize(_propertyBuffer);
+        
+        buffer.FromBuffer(_propertyBuffer, _size);
         return;
       }
 
-      var sizeOffset = buffer.WriteOffset;
-      buffer.Write(0, 16);
-      var propOffset = buffer.WriteOffset;
+      Serialize(_propertyBuffer);
 
-      Serialize(buffer);
-
-      var propSize = (uint)(buffer.WriteOffset - propOffset);
-      buffer.Write(propSize, 16, sizeOffset);
+      var propertySize = (ushort) _propertyBuffer.WriteOffset;
+      buffer.WriteUShort(propertySize);;
+      buffer.FromBuffer(_propertyBuffer, propertySize);
     }
 
     internal void Read(RagonBuffer buffer)
     {
-      Deserialize(buffer);
+      _propertyBuffer.Clear();
+      
+      if (_fixed)
+      {
+        buffer.ToBuffer(_propertyBuffer, _size);
+        
+        Deserialize(_propertyBuffer);
+        return;
+      }
+      
+      var propSize = buffer.ReadUShort();
+      buffer.ToBuffer(_propertyBuffer, propSize);
+      Deserialize(_propertyBuffer);
     }
 
     public virtual void Serialize(RagonBuffer buffer)
