@@ -20,9 +20,9 @@ using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
 
-namespace Ragon.Server.DotNetWebsockets;
+namespace Ragon.Server.WebSocketServer;
 
-public class DotNetWebSocketServer : INetworkServer
+public class WebSocketServer : INetworkServer
 {
   public Executor Executor => _executor;
   
@@ -35,7 +35,7 @@ public class DotNetWebSocketServer : INetworkServer
   private List<WebSocketConnection> _activeConnections;
   private CancellationTokenSource _cancellationTokenSource;
   
-  public DotNetWebSocketServer()
+  public WebSocketServer()
   {
     _sequencer = new Stack<ushort>();
     _connections = Array.Empty<WebSocketConnection>();

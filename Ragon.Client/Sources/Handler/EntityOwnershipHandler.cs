@@ -19,13 +19,13 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class OwnershipEntityHandler: Handler
+internal class EntityOwnershipHandler: Handler
 {
   private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
   
-  public OwnershipEntityHandler(
+  public EntityOwnershipHandler(
     RagonListenerList listenerList,
     RagonPlayerCache playerCache,
     RagonEntityCache entityCache)
@@ -37,13 +37,16 @@ internal class OwnershipEntityHandler: Handler
   
   public void Handle(RagonBuffer buffer)
   {
-    var newOwnerId = buffer.ReadString();
-    var player = _playerCache.GetPlayerById(newOwnerId);
+    var newOwnerId = buffer.ReadUShort();
     var entities = buffer.ReadUShort();
+    
+    var player = _playerCache.GetPlayerByPeer(newOwnerId);
     for (var i = 0; i < entities; i++)
     {
       var entityId = buffer.ReadUShort();
       _entityCache.OnOwnershipChanged(player, entityId);
+      
+      RagonLog.Trace("Entity changed owner: " + entityId);
     }
   }
 }

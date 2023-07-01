@@ -38,7 +38,8 @@ public sealed class EntityCreateOperation : IRagonOperation
       Type = entityType,
       Authority = eventAuthority,
       AttachId = attachId,
-      StaticId = 0
+      StaticId = 0,
+      BufferedEvents = context.Configuration.LimitBufferedEvents,
     };
     
     var entity = new RagonEntity(entityParameters);

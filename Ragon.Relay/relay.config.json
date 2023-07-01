@@ -9,6 +9,7 @@
   "limitConnections": 4095,
   "limitPlayersPerRoom": 20,
   "limitRooms": 200,
+  "limitBufferedEvents": 50,
   "webHooks":
   {
     "room-created": "http://127.0.0.1:3000/service/create-room",

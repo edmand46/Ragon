@@ -226,7 +226,7 @@ namespace Ragon.Client
       var prevOwner = Owner;
       
       Owner = player;
-      HasAuthority = player.PeerId == _client.Room.Local.PeerId;
+      HasAuthority = player.IsLocal;
       
       OwnershipChanged?.Invoke(prevOwner, player);
     }

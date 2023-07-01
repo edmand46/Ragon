@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Protocol", "Ragon.Pro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server", "Ragon.Server\Ragon.Server.csproj", "{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.DotNetWebSockets", "Ragon.Server.DotNetWebSockets\Ragon.Server.DotNetWebSockets.csproj", "{81050343-A9B8-487B-86C8-7A5B7DD9C39B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.WebSocketServer", "Ragon.Server.WebSocketServer\Ragon.Server.WebSocketServer.csproj", "{81050343-A9B8-487B-86C8-7A5B7DD9C39B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.ENet", "Ragon.Server.ENet\Ragon.Server.ENet.csproj", "{DD79AC4F-9E5C-4938-850E-805D537E68D0}"
 EndProject

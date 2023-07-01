@@ -28,16 +28,14 @@ public sealed class AuthorizationOperation: IRagonOperation
   private Logger _logger = LogManager.GetCurrentClassLogger();
   private readonly RagonWebHookPlugin _ragonWebHook;
   private readonly RagonContextObserver _contextObserver;
-  private readonly Configuration _configuration;
   private readonly RagonBuffer _writer;
   
-  public AuthorizationOperation(RagonWebHookPlugin ragonWebHook,
+  public AuthorizationOperation(
+    RagonWebHookPlugin ragonWebHook,
     RagonContextObserver contextObserver,
-    RagonBuffer writer,
-    Configuration configuration)
+    RagonBuffer writer)
   {
     _ragonWebHook = ragonWebHook;
-    _configuration = configuration;
     _contextObserver = contextObserver;
     _writer = writer;
   }
@@ -55,12 +53,13 @@ public sealed class AuthorizationOperation: IRagonOperation
       _logger.Warn("Player already request authorization!");    
       return;
     }
-    
+
+    var configuration = context.Configuration; 
     var key = reader.ReadString();
     var name = reader.ReadString();
     var payload = reader.ReadString();
     
-    if (key == _configuration.ServerKey)
+    if (key == configuration.ServerKey)
     {
       if (_ragonWebHook.RequestAuthorization(context, name, payload)) 
         return;

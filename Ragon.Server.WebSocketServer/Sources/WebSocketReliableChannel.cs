@@ -17,7 +17,7 @@
 using System.Net.WebSockets;
 using Ragon.Server.IO;
 
-namespace Ragon.Server.DotNetWebsockets;
+namespace Ragon.Server.WebSocketServer;
 
 public class WebSocketReliableChannel : INetworkChannel
 {

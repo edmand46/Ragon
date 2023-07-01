@@ -24,4 +24,5 @@ public ref struct RagonEntityParameters
   public ushort StaticId;
   public ushort AttachId;
   public RagonAuthority Authority;
+  public int BufferedEvents;
 }

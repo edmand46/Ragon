@@ -71,13 +71,15 @@ public sealed class RagonPlayerCache
     }
   }
 
-  public void OnOwnershipChanged(string playerId)
+  public void OnOwnershipChanged(ushort playerPeerId)
   {
     foreach (var player in _players)
     {
-      if (player.Id == playerId)
+      if (player.PeerId == playerPeerId)
+      {
         Owner = player;
-      player.IsRoomOwner = player.Id == playerId;
+        Owner.IsRoomOwner = true;
+      }
     }
   }
 

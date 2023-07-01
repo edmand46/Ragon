@@ -17,7 +17,7 @@
 using NLog;
 using Ragon.Server;
 using Ragon.Server.ENet;
-using Ragon.Server.DotNetWebsockets;
+using Ragon.Server.WebSocketServer;
 using Ragon.Server.IO;
 using Ragon.Server.Plugin;
 
@@ -30,8 +30,8 @@ public class Relay
     var logger = LogManager.GetLogger("Ragon.Relay");
     logger.Info("Relay Application");
 
-    var configuration = Configuration.Load("relay.config.json");
-    var serverType = Configuration.GetServerType(configuration.ServerType);
+    var configuration = RagonServerConfiguration.Load("relay.config.json");
+    var serverType = RagonServerConfiguration.GetServerType(configuration.ServerType);
 
     INetworkServer networkServer = new ENetServer();
     IServerPlugin plugin = new RelayServerPlugin();
@@ -41,7 +41,7 @@ public class Relay
         networkServer = new ENetServer();
         break;
       case ServerType.WEBSOCKET:
-        networkServer = new DotNetWebSocketServer();
+        networkServer = new WebSocketServer();
         break;
     }
 

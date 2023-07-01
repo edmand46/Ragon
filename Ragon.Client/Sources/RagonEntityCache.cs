@@ -24,20 +24,20 @@ public sealed class RagonEntityCache
   private readonly Dictionary<uint, RagonEntity> _entityMap = new();
   private readonly Dictionary<uint, RagonEntity> _pendingEntities = new();
   private readonly Dictionary<uint, RagonEntity> _sceneEntities = new();
-  
+
   private readonly RagonClient _client;
   private readonly IRagonEntityListener _entityListener;
   private readonly IRagonSceneCollector _sceneCollector;
   private readonly RagonPlayerCache _playerCache;
 
   private int _localEntitiesCounter = 0;
-  
+
   public RagonEntityCache(
-    RagonClient client, 
-    RagonPlayerCache playerCache, 
+    RagonClient client,
+    RagonPlayerCache playerCache,
     IRagonEntityListener listener,
     IRagonSceneCollector sceneCollector
-    )
+  )
   {
     _client = client;
     _entityListener = listener;
@@ -49,24 +49,24 @@ public sealed class RagonEntityCache
   {
     return _entityMap[id];
   }
-  
+
   public void Create(RagonEntity entity, IRagonPayload? spawnPayload)
   {
-    var attachId = (ushort) (_playerCache.Local.PeerId + _localEntitiesCounter++) ;
+    var attachId = (ushort)(_playerCache.Local.PeerId + _localEntitiesCounter++);
     var buffer = _client.Buffer;
-    
+
     buffer.Clear();
     buffer.WriteOperation(RagonOperation.CREATE_ENTITY);
     buffer.WriteUShort(attachId);
     buffer.WriteUShort(entity.Type);
-    buffer.WriteByte((byte) entity.Authority);
+    buffer.WriteByte((byte)entity.Authority);
 
     entity.State.WriteInfo(buffer);
-    
+
     spawnPayload?.Serialize(buffer);
-    
+
     _pendingEntities.Add(attachId, entity);
-    
+
     var sendData = buffer.ToArray();
     _client.Reliable.Send(sendData);
   }
@@ -74,16 +74,16 @@ public sealed class RagonEntityCache
   public void Transfer(RagonEntity entity, RagonPlayer player)
   {
     var buffer = _client.Buffer;
-    
+
     buffer.Clear();
     buffer.WriteOperation(RagonOperation.TRANSFER_ENTITY_OWNERSHIP);
     buffer.WriteUShort(entity.Id);
     buffer.WriteUShort(player.PeerId);
-    
+
     var sendData = buffer.ToArray();
     _client.Reliable.Send(sendData);
   }
-  
+
   public void Destroy(RagonEntity entity, IRagonPayload? destroyPayload)
   {
     if (!entity.IsAttached)
@@ -91,9 +91,9 @@ public sealed class RagonEntityCache
       RagonLog.Warn("Can't destroy object, he is not created");
       return;
     }
-    
+
     var buffer = _client.Buffer;
-    
+
     buffer.Clear();
     buffer.WriteOperation(RagonOperation.REMOVE_ENTITY);
     buffer.WriteUShort(entity.Id);
@@ -107,7 +107,7 @@ public sealed class RagonEntityCache
   internal void WriteState(RagonBuffer buffer)
   {
     var changedEntities = 0u;
-    
+
     buffer.Clear();
     buffer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
 
@@ -119,34 +119,34 @@ public sealed class RagonEntityCache
       if (!ent.IsAttached ||
           !ent.Replication ||
           !ent.PropertiesChanged) continue;
-      
+
       ent.Write(buffer);
-      
+
       changedEntities++;
     }
 
     if (changedEntities <= 0) return;
-    
+
     buffer.Write(changedEntities, 16, offset);
 
     var data = buffer.ToArray();
     _client.Unreliable.Send(data);
   }
-  
+
   internal void WriteScene(RagonBuffer buffer)
   {
     _sceneEntities.Clear();
-    
+
     var entities = _sceneCollector.Collect();
-    buffer.WriteUShort((ushort) entities.Length);
+    buffer.WriteUShort((ushort)entities.Length);
     foreach (var entity in entities)
     {
       buffer.WriteUShort(entity.Type);
-      buffer.WriteByte((byte) entity.Authority);
+      buffer.WriteByte((byte)entity.Authority);
       buffer.WriteUShort(entity.SceneId);
-      
+
       entity.State.WriteInfo(buffer);
-      
+
       _sceneEntities.Add(entity.SceneId, entity);
     }
   }
@@ -154,12 +154,12 @@ public sealed class RagonEntityCache
   internal void CacheScene()
   {
     _sceneEntities.Clear();
-    
+
     var entities = _sceneCollector.Collect();
     foreach (var entity in entities)
       _sceneEntities.Add(entity.SceneId, entity);
   }
-  
+
   internal void Cleanup()
   {
     var payload = new RagonPayload();
@@ -169,7 +169,7 @@ public sealed class RagonEntityCache
     _entityMap.Clear();
     _entityList.Clear();
   }
-  
+
   internal RagonEntity OnCreate(ushort attachId, ushort entityType, ushort sceneId, ushort entityId, bool hasAuthority)
   {
     if (sceneId > 0)
@@ -177,45 +177,45 @@ public sealed class RagonEntityCache
       if (_sceneEntities.TryGetValue(sceneId, out var entity))
       {
         _entityMap.Add(entityId, entity);
-        
+
         if (hasAuthority)
           _entityList.Add(entity);
-        
+
         return entity;
       }
     }
-    
+
     if (_pendingEntities.Remove(attachId, out var existsEntity))
     {
       _entityMap.Add(entityId, existsEntity);
-      
+
       if (hasAuthority)
         _entityList.Add(existsEntity);
-      
+
       return existsEntity;
     }
     else
     {
       var entity = new RagonEntity(entityType, sceneId);
-      
+
       _entityMap.Add(entityId, entity);
-      
+
       if (hasAuthority)
         _entityList.Add(entity);
-      
+
       _entityListener.OnEntityCreated(entity);
 
       return entity;
     }
   }
-  
+
 
   internal void OnDestroy(ushort entityId, RagonPayload payload)
   {
     if (_entityMap.Remove(entityId, out var ragonEntity))
     {
       _entityList.Remove(ragonEntity);
-      
+
       ragonEntity.Detach(payload);
     }
   }
@@ -224,7 +224,7 @@ public sealed class RagonEntityCache
   {
     if (_entityMap.TryGetValue(entityId, out var entity))
       entity.Read(buffer);
-    else 
+    else
       RagonLog.Warn($"Entity {entityId} not found!");
   }
 
@@ -232,15 +232,24 @@ public sealed class RagonEntityCache
   {
     if (_entityMap.TryGetValue(entityId, out var entity))
       entity.Event(eventCode, player, buffer);
-    else 
+    else
       RagonLog.Warn($"Entity {entityId} not found!");
   }
 
   internal void OnOwnershipChanged(RagonPlayer player, ushort entityId)
   {
     if (_entityMap.TryGetValue(entityId, out var entity))
+    {
+      if (player.IsLocal)
+        _entityList.Add(entity);
+      else
+        _entityList.Remove(entity);
+      
       entity.OnOwnershipChanged(player);
+    }
     else
+    {
       RagonLog.Warn($"Entity {entityId} not found!");
+    }
   }
 }

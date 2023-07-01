@@ -20,7 +20,7 @@ using Ragon.Server.Room;
 
 namespace Ragon.Server.Entity;
 
-public class RagonEntity: IRagonEntity
+public class RagonEntity : IRagonEntity
 {
   private static ushort _idGenerator = 100;
   public ushort Id { get; private set; }
@@ -31,24 +31,26 @@ public class RagonEntity: IRagonEntity
   public RagonAuthority Authority { get; private set; }
   public RagonPayload Payload { get; private set; }
   public IRagonEntityState State => _state;
-  
+
   private readonly List<RagonEvent> _bufferedEvents;
+  private readonly int _limitBufferedEvents;
   private readonly RagonEntityState _state;
-  
+
   public RagonEntity(RagonEntityParameters parameters)
   {
     Id = _idGenerator++;
-    
+
     StaticId = parameters.StaticId;
     Type = parameters.Type;
     AttachId = parameters.AttachId;
     Authority = parameters.Authority;
     Payload = new RagonPayload();
-    
+
     _state = new RagonEntityState(this);
     _bufferedEvents = new List<RagonEvent>();
+    _limitBufferedEvents = parameters.BufferedEvents;
   }
-  
+
   public void Attach(RagonRoomPlayer owner)
   {
     Owner = owner;
@@ -56,8 +58,7 @@ public class RagonEntity: IRagonEntity
 
   public void Detach()
   {
-    
-  } 
+  }
 
   public void RestoreBufferedEvents(RagonRoomPlayer roomPlayer, RagonBuffer writer)
   {
@@ -88,7 +89,7 @@ public class RagonEntity: IRagonEntity
     buffer.WriteUShort(Type);
     buffer.WriteUShort(Id);
     buffer.WriteUShort(Owner.Connection.Id);
-      
+
     Payload.Write(buffer);
 
     var sendData = buffer.ToArray();
@@ -122,7 +123,7 @@ public class RagonEntity: IRagonEntity
 
     buffer.WriteUShort(Payload.Size);
     Payload.Write(buffer);
-    
+
     _state.Snapshot(buffer);
   }
 
@@ -163,7 +164,9 @@ public class RagonEntity: IRagonEntity
       return;
     }
 
-    if (eventMode == RagonReplicationMode.Buffered && targetMode != RagonTarget.Owner)
+    if (eventMode == RagonReplicationMode.Buffered &&
+        targetMode != RagonTarget.Owner &&
+        _bufferedEvents.Count < _limitBufferedEvents)
     {
       _bufferedEvents.Add(evnt);
     }
@@ -221,7 +224,7 @@ public class RagonEntity: IRagonEntity
   {
     _state.AddProperty(property);
   }
-  
+
   public void WriteState(RagonBuffer writer)
   {
     _state.Write(writer);
@@ -231,9 +234,9 @@ public class RagonEntity: IRagonEntity
   {
     if (Owner.Connection.Id != player.Connection.Id)
       return false;
-    
+
     _state.Read(reader);
-    
+
     return true;
   }
 }

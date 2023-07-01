@@ -9,11 +9,11 @@ public sealed class EntityOwnershipOperation : IRagonOperation
 
   public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
   {
-    var player = context.RoomPlayer;
+    var currentOwner = context.RoomPlayer;
     var room = context.Room;
     
     var entityId = reader.ReadUShort();
-    var playerId = reader.ReadUShort();
+    var playerPeerId = reader.ReadUShort();
 
     if (!room.Entities.TryGetValue(entityId, out var entity))
     {
@@ -21,29 +21,33 @@ public sealed class EntityOwnershipOperation : IRagonOperation
       return;
     }
     
-    if (entity.Owner.Connection.Id != player.Connection.Id)
+    if (entity.Owner.Connection.Id != currentOwner.Connection.Id)
     {
       _logger.Error($"Player not owner of entity with id {entityId}");
       return;
     } 
 
-    if (!room.Players.TryGetValue(playerId, out var nextOwner))
+    if (!room.Players.TryGetValue(playerPeerId, out var nextOwner))
     {
       _logger.Error($"Player not found with id {entityId}");
       return;
     }    
     
-    writer.Clear();
-    writer.WriteOperation(RagonOperation.OWNERSHIP_ENTITY_CHANGED);
-    writer.WriteUShort(nextOwner.Connection.Id);
-    writer.WriteUShort(1);
-    writer.WriteUShort(entity.Id);
-
-    player.Entities.Remove(entity);
+    currentOwner.Entities.Remove(entity);
     nextOwner.Entities.Add(entity);
     
     entity.Attach(nextOwner);
     
     _logger.Trace($"Entity {entity.Id} next owner {nextOwner.Connection.Id}");
+    
+    writer.Clear();
+    writer.WriteOperation(RagonOperation.OWNERSHIP_ENTITY_CHANGED);
+    writer.WriteUShort(playerPeerId);
+    writer.WriteUShort(1);
+    writer.WriteUShort(entity.Id);
+    
+    var sendData = writer.ToArray();
+    foreach (var player in room.PlayerList)
+      player.Connection.Reliable.Send(sendData);
   }
 }

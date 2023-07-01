@@ -31,7 +31,7 @@ public class RagonWebHookPlugin
   private RagonServer _server;
   private HttpClient _httpClient;
 
-  public RagonWebHookPlugin(RagonServer server, Configuration configuration)
+  public RagonWebHookPlugin(RagonServer server, RagonServerConfiguration configuration)
   {
     _webHooks = new Dictionary<string, string>(configuration.WebHooks);
     _httpClient = new HttpClient();

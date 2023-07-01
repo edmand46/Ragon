@@ -91,7 +91,7 @@ public class RagonHttpServer
     }
   }
 
-  public void Start(Configuration configuration)
+  public void Start(RagonServerConfiguration configuration)
   {
     _cancellationTokenSource = new CancellationTokenSource();
     _logger.Info($"Listen at http://0.0.0.0:{configuration.HttpPort}/");

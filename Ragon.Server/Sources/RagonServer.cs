@@ -36,7 +36,7 @@ public class RagonServer : IRagonServer, INetworkListener
   private readonly IServerPlugin _serverPlugin;
   private readonly Thread _dedicatedThread;
   private readonly Executor _executor;
-  private readonly Configuration _configuration;
+  private readonly RagonServerConfiguration _configuration;
   private readonly RagonWebHookPlugin _webhooks;
   private readonly RagonHttpServer _httpServer;
   private readonly RagonBuffer _reader;
@@ -50,7 +50,7 @@ public class RagonServer : IRagonServer, INetworkListener
   public RagonServer(
     INetworkServer server,
     IServerPlugin plugin,
-    Configuration configuration)
+    RagonServerConfiguration configuration)
   {
     _server = server;
     _executor = _server.Executor;
@@ -74,7 +74,7 @@ public class RagonServer : IRagonServer, INetworkListener
     _serverPlugin.OnAttached(this);
     
     _handlers = new IRagonOperation[byte.MaxValue];
-    _handlers[(byte) RagonOperation.AUTHORIZE] = new AuthorizationOperation(_webhooks, contextObserver, _writer, configuration);
+    _handlers[(byte) RagonOperation.AUTHORIZE] = new AuthorizationOperation(_webhooks, contextObserver, _writer);
     _handlers[(byte) RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation(plugin, _webhooks);
     _handlers[(byte) RagonOperation.CREATE_ROOM] = new RoomCreateOperation(plugin, _webhooks);
     _handlers[(byte) RagonOperation.JOIN_ROOM] = new RoomJoinOperation(_webhooks);
@@ -136,7 +136,7 @@ public class RagonServer : IRagonServer, INetworkListener
 
   public void OnConnected(INetworkConnection connection)
   {
-    var context = new RagonContext(connection, _executor, _lobby, _scheduler);
+    var context = new RagonContext(connection, _configuration, _executor, _lobby, _scheduler);
    
     _logger.Trace($"Connected: {connection.Id}");
     _contextsByConnection.Add(connection.Id, context);

@@ -37,8 +37,8 @@ internal  class OwnershipRoomHandler: Handler
   
   public void Handle(RagonBuffer buffer)
   {
-    var newOwnerId = buffer.ReadString();
-    var player = _playerCache.GetPlayerById(newOwnerId);
+    var newOwnerId = buffer.ReadUShort();
+    var player = _playerCache.GetPlayerByPeer(newOwnerId);
 
     _playerCache.OnOwnershipChanged(newOwnerId);
     _listenerList.OnOwnershipChanged(player);

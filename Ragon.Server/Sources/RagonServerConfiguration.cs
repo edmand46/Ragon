@@ -31,7 +31,7 @@ public class WebHook
 }
 
 [Serializable]
-public struct Configuration
+public struct RagonServerConfiguration
 {
   public string ServerKey;
   public string ServerType;
@@ -43,6 +43,7 @@ public struct Configuration
   public int LimitConnections;
   public int LimitPlayersPerRoom;
   public int LimitRooms;
+  public int LimitBufferedEvents;
   public Dictionary<string, string> WebHooks;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -53,12 +54,12 @@ public struct Configuration
     {"websocket", Server.ServerType.WEBSOCKET}
   };
 
-  public static Configuration Load(string filePath)
+  public static RagonServerConfiguration Load(string filePath)
   {
     CopyrightInfo();
       
     var data = File.ReadAllText(filePath);
-    var configuration = JsonConvert.DeserializeObject<Configuration>(data);
+    var configuration = JsonConvert.DeserializeObject<RagonServerConfiguration>(data);
     return configuration;
   }
 

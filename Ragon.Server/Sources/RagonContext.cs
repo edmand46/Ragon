@@ -26,7 +26,7 @@ public class RagonContext
   public ConnectionStatus ConnectionStatus { get; set; }
   public INetworkConnection Connection { get; }
   public IExecutor Executor { get; private set; }
-  
+  public RagonServerConfiguration Configuration { get; private set; }
   public IRagonLobby Lobby { get; private set; }
   public RagonLobbyPlayer? LobbyPlayer { get; private set; }
 
@@ -37,11 +37,13 @@ public class RagonContext
 
   public RagonContext(
     INetworkConnection connection, 
+    RagonServerConfiguration configuration,
     IExecutor executor, 
     IRagonLobby lobby, 
     RagonScheduler scheduler)
   {
     ConnectionStatus = ConnectionStatus.Unauthorized;
+    Configuration = configuration;
     Connection = connection;
     Executor = executor;
     Lobby = lobby;
