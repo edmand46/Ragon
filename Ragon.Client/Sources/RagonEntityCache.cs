@@ -45,9 +45,9 @@ public sealed class RagonEntityCache
     _playerCache = playerCache;
   }
 
-  public RagonEntity FindById(ushort id)
+  public bool TryGetEntity(ushort id, out RagonEntity entity)
   {
-    return _entityMap[id];
+    return _entityMap.TryGetValue(id, out entity);
   }
 
   public void Create(RagonEntity entity, IRagonPayload? spawnPayload)

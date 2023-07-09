@@ -21,8 +21,8 @@ namespace Ragon.Client
   public sealed class RagonClient
   {
     private readonly INetworkConnection _connection;
-    private readonly IRagonEntityListener _entityListener;
-    private readonly IRagonSceneCollector _sceneCollector;
+    private IRagonEntityListener _entityListener;
+    private IRagonSceneCollector _sceneCollector;
     private Handler[] _handlers;
     private RagonBuffer _readBuffer;
     private RagonBuffer _writeBuffer;
@@ -52,21 +52,15 @@ namespace Ragon.Client
 
     #region PUBLIC
 
-    public RagonClient(
-      INetworkConnection connection, 
-      IRagonEntityListener entityListener,
-      IRagonSceneCollector sceneCollector, 
-      int rate)
+    public RagonClient(INetworkConnection connection, int rate)
     {
-      _listenerList = new RagonListenerList(this);
-      _entityListener = entityListener;
-      _sceneCollector = sceneCollector;
-      
       _connection = connection;
       _connection.OnData += OnData;
       _connection.OnConnected += OnConnected;
       _connection.OnDisconnected += OnDisconnected;
-
+      
+      _listenerList = new RagonListenerList(this);
+      
       _replicationRate = (1000.0f / rate) / 1000.0f;
       _replicationTime = 0;
 
@@ -74,9 +68,32 @@ namespace Ragon.Client
       _stats = new NetworkStatistics();
       _status = RagonStatus.DISCONNECTED;
     }
+
+
+    public void Configure(IRagonSceneCollector sceneCollector)
+    {
+      _sceneCollector = sceneCollector;
+    }
+
+    public void Configure(IRagonEntityListener listener)
+    {
+      _entityListener = listener;
+    }
     
     public void Connect(string address, ushort port, string protocol)
     {
+      if (_sceneCollector == null)
+      {
+        RagonLog.Error("Scene collector is not defined!");
+        return;
+      }
+
+      if (_entityListener == null)
+      {
+        RagonLog.Error("Entity Listener is not defined!");
+        return;
+      }
+      
       _writeBuffer = new RagonBuffer();
       _readBuffer = new RagonBuffer();
       _session = new RagonSession(this, _readBuffer);

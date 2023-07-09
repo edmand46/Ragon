@@ -54,8 +54,8 @@ public sealed class EntityCreateOperation : IRagonOperation
     if (reader.Capacity > 0)
       entity.Payload.Read(reader);
     
-    var roomPlugin = room.Plugin;
-    if (!roomPlugin.OnEntityCreate(player, entity))
+    var plugin = room.Plugin;
+    if (!plugin.OnEntityCreate(player, entity))
       return;
     
     entity.Attach(player);

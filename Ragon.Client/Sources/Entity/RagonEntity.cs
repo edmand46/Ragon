@@ -22,16 +22,17 @@ namespace Ragon.Client
   public sealed class RagonEntity
   {
     private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
+
     private RagonClient _client;
-    
+
     public ushort Id { get; private set; }
     public ushort Type { get; private set; }
     public bool Replication { get; private set; }
-    
+
     public RagonAuthority Authority { get; private set; }
     public RagonPlayer Owner { get; private set; }
     public RagonEntityState State { get; private set; }
-    
+
     public bool IsAttached { get; private set; }
     public bool HasAuthority { get; private set; }
 
@@ -41,7 +42,7 @@ namespace Ragon.Client
 
     internal bool PropertiesChanged => _propertiesChanged;
     internal ushort SceneId => _sceneId;
-    
+
     private ushort _sceneId;
     private bool _propertiesChanged;
 
@@ -55,7 +56,7 @@ namespace Ragon.Client
     {
       State = new RagonEntityState(this);
       Type = type;
-      
+
       _sceneId = sceneId;
     }
 
@@ -67,17 +68,17 @@ namespace Ragon.Client
       IsAttached = true;
       Replication = true;
       HasAuthority = hasAuthority;
-      
-      _client = client; 
+
+      _client = client;
       _spawnPayload = payload;
-      
+
       Attached?.Invoke(this);
     }
 
     internal void Detach(RagonPayload payload)
     {
       _destroyPayload = payload;
-      
+
       Detached?.Invoke();
     }
 
@@ -91,6 +92,15 @@ namespace Ragon.Client
 
       return payload;
     }
+    
+    public void PreAttach(IRagonPayload payload)
+    {
+      var buffer = new RagonBuffer();
+      payload.Serialize(buffer);
+
+      _spawnPayload = new RagonPayload();
+      _spawnPayload.Read(buffer);
+    } 
 
     public T GetAttachPayload<T>() where T : IRagonPayload, new()
     {
@@ -110,7 +120,7 @@ namespace Ragon.Client
         RagonLog.Error("Entity not attached");
         return;
       }
-      
+
       var evntId = _client.Event.GetEventCode(evnt);
       var buffer = _client.Buffer;
 
@@ -118,12 +128,12 @@ namespace Ragon.Client
       buffer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       buffer.WriteUShort(Id);
       buffer.WriteUShort(evntId);
-      buffer.WriteByte((byte) replicationMode);
-      buffer.WriteByte((byte) RagonTarget.Player);
+      buffer.WriteByte((byte)replicationMode);
+      buffer.WriteByte((byte)RagonTarget.Player);
       buffer.WriteUShort(target.PeerId);
 
       evnt.Serialize(buffer);
-      
+
       var sendData = buffer.ToArray();
       _client.Reliable.Send(sendData);
     }
@@ -139,7 +149,7 @@ namespace Ragon.Client
         RagonLog.Error("Entity not attached");
         return;
       }
-      
+
       if (target != RagonTarget.ExceptOwner)
       {
         if (replicationMode == RagonReplicationMode.Local)
@@ -163,8 +173,8 @@ namespace Ragon.Client
       buffer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       buffer.WriteUShort(Id);
       buffer.WriteUShort(evntId);
-      buffer.WriteByte((byte) replicationMode);
-      buffer.WriteByte((byte) target);
+      buffer.WriteByte((byte)replicationMode);
+      buffer.WriteByte((byte)target);
 
       evnt.Serialize(buffer);
 
@@ -181,18 +191,18 @@ namespace Ragon.Client
       {
         _events.Remove(eventCode);
         _localEvents.Remove(eventCode);
-        
+
         RagonLog.Warn($"Event already {eventCode} subscribed, removed old one!");
       }
-    
-      _localEvents.Add(eventCode, (player, eventData) => { callback.Invoke(player, (TEvent) eventData); });
+
+      _localEvents.Add(eventCode, (player, eventData) => { callback.Invoke(player, (TEvent)eventData); });
       _events.Add(eventCode, (player, serializer) =>
       {
         t.Deserialize(serializer);
         callback.Invoke(player, t);
       });
     }
-    
+
     internal void Write(RagonBuffer buffer)
     {
       buffer.WriteUShort(Id);
@@ -212,7 +222,7 @@ namespace Ragon.Client
     {
       if (_events.TryGetValue(eventCode, out var evnt))
         evnt?.Invoke(caller, buffer);
-      else 
+      else
         RagonLog.Warn($"Handler event on entity {Id} with eventCode {eventCode} not defined");
     }
 
@@ -224,10 +234,10 @@ namespace Ragon.Client
     public void OnOwnershipChanged(RagonPlayer player)
     {
       var prevOwner = Owner;
-      
+
       Owner = player;
       HasAuthority = player.IsLocal;
-      
+
       OwnershipChanged?.Invoke(prevOwner, player);
     }
   }

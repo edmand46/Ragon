@@ -40,20 +40,19 @@ public sealed class EntityEventOperation : IRagonOperation
     var eventMode = (RagonReplicationMode)reader.ReadByte();
     var targetMode = (RagonTarget)reader.ReadByte();
     var targetPlayerPeerId = (ushort)0;
-
+    
     if (targetMode == RagonTarget.Player)
       targetPlayerPeerId = reader.ReadUShort();
 
-    var ragonEvent = new RagonEvent(player, eventId);
-    ragonEvent.Read(reader);
+    var @event = new RagonEvent(player, eventId);
+    @event.Read(reader);
 
-    if (targetMode == RagonTarget.Player &&
-        context.Room.Players.TryGetValue(targetPlayerPeerId, out var targetPlayer))
+    if (targetMode == RagonTarget.Player && room.Players.TryGetValue(targetPlayerPeerId, out var targetPlayer))
     {
-      ent.ReplicateEvent(player, ragonEvent, eventMode, targetPlayer);
+      ent.ReplicateEvent(player, @event, eventMode, targetPlayer);
       return;
     }
 
-    ent.ReplicateEvent(player, ragonEvent, eventMode, targetMode);
+    ent.ReplicateEvent(player, @event, eventMode, targetMode);
   }
 }
