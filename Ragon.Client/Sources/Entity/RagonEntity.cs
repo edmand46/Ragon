@@ -84,17 +84,22 @@ namespace Ragon.Client
 
     internal T GetPayload<T>(RagonPayload data) where T : IRagonPayload, new()
     {
-      var buffer = new RagonBuffer();
-      data.Write(buffer);
-
       var payload = new T();
+      if (data.Size <= 0) return payload;
+      
+      var buffer = new RagonBuffer();
+      
+      data.Write(buffer);
+      
       payload.Deserialize(buffer);
-
+      
       return payload;
     }
     
-    public void PreAttach(IRagonPayload payload)
+    public void AttachPayload(IRagonPayload? payload)
     {
+      if (payload == null) return;
+      
       var buffer = new RagonBuffer();
       payload.Serialize(buffer);
 

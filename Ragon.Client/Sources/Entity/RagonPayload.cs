@@ -21,8 +21,8 @@ namespace Ragon.Client;
 
 public struct RagonPayload
 {
-  private uint[] _data = new uint[128];
-  private int _size = 0;
+  private readonly uint[] _data = new uint[128];
+  private readonly int _size = 0;
 
   public RagonPayload(int capacity)
   {
