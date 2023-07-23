@@ -21,7 +21,7 @@ namespace Ragon.Protocol
   {
     public static uint Parse(string version)
     {
-      var strings = version.Split(".");
+      var strings = version.Split('.');
       if (strings.Length < 3)
         return 0;
       

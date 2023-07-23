@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>Ragon.WebSockets</RootNamespace>
+        <TargetFrameworks>net7.0;net6.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="NLog" Version="5.1.1" />
+      <PackageReference Include="NLog" Version="5.2.2" />
     </ItemGroup>
 
     <ItemGroup>

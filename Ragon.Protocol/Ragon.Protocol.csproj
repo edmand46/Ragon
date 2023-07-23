@@ -4,8 +4,16 @@
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <LangVersion>8</LangVersion>
-        <TargetFramework>netstandard2.1</TargetFramework>
         <RootNamespace>Ragon.Common</RootNamespace>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Version>1.2.4-rc</Version>
+        <Title>Ragon.Protocol</Title>
+        <Copyright>Eduard Kargin</Copyright>
+        <PackageProjectUrl>https://ragon-server.com</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/edmand46/Ragon</RepositoryUrl>
+        <RepositoryType>Source</RepositoryType>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <TargetFramework>netstandard2.1</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -16,8 +24,8 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <OutputPath>C:\Users\edmand46\RagonProjects\ragon-unity-sdk\Assets\Ragon-Unity-SDK\Runtime\Plugins</OutputPath>
-      <DefineConstants>TRACE;NETSTACK_SPAN</DefineConstants>
+      <OutputPath></OutputPath>
+      <DefineConstants>TRACE;</DefineConstants>
       <DebugType>none</DebugType>
     </PropertyGroup>
 </Project>

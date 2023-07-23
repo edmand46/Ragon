@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>Ragon.ENet</RootNamespace>
+        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="ENet-CSharp" Version="2.4.8" />
-      <PackageReference Include="NLog" Version="5.1.1" />
+      <PackageReference Include="NLog" Version="5.2.2" />
     </ItemGroup>
 
     <ItemGroup>
