@@ -42,7 +42,6 @@ public sealed class SceneLoadedOperation : IRagonOperation
 
     if (player == owner)
     {
-      
       var statics = reader.ReadUShort();
       for (var staticIndex = 0; staticIndex < statics; staticIndex++)
       {

@@ -64,9 +64,10 @@ public sealed class RagonPlayerCache
 
   public void RemovePlayer(string playerId)
   {
-    if (_playersById.Remove(playerId, out var player))
+    if (_playersById.TryGetValue(playerId, out var player))
     {
       _players.Remove(player);
+      _playersById.Remove(playerId);
       _playersByConnection.Remove(player.PeerId);
     }
   }

@@ -28,19 +28,13 @@ public class RagonPayload
 
   public void Read(RagonBuffer buffer)
   {
-    var readOnlySpan = _data.AsSpan();
-    
     _size = buffer.Capacity;
-    
-    buffer.ReadSpan(ref readOnlySpan, _size);
+    buffer.ReadArray(_data, _size);
   }
 
   public void Write(RagonBuffer buffer)
   {
     if (_size == 0) return;
-    
-    ReadOnlySpan<uint> readOnlySpan = _data.AsSpan();
-
-    buffer.WriteSpan(ref readOnlySpan, _size);
+    buffer.WriteArray(_data, _size);
   }
 }

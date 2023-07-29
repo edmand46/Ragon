@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-public struct RagonPayload
+public class RagonPayload
 {
   private readonly uint[] _data = new uint[128];
   private readonly int _size = 0;
@@ -32,16 +32,12 @@ public struct RagonPayload
 
   public void Read(RagonBuffer buffer)
   {
-    var readOnlySpan = _data.AsSpan();
-
-    buffer.ReadSpan(ref readOnlySpan, _size);
+    buffer.ReadArray(_data, _size);
   }
 
   public void Write(RagonBuffer buffer)
   {
-    ReadOnlySpan<uint> readOnlySpan = _data.AsSpan();
-
-    buffer.WriteSpan(ref readOnlySpan, _size);
+    buffer.WriteArray(_data, _size);
   }
 
   public override string ToString()

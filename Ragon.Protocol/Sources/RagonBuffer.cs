@@ -58,7 +58,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -245,7 +244,7 @@ namespace Ragon.Protocol
 
       if (currentBucketIndex + 1 >= _buckets.Length)
         Resize(1);
-      
+
       _buckets[currentBucketIndex] = (uint)result;
       _buckets[currentBucketIndex + 1] = (uint)(result >> 32);
 
@@ -292,13 +291,13 @@ namespace Ragon.Protocol
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ReadSpan(ref Span<uint> data, int size)
+    public void ReadArray(uint[] data, int size)
     {
       var used = _read & 0x0000001F;
       var index = _read >> 5;
       var limit = (size + 32 - 1) / 32;
       var capacity = size;
-      
+
       for (int i = 0; i < limit; i++)
       {
         var dataSize = capacity > 32 ? 32 : capacity;
@@ -306,23 +305,24 @@ namespace Ragon.Protocol
         var bucketRaw = (ulong)_buckets[index];
         if (index + 1 < _buckets.Length)
           bucketRaw |= (ulong)_buckets[index + 1] << 32;
-      
+
         var bucket = bucketRaw >> used;
         var result = bucket & mask;
-      
+
         data[i] = (uint)result;
         if (i + 1 < data.Length)
           data[i + 1] = (uint)(result >> 32);
-      
+
         index += 1;
         capacity -= dataSize;
       }
-      
+
       _read += size;
     }
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteSpan(ref ReadOnlySpan<uint> data, int size)
+    public void WriteArray(uint[] data, int size)
     {
       var used = _write & 0x0000001F;
       var index = _write >> 5;
@@ -330,20 +330,20 @@ namespace Ragon.Protocol
 
       if (index + limit >= _buckets.Length)
         Resize(size);
-      
+
       for (var i = 0; i < limit; i += 1)
       {
-        var prepared = (ulong) data[i] << used;
+        var prepared = (ulong)data[i] << used;
         var mask = (1UL << used) - 1;
         var scratch = _buckets[index] & mask;
         var result = scratch | prepared;
-      
+
         _buckets[index] = (uint)result;
         _buckets[index + 1] = (uint)(result >> 32);
-      
+
         index += 1;
       }
-      
+
       _write += size;
     }
 
@@ -356,17 +356,15 @@ namespace Ragon.Protocol
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void FromBuffer(RagonBuffer buffer, int size)
     {
-      ReadOnlySpan<uint> data = buffer._buckets.AsSpan();
-      WriteSpan(ref data, size);
+      WriteArray(buffer._buckets, size);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToBuffer(RagonBuffer buffer, int size)
     {
-      var data = buffer._buckets.AsSpan();
-      ReadSpan(ref data, size);
+      ReadArray(buffer._buckets, size);
     }
-    
+
     public void FromArray(byte[] data)
     {
       var length = data.Length;

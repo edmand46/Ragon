@@ -53,8 +53,9 @@ internal class PlayerLeftHandler : Handler
         toDeleteIds[i] = entityId;
       }
 
+      var emptyPayload = new RagonPayload(0);
       foreach (var id in toDeleteIds)
-        _entityCache.OnDestroy(id, new RagonPayload());
+        _entityCache.OnDestroy(id, emptyPayload);
     }
   }
 }

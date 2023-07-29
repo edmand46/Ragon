@@ -23,16 +23,18 @@ internal  class EntityCreateHandler : Handler
   private readonly RagonClient _client;
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
-  
+  private readonly IRagonEntityListener _entityListener;
   public EntityCreateHandler(
     RagonClient client,
     RagonPlayerCache playerCache,
-    RagonEntityCache entityCache
+    RagonEntityCache entityCache,
+    IRagonEntityListener entityListener
   )
   {
     _client = client;
     _entityCache = entityCache;
     _playerCache = playerCache;
+    _entityListener = entityListener;
   }
 
   public void Handle(RagonBuffer buffer)
@@ -52,7 +54,13 @@ internal  class EntityCreateHandler : Handler
     }
     
     var hasAuthority = _playerCache.Local.Id == player.Id;
-    var entity = _entityCache.OnCreate(attachId, entityType, 0, entityId, hasAuthority);
-    entity.Attach(_client, entityId, entityType, hasAuthority, player, payload);
+    var entity = _entityCache.TryGetEntity(attachId, entityType, 0, entityId, hasAuthority, out var hasCreated);
+    
+    entity.AttachPayload(payload);
+
+    if (hasCreated)
+      _entityListener.OnEntityCreated(entity);
+    
+    entity.Attach(_client, entityId, entityType, hasAuthority, player);
   }
 }
