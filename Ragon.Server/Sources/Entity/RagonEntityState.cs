@@ -21,14 +21,12 @@ namespace Ragon.Server.Entity;
 
 public class RagonEntityState: IRagonEntityState
 {
-  private List<RagonProperty> _properties;
-  private RagonEntity _entity;
-  private RagonBuffer _buffer;
-  
+  private readonly List<RagonProperty> _properties;
+  private readonly RagonEntity _entity;
+
   public RagonEntityState(RagonEntity entity, int capacity = 10)
   {
     _entity = entity;
-    _buffer = new RagonBuffer(8);
     _properties = new List<RagonProperty>(capacity);
   }
 
@@ -67,8 +65,7 @@ public class RagonEntityState: IRagonEntityState
   {
     foreach (var property in _properties)
     {
-      var hasPayloadOrFixed = property.IsFixed || property is { IsFixed: false, Size: > 0 };
-      if (hasPayloadOrFixed)
+      if (property.HasData)
       {
         buffer.WriteBool(true);
         property.Write(buffer);

@@ -23,6 +23,7 @@ public class RagonProperty : RagonPayload
   public int Size { get; set; }
   public bool IsDirty { get; private set; }
   public bool IsFixed { get; private set; }
+  public bool HasData { get; private set; }
 
   private uint[] _data;
 
@@ -47,6 +48,7 @@ public class RagonProperty : RagonPayload
       buffer.ReadArray(_data, Size);
     }
     
+    HasData = true;
     IsDirty = true;
   }
 

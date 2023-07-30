@@ -66,8 +66,7 @@ internal class SnapshotHandler : Handler
       var entityId = buffer.ReadUShort();
       var ownerPeerId = buffer.ReadUShort();
       var payloadSize = buffer.ReadUShort();
-      RagonLog.Trace("Read offset: " + buffer.ReadOffset);
-
+      
       var player = _playerCache.GetPlayerByPeer(ownerPeerId);
       if (player == null)
       {
