@@ -21,6 +21,7 @@ namespace Ragon.Client
   public sealed class RagonClient
   {
     private readonly INetworkConnection _connection;
+    private readonly NetworkStatistics _stats;
     private IRagonEntityListener _entityListener;
     private IRagonSceneCollector _sceneCollector;
     private Handler[] _handlers;
@@ -28,13 +29,12 @@ namespace Ragon.Client
     private RagonBuffer _writeBuffer;
     private RagonRoom _room;
     private RagonSession _session;
-    private RagonListenerList _listenerList;
+    private RagonListenerList listeners;
     private RagonPlayerCache _playerCache;
     private RagonEntityCache _entityCache;
     private RagonEventCache _eventCache;
     private RagonStatus _status;
-    private NetworkStatistics _stats;
-
+    
     private float _replicationRate = 0;
     private float _replicationTime = 0;
 
@@ -59,7 +59,7 @@ namespace Ragon.Client
       _connection.OnConnected += OnConnected;
       _connection.OnDisconnected += OnDisconnected;
       
-      _listenerList = new RagonListenerList(this);
+      listeners = new RagonListenerList(this);
       
       _replicationRate = (1000.0f / rate) / 1000.0f;
       _replicationTime = 0;
@@ -102,21 +102,21 @@ namespace Ragon.Client
       _entityCache = new RagonEntityCache(this, _playerCache, _sceneCollector);
 
       _handlers = new Handler[byte.MaxValue];
-      _handlers[(byte)RagonOperation.AUTHORIZED_SUCCESS] = new AuthorizeSuccessHandler(_listenerList);
-      _handlers[(byte)RagonOperation.AUTHORIZED_FAILED] = new AuthorizeFailedHandler(_listenerList);
-      _handlers[(byte)RagonOperation.JOIN_SUCCESS] = new JoinSuccessHandler(this, _readBuffer, _listenerList, _playerCache, _entityCache);
-      _handlers[(byte)RagonOperation.JOIN_FAILED] = new JoinFailedHandler(_listenerList);
-      _handlers[(byte)RagonOperation.LEAVE_ROOM] = new LeaveRoomHandler(this, _listenerList, _entityCache);
-      _handlers[(byte)RagonOperation.OWNERSHIP_ROOM_CHANGED] = new OwnershipRoomHandler(_listenerList, _playerCache, _entityCache);
-      _handlers[(byte)RagonOperation.OWNERSHIP_ENTITY_CHANGED] = new EntityOwnershipHandler(_listenerList, _playerCache, _entityCache);
-      _handlers[(byte)RagonOperation.PLAYER_JOINED] = new PlayerJoinHandler(_playerCache, _listenerList);
-      _handlers[(byte)RagonOperation.PLAYER_LEAVED] = new PlayerLeftHandler(_entityCache, _playerCache, _listenerList);
-      _handlers[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadHandler(this, _listenerList);
+      _handlers[(byte)RagonOperation.AUTHORIZED_SUCCESS] = new AuthorizeSuccessHandler(listeners);
+      _handlers[(byte)RagonOperation.AUTHORIZED_FAILED] = new AuthorizeFailedHandler(listeners);
+      _handlers[(byte)RagonOperation.JOIN_SUCCESS] = new JoinSuccessHandler(this, _readBuffer, listeners, _playerCache, _entityCache);
+      _handlers[(byte)RagonOperation.JOIN_FAILED] = new JoinFailedHandler(listeners);
+      _handlers[(byte)RagonOperation.LEAVE_ROOM] = new LeaveRoomHandler(this, listeners, _entityCache);
+      _handlers[(byte)RagonOperation.OWNERSHIP_ROOM_CHANGED] = new OwnershipRoomHandler(listeners, _playerCache, _entityCache);
+      _handlers[(byte)RagonOperation.OWNERSHIP_ENTITY_CHANGED] = new EntityOwnershipHandler(listeners, _playerCache, _entityCache);
+      _handlers[(byte)RagonOperation.PLAYER_JOINED] = new PlayerJoinHandler(_playerCache, listeners);
+      _handlers[(byte)RagonOperation.PLAYER_LEAVED] = new PlayerLeftHandler(_entityCache, _playerCache, listeners);
+      _handlers[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadHandler(this, listeners);
       _handlers[(byte)RagonOperation.CREATE_ENTITY] = new EntityCreateHandler(this, _playerCache, _entityCache, _entityListener);
       _handlers[(byte)RagonOperation.REMOVE_ENTITY] = new EntityRemoveHandler(_entityCache);
       _handlers[(byte)RagonOperation.REPLICATE_ENTITY_STATE] = new StateEntityHandler(_entityCache);
       _handlers[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventHandler(this, _playerCache, _entityCache);
-      _handlers[(byte)RagonOperation.SNAPSHOT] = new SnapshotHandler(this, _listenerList, _entityCache, _playerCache, _entityListener);
+      _handlers[(byte)RagonOperation.SNAPSHOT] = new SnapshotHandler(this, listeners, _entityCache, _playerCache, _entityListener);
 
       var protocolRaw = RagonVersion.Parse(protocol);
       _connection.Connect(address, port, protocolRaw);
@@ -145,7 +145,7 @@ namespace Ragon.Client
         _stats.Update(_connection.BytesSent, _connection.BytesReceived, _connection.Ping, dt);
       }
       
-      _listenerList.Update();
+      listeners.Update();
       _connection.Update();
     }
 
@@ -156,27 +156,29 @@ namespace Ragon.Client
       _connection.Dispose();
     }
 
-    public void AddListener(IRagonListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonAuthorizationListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonConnectionListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonFailedListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonJoinListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonLeftListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonSceneListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonOwnershipChangedListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonPlayerJoinListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonPlayerLeftListener listener) => _listenerList.Add(listener);
+    public void AddListener(IRagonListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonAuthorizationListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonConnectionListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonFailedListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonJoinListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonLeftListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonOwnershipChangedListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonPlayerJoinListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonPlayerLeftListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonSceneListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonSceneRequestListener listener) => listeners.Add(listener);
 
-    public void RemoveListener(IRagonListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonAuthorizationListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonConnectionListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonFailedListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonJoinListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonLeftListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonSceneListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonOwnershipChangedListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonPlayerJoinListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonPlayerLeftListener listener) => _listenerList.Remove(listener);
+    public void RemoveListener(IRagonListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonAuthorizationListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonConnectionListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonFailedListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonJoinListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonLeftListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonOwnershipChangedListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonPlayerJoinListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonPlayerLeftListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonSceneListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonSceneRequestListener listener) => listeners.Remove(listener);
     
     #endregion
 
@@ -196,7 +198,7 @@ namespace Ragon.Client
     {
       RagonLog.Trace("Connected");
 
-      _listenerList.OnConnected();
+      listeners.OnConnected();
       _status = RagonStatus.CONNECTED;
     }
 
@@ -204,7 +206,7 @@ namespace Ragon.Client
     {
       RagonLog.Trace($"Disconnected: {reason}");
 
-      _listenerList.OnDisconnected(reason);
+      listeners.OnDisconnected(reason);
       _status = RagonStatus.DISCONNECTED;
     }
 
