@@ -22,9 +22,13 @@ namespace Ragon.Client;
 internal  class AuthorizeSuccessHandler: Handler
 {
   private readonly RagonListenerList _listenerList;
+  private readonly RagonClient _client;
   
-  public AuthorizeSuccessHandler(RagonListenerList listenerList)
+  public AuthorizeSuccessHandler(
+    RagonClient client,
+    RagonListenerList listenerList)
   {
+    _client = client;
     _listenerList = listenerList;
   }
   
@@ -34,6 +38,7 @@ internal  class AuthorizeSuccessHandler: Handler
     var playerName = buffer.ReadString();
     var playerPayload = buffer.ReadString();
 
+    _client.SetStatus(RagonStatus.LOBBY);
     _listenerList.OnAuthorizationSuccess(playerId, playerName, playerPayload);
   }
 }

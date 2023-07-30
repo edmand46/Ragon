@@ -34,7 +34,7 @@ namespace Ragon.Client
     private RagonEntityCache _entityCache;
     private RagonEventCache _eventCache;
     private RagonStatus _status;
-    
+
     private float _replicationRate = 0;
     private float _replicationTime = 0;
 
@@ -58,9 +58,9 @@ namespace Ragon.Client
       _connection.OnData += OnData;
       _connection.OnConnected += OnConnected;
       _connection.OnDisconnected += OnDisconnected;
-      
+
       listeners = new RagonListenerList(this);
-      
+
       _replicationRate = (1000.0f / rate) / 1000.0f;
       _replicationTime = 0;
 
@@ -79,7 +79,7 @@ namespace Ragon.Client
     {
       _entityListener = listener;
     }
-    
+
     public void Connect(string address, ushort port, string protocol)
     {
       if (_sceneCollector == null)
@@ -93,7 +93,7 @@ namespace Ragon.Client
         RagonLog.Error("Entity Listener is not defined!");
         return;
       }
-      
+
       _writeBuffer = new RagonBuffer();
       _readBuffer = new RagonBuffer();
       _session = new RagonSession(this, _readBuffer);
@@ -102,7 +102,7 @@ namespace Ragon.Client
       _entityCache = new RagonEntityCache(this, _playerCache, _sceneCollector);
 
       _handlers = new Handler[byte.MaxValue];
-      _handlers[(byte)RagonOperation.AUTHORIZED_SUCCESS] = new AuthorizeSuccessHandler(listeners);
+      _handlers[(byte)RagonOperation.AUTHORIZED_SUCCESS] = new AuthorizeSuccessHandler(this, listeners);
       _handlers[(byte)RagonOperation.AUTHORIZED_FAILED] = new AuthorizeFailedHandler(listeners);
       _handlers[(byte)RagonOperation.JOIN_SUCCESS] = new JoinSuccessHandler(this, _readBuffer, listeners, _playerCache, _entityCache);
       _handlers[(byte)RagonOperation.JOIN_FAILED] = new JoinFailedHandler(listeners);
@@ -127,7 +127,7 @@ namespace Ragon.Client
       _status = RagonStatus.DISCONNECTED;
       _room.Cleanup();
       _connection.Disconnect();
-      
+
       OnDisconnected(RagonDisconnect.MANUAL);
     }
 
@@ -144,7 +144,7 @@ namespace Ragon.Client
 
         _stats.Update(_connection.BytesSent, _connection.BytesReceived, _connection.Ping, dt);
       }
-      
+
       listeners.Update();
       _connection.Update();
     }
@@ -179,7 +179,7 @@ namespace Ragon.Client
     public void RemoveListener(IRagonPlayerLeftListener listener) => listeners.Remove(listener);
     public void RemoveListener(IRagonSceneListener listener) => listeners.Remove(listener);
     public void RemoveListener(IRagonSceneRequestListener listener) => listeners.Remove(listener);
-    
+
     #endregion
 
     #region INTERNAL
@@ -187,7 +187,11 @@ namespace Ragon.Client
     internal void AssignRoom(RagonRoom room)
     {
       _room = room;
-      _status = RagonStatus.ROOM;
+    }
+
+    internal void SetStatus(RagonStatus status)
+    {
+      _status = status;
     }
 
     #endregion

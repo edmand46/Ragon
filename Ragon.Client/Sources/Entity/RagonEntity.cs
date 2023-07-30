@@ -49,8 +49,8 @@ namespace Ragon.Client
     private RagonPayload _spawnPayload;
     private RagonPayload _destroyPayload;
 
-    private Dictionary<int, OnEventDelegate> _events = new();
-    private Dictionary<int, Action<RagonPlayer, IRagonEvent>> _localEvents = new();
+    private readonly Dictionary<int, OnEventDelegate> _events = new Dictionary<int, OnEventDelegate>();
+    private readonly Dictionary<int, Action<RagonPlayer, IRagonEvent>> _localEvents = new Dictionary<int, Action<RagonPlayer, IRagonEvent>>();
 
     public RagonEntity(ushort type = 0, ushort sceneId = 0)
     {
@@ -150,29 +150,26 @@ namespace Ragon.Client
         return;
       }
 
+      var eventCode = _client.Event.GetEventCode(evnt);
       if (target != RagonTarget.ExceptOwner)
       {
         if (replicationMode == RagonReplicationMode.Local)
         {
-          var eventCode = _client.Event.GetEventCode(evnt);
           _localEvents[eventCode].Invoke(_client.Room.Local, evnt);
           return;
         }
-
         if (replicationMode == RagonReplicationMode.LocalAndServer)
         {
-          var eventCode = _client.Event.GetEventCode(evnt);
           _localEvents[eventCode].Invoke(_client.Room.Local, evnt);
         }
       }
 
-      var evntId = _client.Event.GetEventCode(evnt);
       var buffer = _client.Buffer;
-
+      
       buffer.Clear();
       buffer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
       buffer.WriteUShort(Id);
-      buffer.WriteUShort(evntId);
+      buffer.WriteUShort(eventCode);
       buffer.WriteByte((byte)replicationMode);
       buffer.WriteByte((byte)target);
 

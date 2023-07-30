@@ -43,7 +43,6 @@ internal class JoinSuccessHandler : Handler
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
   private readonly RagonClient _client;
-  private readonly RagonBuffer _buffer;
 
   public JoinSuccessHandler(
     RagonClient client,
@@ -53,7 +52,6 @@ internal class JoinSuccessHandler : Handler
     RagonEntityCache entityCache
   )
   {
-    _buffer = buffer;
     _client = client;
     _listenerList = listenerList;
     _entityCache = entityCache;
