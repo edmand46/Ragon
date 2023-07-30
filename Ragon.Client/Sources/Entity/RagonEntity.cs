@@ -56,11 +56,13 @@ namespace Ragon.Client
     {
       State = new RagonEntityState(this);
       Type = type;
-
+      
+      _spawnPayload = new RagonPayload(0);
+      _destroyPayload = new RagonPayload(0);
       _sceneId = sceneId;
     }
 
-    internal void Attach(RagonClient client, ushort entityId, ushort entityType, bool hasAuthority, RagonPlayer owner, RagonPayload payload)
+    internal void Attach(RagonClient client, ushort entityId, ushort entityType, bool hasAuthority, RagonPlayer owner)
     {
       Type = entityType;
       Id = entityId;
@@ -70,7 +72,6 @@ namespace Ragon.Client
       HasAuthority = hasAuthority;
 
       _client = client;
-      _spawnPayload = payload;
 
       Attached?.Invoke(this);
     }
@@ -96,15 +97,9 @@ namespace Ragon.Client
       return payload;
     }
     
-    public void AttachPayload(IRagonPayload? payload)
+    public void AttachPayload(RagonPayload payload)
     {
-      if (payload == null) return;
-      
-      var buffer = new RagonBuffer();
-      payload.Serialize(buffer);
-
-      _spawnPayload = new RagonPayload();
-      _spawnPayload.Read(buffer);
+      _spawnPayload = payload;
     } 
 
     public T GetAttachPayload<T>() where T : IRagonPayload, new()

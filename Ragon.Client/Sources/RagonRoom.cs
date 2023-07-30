@@ -55,10 +55,10 @@ namespace Ragon.Client
     public void SceneLoaded() => _scene.SceneLoaded();
 
     public void CreateEntity(RagonEntity entity) => CreateEntity(entity, null);
-    public void CreateEntity(RagonEntity entity, IRagonPayload? payload) => _entityCache.Create(entity, payload);
+    public void CreateEntity(RagonEntity entity, RagonPayload payload) => _entityCache.Create(entity, payload);
     public void TransferEntity(RagonEntity entity, RagonPlayer player) => _entityCache.Transfer(entity, player);
 
     public void DestroyEntity(RagonEntity entityId) => DestroyEntity(entityId, null);
-    public void DestroyEntity(RagonEntity entityId, IRagonPayload? payload) => _entityCache.Destroy(entityId, payload);
+    public void DestroyEntity(RagonEntity entityId, RagonPayload payload) => _entityCache.Destroy(entityId, payload);
   }
 }

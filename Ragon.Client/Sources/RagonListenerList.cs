@@ -30,6 +30,7 @@ namespace Ragon.Client
     private readonly List<IRagonOwnershipChangedListener> _ownershipChangedListeners = new();
     private readonly List<IRagonPlayerJoinListener> _playerJoinListeners = new();
     private readonly List<IRagonPlayerLeftListener> _playerLeftListeners = new();
+    private readonly List<Action> _delayedActions = new();
     
     public RagonListenerList(RagonClient client)
     {
@@ -51,16 +52,28 @@ namespace Ragon.Client
 
     public void Remove(IRagonListener listener)
     {
-      _authorizationListeners.Remove(listener);
-      _connectionListeners.Remove(listener);
-      _failedListeners.Remove(listener);
-      _joinListeners.Remove(listener);
-      _leftListeners.Remove(listener);
-      _levelListeners.Remove(listener);
-      _ownershipChangedListeners.Remove(listener);
-      _playerJoinListeners.Remove(listener);
-      _playerLeftListeners.Remove(listener);
+      _delayedActions.Add(() =>
+      {
+        _authorizationListeners.Remove(listener);
+        _connectionListeners.Remove(listener);
+        _failedListeners.Remove(listener);
+        _joinListeners.Remove(listener);
+        _leftListeners.Remove(listener);
+        _levelListeners.Remove(listener);
+        _ownershipChangedListeners.Remove(listener);
+        _playerJoinListeners.Remove(listener);
+        _playerLeftListeners.Remove(listener);
+      });
     }
+
+    public void Update()
+    {
+      foreach (var action in _delayedActions)
+        action.Invoke();
+      
+      _delayedActions.Clear();
+    }
+    
     
     public void Add(IRagonAuthorizationListener listener)
     {
@@ -109,47 +122,48 @@ namespace Ragon.Client
 
     public void Remove(IRagonAuthorizationListener listener)
     {
-      _authorizationListeners.Remove(listener);
+      _delayedActions.Add(() => _authorizationListeners.Remove(listener));
     }
     
     public void Remove(IRagonConnectionListener listener)
     {
-      _connectionListeners.Remove(listener);
+      
+      _delayedActions.Add(() => _connectionListeners.Remove(listener));
     }
     
     public void Remove(IRagonFailedListener listener)
     {
-      _failedListeners.Remove(listener);
+      _delayedActions.Add(() => _failedListeners.Remove(listener));
     }
     
     public void Remove(IRagonJoinListener listener)
     {
-      _joinListeners.Remove(listener);
+      _delayedActions.Add(() => _joinListeners.Remove(listener));
     }
     
     public void Remove(IRagonLeftListener  listener)
     {
-      _leftListeners.Remove(listener);
+      _delayedActions.Add(() => _leftListeners.Remove(listener));
     }
     
     public void Remove(IRagonLevelListener  listener)
     {
-      _levelListeners.Remove(listener);
+      _delayedActions.Add(() => _levelListeners.Remove(listener));
     }
     
     public void Remove(IRagonOwnershipChangedListener  listener)
     {
-      _ownershipChangedListeners.Remove(listener);
+      _delayedActions.Add(() => _ownershipChangedListeners.Remove(listener));
     }
 
     public void Remove(IRagonPlayerJoinListener  listener)
     {
-      _playerJoinListeners.Remove(listener);
+      _delayedActions.Add(() => _playerJoinListeners.Remove(listener));
     }
     
     public void Remove(IRagonPlayerLeftListener  listener)
     {
-      _playerLeftListeners.Remove(listener);
+      _delayedActions.Add(() => _playerLeftListeners.Remove(listener));
     }
 
     public void OnAuthorizationSuccess(string playerId, string playerName, string payload)

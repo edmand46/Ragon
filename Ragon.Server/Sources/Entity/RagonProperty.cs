@@ -37,15 +37,14 @@ public class RagonProperty : RagonPayload
 
   public void Read(RagonBuffer buffer)
   {
-    var readOnlySpan = _data.AsSpan();
     if (IsFixed)
     {
-      buffer.ReadSpan(ref readOnlySpan, Size);
+      buffer.ReadArray(_data, Size);
     }
     else
     {
       Size = (int) buffer.Read();
-      buffer.ReadSpan(ref readOnlySpan, Size);
+      buffer.ReadArray(_data, Size);
     }
     
     IsDirty = true;
@@ -53,8 +52,7 @@ public class RagonProperty : RagonPayload
 
   public void Write(RagonBuffer buffer)
   {
-    ReadOnlySpan<uint> readOnlySpan = _data.AsSpan();
-    buffer.WriteSpan(ref readOnlySpan, Size);
+    buffer.WriteArray(_data, Size);
   }
 
   public void Clear()

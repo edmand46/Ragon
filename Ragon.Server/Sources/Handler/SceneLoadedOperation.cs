@@ -42,7 +42,6 @@ public sealed class SceneLoadedOperation : IRagonOperation
 
     if (player == owner)
     {
-      
       var statics = reader.ReadUShort();
       for (var staticIndex = 0; staticIndex < statics; staticIndex++)
       {
@@ -73,7 +72,7 @@ public sealed class SceneLoadedOperation : IRagonOperation
         var playerInfo = $"Player {context.Connection.Id}|{context.LobbyPlayer.Name}";
         var entityInfo = $"{entity.Id}:{entity.Type}";
 
-        _logger.Trace($"{playerInfo} created entity {entityInfo}");
+        _logger.Trace($"{playerInfo} created static entity {entityInfo}");
 
         entity.Attach(player);
         room.AttachEntity(entity);

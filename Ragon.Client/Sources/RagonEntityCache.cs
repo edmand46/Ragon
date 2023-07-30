@@ -26,7 +26,6 @@ public sealed class RagonEntityCache
   private readonly Dictionary<uint, RagonEntity> _sceneEntities = new();
 
   private readonly RagonClient _client;
-  private readonly IRagonEntityListener _entityListener;
   private readonly IRagonSceneCollector _sceneCollector;
   private readonly RagonPlayerCache _playerCache;
 
@@ -35,12 +34,10 @@ public sealed class RagonEntityCache
   public RagonEntityCache(
     RagonClient client,
     RagonPlayerCache playerCache,
-    IRagonEntityListener listener,
     IRagonSceneCollector sceneCollector
   )
   {
     _client = client;
-    _entityListener = listener;
     _sceneCollector = sceneCollector;
     _playerCache = playerCache;
   }
@@ -50,7 +47,7 @@ public sealed class RagonEntityCache
     return _entityMap.TryGetValue(id, out entity);
   }
 
-  public void Create(RagonEntity entity, IRagonPayload? spawnPayload)
+  public void Create(RagonEntity entity, RagonPayload spawnPayload)
   {
     var attachId = (ushort)(_playerCache.Local.PeerId + _localEntitiesCounter++);
     var buffer = _client.Buffer;
@@ -63,7 +60,7 @@ public sealed class RagonEntityCache
 
     entity.State.WriteInfo(buffer);
 
-    spawnPayload?.Serialize(buffer);
+    spawnPayload?.Write(buffer);
 
     _pendingEntities.Add(attachId, entity);
 
@@ -84,7 +81,7 @@ public sealed class RagonEntityCache
     _client.Reliable.Send(sendData);
   }
 
-  public void Destroy(RagonEntity entity, IRagonPayload? destroyPayload)
+  public void Destroy(RagonEntity entity, RagonPayload destroyPayload)
   {
     if (!entity.IsAttached)
     {
@@ -98,7 +95,7 @@ public sealed class RagonEntityCache
     buffer.WriteOperation(RagonOperation.REMOVE_ENTITY);
     buffer.WriteUShort(entity.Id);
 
-    destroyPayload?.Serialize(buffer);
+    destroyPayload?.Write(buffer);
 
     var sendData = buffer.ToArray();
     _client.Reliable.Send(sendData);
@@ -162,61 +159,66 @@ public sealed class RagonEntityCache
 
   internal void Cleanup()
   {
-    var payload = new RagonPayload();
+    var payload = new RagonPayload(0);
     foreach (var ent in _entityList)
       ent.Detach(payload);
 
     _entityMap.Clear();
     _entityList.Clear();
   }
-
-  internal RagonEntity OnCreate(ushort attachId, ushort entityType, ushort sceneId, ushort entityId, bool hasAuthority)
+  
+  internal RagonEntity TryGetEntity(ushort attachId, ushort entityType, ushort sceneId, ushort entityId, bool hasAuthority, out bool hasCreated)
   {
     if (sceneId > 0)
     {
-      if (_sceneEntities.TryGetValue(sceneId, out var entity))
+      if (_sceneEntities.TryGetValue(sceneId, out var sceneEntity))
       {
-        _entityMap.Add(entityId, entity);
+        _entityMap.Add(entityId, sceneEntity);
 
         if (hasAuthority)
-          _entityList.Add(entity);
-
-        return entity;
+          _entityList.Add(sceneEntity);
+        
+        hasCreated = false;
+        
+        return sceneEntity;
       }
     }
 
-    if (_pendingEntities.Remove(attachId, out var existsEntity))
+    if (_pendingEntities.TryGetValue(attachId, out var pendingEntity))
     {
-      _entityMap.Add(entityId, existsEntity);
+      _pendingEntities.Remove(attachId);
+      _entityMap.Add(entityId, pendingEntity);
 
       if (hasAuthority)
-        _entityList.Add(existsEntity);
+        _entityList.Add(pendingEntity);
 
-      return existsEntity;
+      hasCreated = false;
+
+      return pendingEntity;
     }
-    else
-    {
-      var entity = new RagonEntity(entityType, sceneId);
 
-      _entityMap.Add(entityId, entity);
 
-      if (hasAuthority)
-        _entityList.Add(entity);
+    var entity = new RagonEntity(entityType, sceneId);
+    
+    _entityMap.Add(entityId, entity);
+    
+    if (hasAuthority)
+      _entityList.Add(entity);
 
-      _entityListener.OnEntityCreated(entity);
-
-      return entity;
-    }
+    hasCreated = true;
+    
+    return entity;
   }
 
 
   internal void OnDestroy(ushort entityId, RagonPayload payload)
   {
-    if (_entityMap.Remove(entityId, out var ragonEntity))
+    if (_entityMap.TryGetValue(entityId, out var entity))
     {
-      _entityList.Remove(ragonEntity);
+      _entityMap.Remove(entityId);
+      _entityList.Remove(entity);
 
-      ragonEntity.Detach(payload);
+      entity.Detach(payload);
     }
   }
 
@@ -244,7 +246,7 @@ public sealed class RagonEntityCache
         _entityList.Add(entity);
       else
         _entityList.Remove(entity);
-      
+
       entity.OnOwnershipChanged(player);
     }
     else
