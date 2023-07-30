@@ -18,7 +18,7 @@ namespace Ragon.Server;
 
 public ref struct RoomInformation
 {
-  public string Map;
+  public string Scene;
   public int Min;
   public int Max;
 }

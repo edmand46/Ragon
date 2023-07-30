@@ -29,9 +29,9 @@ namespace Ragon.Client
       _buffer = buffer;
     }
 
-    public void CreateOrJoin(string map, int minPlayers, int maxPlayers)
+    public void CreateOrJoin(string sceneName, int minPlayers, int maxPlayers)
     {
-      var parameters = new RagonRoomParameters() {Map = map, Min = minPlayers, Max = maxPlayers};
+      var parameters = new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers};
       CreateOrJoin(parameters);
     }
     
@@ -46,14 +46,14 @@ namespace Ragon.Client
       _client.Reliable.Send(sendData);
     }
 
-    public void Create(string map, int minPlayers, int maxPlayers)
+    public void Create(string sceneName, int minPlayers, int maxPlayers)
     {
-      Create(null, new RagonRoomParameters() {Map = map, Min = minPlayers, Max = maxPlayers});
+      Create(null, new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers});
     }
 
-    public void Create(string roomId, string map, int minPlayers, int maxPlayers)
+    public void Create(string roomId, string sceneNa, int minPlayers, int maxPlayers)
     {
-      Create(roomId, new RagonRoomParameters() {Map = map, Min = minPlayers, Max = maxPlayers});
+      Create(roomId, new RagonRoomParameters() {Scene = sceneNa, Min = minPlayers, Max = maxPlayers});
     }
     
     public  void Create(string roomId, RagonRoomParameters parameters)

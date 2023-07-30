@@ -26,7 +26,8 @@ namespace Ragon.Client
     private readonly List<IRagonFailedListener> _failedListeners = new();
     private readonly List<IRagonJoinListener> _joinListeners = new();
     private readonly List<IRagonLeftListener> _leftListeners = new();
-    private readonly List<IRagonLevelListener> _levelListeners = new();
+    private readonly List<IRagonSceneListener> _sceneListeners = new();
+    private readonly List<IRagonSceneRequestListener> _sceneRequestListeners = new();
     private readonly List<IRagonOwnershipChangedListener> _ownershipChangedListeners = new();
     private readonly List<IRagonPlayerJoinListener> _playerJoinListeners = new();
     private readonly List<IRagonPlayerLeftListener> _playerLeftListeners = new();
@@ -44,7 +45,7 @@ namespace Ragon.Client
       _failedListeners.Add(listener);
       _joinListeners.Add(listener);
       _leftListeners.Add(listener);
-      _levelListeners.Add(listener);
+      _sceneListeners.Add(listener);
       _ownershipChangedListeners.Add(listener);
       _playerJoinListeners.Add(listener);
       _playerLeftListeners.Add(listener);
@@ -59,7 +60,7 @@ namespace Ragon.Client
         _failedListeners.Remove(listener);
         _joinListeners.Remove(listener);
         _leftListeners.Remove(listener);
-        _levelListeners.Remove(listener);
+        _sceneListeners.Remove(listener);
         _ownershipChangedListeners.Remove(listener);
         _playerJoinListeners.Remove(listener);
         _playerLeftListeners.Remove(listener);
@@ -78,6 +79,11 @@ namespace Ragon.Client
     public void Add(IRagonAuthorizationListener listener)
     {
       _authorizationListeners.Add(listener);
+    }
+    
+    public void Add(IRagonSceneRequestListener listener)
+    {
+      _sceneRequestListeners.Add(listener);
     }
     
     public void Add(IRagonConnectionListener listener)
@@ -100,9 +106,9 @@ namespace Ragon.Client
       _leftListeners.Add(listener);
     }
     
-    public void Add(IRagonLevelListener  listener)
+    public void Add(IRagonSceneListener  listener)
     {
-      _levelListeners.Add(listener);
+      _sceneListeners.Add(listener);
     }
     
     public void Add(IRagonOwnershipChangedListener  listener)
@@ -120,6 +126,11 @@ namespace Ragon.Client
       _playerLeftListeners.Add(listener);
     }
 
+    public void Remove(IRagonSceneRequestListener listener)
+    {
+      _delayedActions.Add(() => _sceneRequestListeners.Remove(listener));
+    }
+    
     public void Remove(IRagonAuthorizationListener listener)
     {
       _delayedActions.Add(() => _authorizationListeners.Remove(listener));
@@ -146,9 +157,9 @@ namespace Ragon.Client
       _delayedActions.Add(() => _leftListeners.Remove(listener));
     }
     
-    public void Remove(IRagonLevelListener  listener)
+    public void Remove(IRagonSceneListener  listener)
     {
-      _delayedActions.Add(() => _levelListeners.Remove(listener));
+      _delayedActions.Add(() => _sceneListeners.Remove(listener));
     }
     
     public void Remove(IRagonOwnershipChangedListener  listener)
@@ -208,10 +219,16 @@ namespace Ragon.Client
         listener.OnPlayerJoined(_client, player);
     }
 
-    public void OnLevel(string sceneName)
+    public void OnSceneLoaded()
     {
-      foreach (var listener in _levelListeners)
-        listener.OnLevel(_client, sceneName);
+      foreach (var listener in _sceneListeners)
+        listener.OnSceneLoaded(_client);
+    }
+    
+    public void OnSceneRequest(string sceneName)
+    {
+      foreach (var listener in _sceneRequestListeners)
+        listener.OnRequestScene(_client, sceneName);
     }
 
     public void OnJoined()

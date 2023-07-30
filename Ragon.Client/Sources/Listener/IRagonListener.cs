@@ -22,10 +22,11 @@ namespace Ragon.Client
     IRagonFailedListener,
     IRagonJoinListener, 
     IRagonLeftListener, 
-    IRagonLevelListener, 
+    IRagonSceneListener, 
     IRagonOwnershipChangedListener,
     IRagonPlayerJoinListener, 
     IRagonPlayerLeftListener
   {
+    
   }
 }

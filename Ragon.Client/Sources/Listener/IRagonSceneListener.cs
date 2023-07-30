@@ -16,7 +16,7 @@
 
 namespace Ragon.Client;
 
-public interface IRagonLevelListener
+public interface IRagonSceneListener
 {
-  void OnLevel(RagonClient client, string sceneName);
+  void OnSceneLoaded(RagonClient client);
 }

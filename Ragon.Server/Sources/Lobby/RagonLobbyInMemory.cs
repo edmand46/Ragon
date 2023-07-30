@@ -40,11 +40,11 @@ public class LobbyInMemory : IRagonLobby
     return false;
   }
 
-  public bool FindRoomByMap(string map, [MaybeNullWhen(false)] out RagonRoom room)
+  public bool FindRoomByScene(string sceneName, [MaybeNullWhen(false)] out RagonRoom room)
   {
     foreach (var existsRoom in _rooms)
     {
-      if (existsRoom.Map == map && existsRoom.PlayerCount < existsRoom.PlayerMax)
+      if (existsRoom.Scene == sceneName && existsRoom.PlayerCount < existsRoom.PlayerMax)
       {
         room = existsRoom;
         return true;
@@ -61,7 +61,7 @@ public class LobbyInMemory : IRagonLobby
     _logger.Trace($"New room: {room.Id}");
     
     foreach (var r in _rooms)
-      _logger.Trace($"Room: {r.Id} Map: {r.Map} Players: {r.Players.Count} Entities: {r.Entities.Count}");
+      _logger.Trace($"Room: {r.Id} Scene: {r.Scene} Players: {r.Players.Count} Entities: {r.Entities.Count}");
   }
 
   public bool RemoveIfEmpty(RagonRoom room)
@@ -76,7 +76,7 @@ public class LobbyInMemory : IRagonLobby
     }
 
     foreach (var r in _rooms)
-      _logger.Trace($"Room: {r.Id} Map: {r.Map} Players: {r.Players.Count} Entities: {r.Entities.Count}");
+      _logger.Trace($"Room: {r.Id} Scene: {r.Scene} Players: {r.Players.Count} Entities: {r.Entities.Count}");
 
     return result;
   }

@@ -4,7 +4,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client.Simulation;
 
-public class Game : IRagonListener
+public class Game : IRagonListener, IRagonSceneRequestListener
 {
     private RagonFloat _health;
     private RagonInt _points;
@@ -36,23 +36,7 @@ public class Game : IRagonListener
 
     public void OnJoined(RagonClient client)
     {
-        RagonLog.Trace("Joined");
-
-        _health = new RagonFloat(100.0f, false, 0);
-        _health.Changed += () => Console.WriteLine($"[Ragon Property] Health: {_health.Value}");
-
-        _points = new RagonInt(0, -1000, 1000, false, 0);
-        _points.Changed += () => Console.WriteLine($"[Ragon Property] Points: {_points.Value}");
-
-        _name = new RagonString("Edmand 000", false);
-        _name.Changed += () => Console.WriteLine($"[Ragon Property] Name: {_name.Value}");
-
-        _entity = new RagonEntity(12, 0);
-        _entity.State.AddProperty(_health);
-        _entity.State.AddProperty(_points);
-        _entity.State.AddProperty(_name);
-
-        client.Room.CreateEntity(_entity);
+        
     }
 
     public void OnFailed(RagonClient client, string message)
@@ -85,11 +69,25 @@ public class Game : IRagonListener
         RagonLog.Trace("Owner ship changed");
     }
 
-    public void OnLevel(RagonClient client, string sceneName)
+    public void OnSceneLoaded(RagonClient client)
     {
-        RagonLog.Trace($"New level: {sceneName}");
+        RagonLog.Trace("Joined");
 
-        client.Room.SceneLoaded();
+        _health = new RagonFloat(100.0f, false, 0);
+        _health.Changed += () => Console.WriteLine($"[Ragon Property] Health: {_health.Value}");
+
+        _points = new RagonInt(0, -1000, 1000, false, 0);
+        _points.Changed += () => Console.WriteLine($"[Ragon Property] Points: {_points.Value}");
+
+        _name = new RagonString("Edmand 000", false);
+        _name.Changed += () => Console.WriteLine($"[Ragon Property] Name: {_name.Value}");
+
+        _entity = new RagonEntity(12, 0);
+        _entity.State.AddProperty(_health);
+        _entity.State.AddProperty(_points);
+        _entity.State.AddProperty(_name);
+
+        client.Room.CreateEntity(_entity);
     }
 
     private float _timer = 0;
@@ -108,5 +106,11 @@ public class Game : IRagonListener
             Console.WriteLine($"{_health.Value} {_points.Value} {_name.Value}");
             _timer = 0;
         }
+    }
+
+    public void OnRequestScene(RagonClient client, string sceneName)
+    {
+        client.Room.SceneLoaded();
+        
     }
 }

@@ -67,14 +67,15 @@ internal class JoinSuccessHandler : Handler
     var ownerId = buffer.ReadString();
     var min = buffer.ReadUShort();
     var max = buffer.ReadUShort();
-    var map = buffer.ReadString();
+    var sceneName = buffer.ReadString();
 
-    var scene = new RagonScene(_client, _playerCache, _entityCache);
+    var scene = new RagonScene(_client, _playerCache, _entityCache, sceneName);
     var roomInfo = new RagonRoomInformation(roomId, localId, ownerId, min, max);
     var room = new RagonRoom(_client, _entityCache, _playerCache, roomInfo, scene);
 
     _playerCache.SetOwnerAndLocal(ownerId, localId);
     _client.AssignRoom(room);
-    _listenerList.OnLevel(map);
+    
+    _listenerList.OnSceneRequest(sceneName);
   }
 }

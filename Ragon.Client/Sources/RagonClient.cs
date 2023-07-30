@@ -162,7 +162,7 @@ namespace Ragon.Client
     public void AddListener(IRagonFailedListener listener) => _listenerList.Add(listener);
     public void AddListener(IRagonJoinListener listener) => _listenerList.Add(listener);
     public void AddListener(IRagonLeftListener listener) => _listenerList.Add(listener);
-    public void AddListener(IRagonLevelListener listener) => _listenerList.Add(listener);
+    public void AddListener(IRagonSceneListener listener) => _listenerList.Add(listener);
     public void AddListener(IRagonOwnershipChangedListener listener) => _listenerList.Add(listener);
     public void AddListener(IRagonPlayerJoinListener listener) => _listenerList.Add(listener);
     public void AddListener(IRagonPlayerLeftListener listener) => _listenerList.Add(listener);
@@ -173,7 +173,7 @@ namespace Ragon.Client
     public void RemoveListener(IRagonFailedListener listener) => _listenerList.Remove(listener);
     public void RemoveListener(IRagonJoinListener listener) => _listenerList.Remove(listener);
     public void RemoveListener(IRagonLeftListener listener) => _listenerList.Remove(listener);
-    public void RemoveListener(IRagonLevelListener listener) => _listenerList.Remove(listener);
+    public void RemoveListener(IRagonSceneListener listener) => _listenerList.Remove(listener);
     public void RemoveListener(IRagonOwnershipChangedListener listener) => _listenerList.Remove(listener);
     public void RemoveListener(IRagonPlayerJoinListener listener) => _listenerList.Remove(listener);
     public void RemoveListener(IRagonPlayerLeftListener listener) => _listenerList.Remove(listener);

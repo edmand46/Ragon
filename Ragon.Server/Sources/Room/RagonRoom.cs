@@ -25,15 +25,15 @@ namespace Ragon.Server.Room;
 public class RagonRoom : IRagonRoom, IRagonAction
 {
   public string Id { get; private set; }
-  public string Map { get; private set; }
+  public string Scene { get; private set; }
   public int PlayerMax { get; private set; }
   public int PlayerMin { get; private set; }
   public int PlayerCount => WaitPlayersList.Count;
-  
+
   public RagonRoomPlayer Owner { get; private set; }
   public RagonBuffer Writer { get; }
   public IRoomPlugin Plugin { get; private set; }
-  
+
   public Dictionary<ushort, RagonRoomPlayer> Players { get; private set; }
   public List<RagonRoomPlayer> WaitPlayersList { get; private set; }
   public List<RagonRoomPlayer> ReadyPlayersList { get; private set; }
@@ -45,11 +45,11 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public List<RagonEntity> EntityList { get; private set; }
 
   private readonly HashSet<RagonEntity> _entitiesDirtySet;
-  
+
   public RagonRoom(string roomId, RoomInformation info, IRoomPlugin roomPlugin)
   {
     Id = roomId;
-    Map = info.Map;
+    Scene = info.Scene;
     PlayerMax = info.Max;
     PlayerMin = info.Min;
     Plugin = roomPlugin;
@@ -182,7 +182,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
 
   public void UpdateMap(string sceneName)
   {
-    Map = sceneName;
+    Scene = sceneName;
 
     DynamicEntitiesList.Clear();
     StaticEntitiesList.Clear();
@@ -218,9 +218,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
 
   public IRagonEntity? GetEntityById(ushort id)
   {
-    return Entities.TryGetValue(id, out var entity) ? 
-      entity : 
-      null;
+    return Entities.TryGetValue(id, out var entity) ? entity : null;
   }
 
   public IRagonEntity[] GetEntitiesOfPlayer(RagonRoomPlayer player)

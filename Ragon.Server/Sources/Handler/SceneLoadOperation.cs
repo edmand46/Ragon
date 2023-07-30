@@ -33,7 +33,7 @@ public class SceneLoadOperation: IRagonOperation
     
     if (roomOwner.Connection.Id != currentPlayer.Connection.Id)
     { 
-      _logger.Warn("Only owner can change map!");
+      _logger.Warn("Only owner can change scene!");
       return;
     }
     

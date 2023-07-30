@@ -22,7 +22,7 @@ namespace Ragon.Server.Lobby;
 public interface IRagonLobby
 {
   public bool FindRoomById(string roomId, [MaybeNullWhen(false)] out RagonRoom room);
-  public bool FindRoomByMap(string map, [MaybeNullWhen(false)] out RagonRoom room);
+  public bool FindRoomByScene(string sceneName, [MaybeNullWhen(false)] out RagonRoom room);
   public void Persist(RagonRoom room);
   public bool RemoveIfEmpty(RagonRoom room);
 }

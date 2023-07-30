@@ -27,6 +27,7 @@ namespace Ragon.Client
     public string Id => _information.RoomId;
     public int MinPlayers => _information.Min;
     public int MaxPlayers => _information.Max;
+    public string Scene => _scene.Name;
 
     public IReadOnlyList<RagonPlayer> Players => _playerCache.Players;
     public RagonPlayer Local => _playerCache.Local;
@@ -51,7 +52,12 @@ namespace Ragon.Client
       _playerCache.Cleanup();
     }
 
-    public void LoadScene(string map) => _scene.Load(map);
+    internal void Update(string sceneName)
+    {
+      _scene.Update(sceneName);
+    }
+
+    public void LoadScene(string sceneName) => _scene.Load(sceneName);
     public void SceneLoaded() => _scene.SceneLoaded();
 
     public void CreateEntity(RagonEntity entity) => CreateEntity(entity, null);

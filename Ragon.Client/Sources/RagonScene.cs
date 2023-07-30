@@ -20,24 +20,33 @@ namespace Ragon.Client;
 
 public class RagonScene
 {
+  public string Name { get; private set; }
+  
   private readonly RagonClient _client;
   private readonly RagonEntityCache _entityCache;
   private readonly RagonPlayerCache _playerCache;
   
-  public RagonScene(RagonClient client, RagonPlayerCache playerCache, RagonEntityCache entityCache)
+  public RagonScene(RagonClient client, RagonPlayerCache playerCache, RagonEntityCache entityCache, string sceneName)
   {
+    Name = sceneName;
+    
     _client = client;
     _playerCache = playerCache;
     _entityCache = entityCache;
   }
 
-  internal void Load(string map)
+  internal void Update(string scene)
+  {
+    Name = scene;
+  }
+  
+  internal void Load(string sceneName)
   {
     var buffer = _client.Buffer;
     
     buffer.Clear();
     buffer.WriteOperation(RagonOperation.LOAD_SCENE);
-    buffer.WriteString(map);
+    buffer.WriteString(sceneName);
 
     var sendData = buffer.ToArray();
     _client.Reliable.Send(sendData);

@@ -117,6 +117,9 @@ internal class SnapshotHandler : Handler
       entity.Attach(_client, entityId, entityType, hasAuthority, player);
     }
 
-    _listenerList.OnJoined();
+    if (_client.Status != RagonStatus.ROOM)
+      _listenerList.OnJoined(); 
+    
+    _listenerList.OnSceneLoaded();
   }
 }

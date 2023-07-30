@@ -38,7 +38,8 @@ internal class SceneLoadHandler: Handler
     var room = _client.Room;
     
     room.Cleanup();
+    room.Update(sceneName);
     
-    _listenerList.OnLevel(sceneName);
+    _listenerList.OnSceneRequest(sceneName);
   }
 }

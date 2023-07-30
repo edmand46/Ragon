@@ -49,7 +49,7 @@ public sealed class RoomJoinOrCreateOperation : IRagonOperation
     
     _roomParameters.Deserialize(reader);
 
-    if (context.Lobby.FindRoomByMap(_roomParameters.Map, out var existsRoom))
+    if (context.Lobby.FindRoomByScene(_roomParameters.Scene, out var existsRoom))
     {
       var player = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
       context.SetRoom(existsRoom, player);
@@ -62,7 +62,7 @@ public sealed class RoomJoinOrCreateOperation : IRagonOperation
     {
       var information = new RoomInformation()
       {
-        Map = _roomParameters.Map,
+        Scene = _roomParameters.Scene,
         Max = _roomParameters.Max,
         Min = _roomParameters.Min,
       };
@@ -77,7 +77,7 @@ public sealed class RoomJoinOrCreateOperation : IRagonOperation
       context.Scheduler.Run(room);
       context.SetRoom(room, roomPlayer);
       
-      _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with map {information.Map}");
+      _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with scene {information.Scene}");
 
       JoinSuccess(roomPlayer, room, writer);
     }
@@ -92,7 +92,7 @@ public sealed class RoomJoinOrCreateOperation : IRagonOperation
     writer.WriteString(room.Owner.Id);
     writer.WriteUShort((ushort) room.PlayerMin);
     writer.WriteUShort((ushort) room.PlayerMax);
-    writer.WriteString(room.Map);
+    writer.WriteString(room.Scene);
 
     var sendData = writer.ToArray();
     player.Connection.Reliable.Send(sendData);

@@ -68,7 +68,7 @@ public sealed class RoomJoinOperation : IRagonOperation
     writer.WriteString(room.Owner.Id);
     writer.WriteUShort((ushort) room.PlayerMin);
     writer.WriteUShort((ushort) room.PlayerMax);
-    writer.WriteString(room.Map);
+    writer.WriteString(room.Scene);
 
     var sendData = writer.ToArray();
     context.Connection.Reliable.Send(sendData);
