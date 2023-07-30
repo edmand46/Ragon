@@ -60,7 +60,7 @@ public sealed class RagonEntityCache
 
     entity.State.WriteInfo(buffer);
 
-    spawnPayload.Write(buffer);
+    spawnPayload?.Write(buffer);
 
     _pendingEntities.Add(attachId, entity);
 
@@ -95,7 +95,7 @@ public sealed class RagonEntityCache
     buffer.WriteOperation(RagonOperation.REMOVE_ENTITY);
     buffer.WriteUShort(entity.Id);
 
-    destroyPayload.Write(buffer);
+    destroyPayload?.Write(buffer);
 
     var sendData = buffer.ToArray();
     _client.Reliable.Send(sendData);

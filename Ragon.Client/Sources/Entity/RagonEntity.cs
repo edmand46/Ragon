@@ -56,7 +56,9 @@ namespace Ragon.Client
     {
       State = new RagonEntityState(this);
       Type = type;
-
+      
+      _spawnPayload = new RagonPayload(0);
+      _destroyPayload = new RagonPayload(0);
       _sceneId = sceneId;
     }
 

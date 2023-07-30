@@ -117,13 +117,15 @@ public class RagonEntity : IRagonEntity
   {
     buffer.WriteUShort(Type);
     buffer.WriteUShort(Id);
+    
     if (StaticId != 0)
       buffer.WriteUShort(StaticId);
+    
     buffer.WriteUShort(Owner.Connection.Id);
-
     buffer.WriteUShort(Payload.Size);
+    
     Payload.Write(buffer);
-
+    
     _state.Snapshot(buffer);
   }
 

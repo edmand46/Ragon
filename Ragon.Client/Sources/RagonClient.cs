@@ -144,7 +144,8 @@ namespace Ragon.Client
 
         _stats.Update(_connection.BytesSent, _connection.BytesReceived, _connection.Ping, dt);
       }
-
+      
+      _listenerList.Update();
       _connection.Update();
     }
 
