@@ -110,8 +110,6 @@ internal class SnapshotHandler : Handler
 
       var hasAuthority = _playerCache.Local.Id == player.Id;
       var entity = _entityCache.TryGetEntity(0, entityType, staticId, entityId, hasAuthority, out _);
-
-      _entityListener.OnEntityCreated(entity);
       
       entity.Read(buffer);
       entity.Attach(_client, entityId, entityType, hasAuthority, player);
