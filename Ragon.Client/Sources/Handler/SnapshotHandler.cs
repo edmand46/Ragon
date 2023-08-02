@@ -118,7 +118,6 @@ internal class SnapshotHandler : Handler
     if (_client.Status == RagonStatus.LOBBY)
     { 
       _client.SetStatus(RagonStatus.ROOM);
-      
       _listenerList.OnJoined();
     }
 
