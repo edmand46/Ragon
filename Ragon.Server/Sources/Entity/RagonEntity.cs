@@ -162,7 +162,6 @@ public class RagonEntity : IRagonEntity
     if (Authority == RagonAuthority.OwnerOnly &&
         Owner.Connection.Id != caller.Connection.Id)
     {
-      Console.WriteLine($"Player have not enough authority for event with Id {evnt.EventCode}");
       return;
     }
 
