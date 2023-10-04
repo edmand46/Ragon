@@ -16,12 +16,12 @@
 
 namespace Ragon.Relay
 {
-    class Program
+  class Program
+  {
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-            var relay = new Relay();
-            relay.Start();
-        }
+      var relay = new Relay();
+      relay.Start();
     }
+  }
 }

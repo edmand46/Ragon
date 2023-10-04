@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class AuthorizeFailedHandler: Handler
+internal class AuthorizeFailedHandler: IHandler
 {
   private readonly RagonListenerList _listenerList;
   public AuthorizeFailedHandler(RagonListenerList list)

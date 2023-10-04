@@ -67,4 +67,39 @@ public class RagonScene
     var sendData = buffer.ToArray();
     _client.Reliable.Send(sendData);
   }
+
+  internal void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode replicationMode)
+    where TEvent : IRagonEvent, new()
+  {
+    var evntId = _client.Event.GetEventCode(evnt);
+    var buffer = _client.Buffer;
+    
+    buffer.Clear();
+    buffer.WriteOperation(RagonOperation.REPLICATE_RAW_DATA);
+    buffer.WriteUShort(evntId);
+    buffer.WriteByte((byte)replicationMode);
+    buffer.WriteByte((byte)target);
+    
+    var sendData = buffer.ToArray();
+    _client.Reliable.Send(sendData);
+  }
+  
+  internal void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode replicationMode)
+    where TEvent : IRagonEvent, new()
+  {
+    var evntId = _client.Event.GetEventCode(evnt);
+    var buffer = _client.Buffer;
+
+    buffer.Clear();
+    buffer.WriteOperation(RagonOperation.REPLICATE_RAW_DATA);
+    buffer.WriteUShort(evntId);
+    buffer.WriteByte((byte)replicationMode);
+    buffer.WriteByte((byte)RagonTarget.Player);
+    buffer.WriteUShort(target.PeerId);
+
+    evnt.Serialize(buffer);
+
+    var sendData = buffer.ToArray();
+    _client.Reliable.Send(sendData);
+  }
 }

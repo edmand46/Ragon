@@ -29,7 +29,7 @@ public sealed class EntityOwnershipOperation : IRagonOperation
 
     if (!room.Players.TryGetValue(playerPeerId, out var nextOwner))
     {
-      _logger.Error($"Player not found with id {entityId}");
+      _logger.Error($"Player not found with id {playerPeerId}");
       return;
     }    
     

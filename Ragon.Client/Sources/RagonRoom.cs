@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
+using Ragon.Protocol;
+
 namespace Ragon.Client
 {
   public class RagonRoom
   {
+    private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
+    
     private RagonClient _client;
     private RagonScene _scene;
     private RagonEntityCache _entityCache;
     private RagonPlayerCache _playerCache;
     private RagonRoomInformation _information;
-
+    
     public string Id => _information.RoomId;
     public int MinPlayers => _information.Min;
     public int MaxPlayers => _information.Max;
@@ -32,6 +36,9 @@ namespace Ragon.Client
     public IReadOnlyList<RagonPlayer> Players => _playerCache.Players;
     public RagonPlayer Local => _playerCache.Local;
     public RagonPlayer Owner => _playerCache.Owner;
+    
+    private readonly Dictionary<int, OnEventDelegate> _events = new Dictionary<int, OnEventDelegate>();
+    private readonly Dictionary<int, Action<RagonPlayer, IRagonEvent>> _localEvents = new Dictionary<int, Action<RagonPlayer, IRagonEvent>>();
     
     public RagonRoom(RagonClient client,
       RagonEntityCache entityCache,
@@ -57,8 +64,40 @@ namespace Ragon.Client
       _scene.Update(sceneName);
     }
 
+    internal void Event(ushort eventCode, RagonPlayer caller, RagonBuffer buffer)
+    {
+      if (_events.TryGetValue(eventCode, out var evnt))
+        evnt?.Invoke(caller, buffer);
+      else
+        RagonLog.Warn($"Handler event on entity {Id} with eventCode {eventCode} not defined");
+    }
+    
+    public void OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
+    {
+      var t = new TEvent();
+      var eventCode = _client.Event.GetEventCode(t);
+
+      if (_events.ContainsKey(eventCode))
+      {
+        _events.Remove(eventCode);
+        _localEvents.Remove(eventCode);
+
+        RagonLog.Warn($"Event already {eventCode} subscribed, removed old one!");
+      }
+
+      _localEvents.Add(eventCode, (player, eventData) => { callback.Invoke(player, (TEvent)eventData); });
+      _events.Add(eventCode, (player, serializer) =>
+      {
+        t.Deserialize(serializer);
+        callback.Invoke(player, t);
+      });
+    }
+
     public void LoadScene(string sceneName) => _scene.Load(sceneName);
     public void SceneLoaded() => _scene.SceneLoaded();
+    
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode mode) where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode mode) where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
 
     public void CreateEntity(RagonEntity entity) => CreateEntity(entity, null);
     public void CreateEntity(RagonEntity entity, RagonPayload payload) => _entityCache.Create(entity, payload);

@@ -1,4 +1,7 @@
-﻿namespace Ragon.Client.Simulation;
+﻿using Ragon.Client;
+using Ragon.Client.Simulation;
+
+namespace Ragon.Simulation;
 
 public class EntityListener : IRagonEntityListener
 {
@@ -24,6 +27,9 @@ public class Simulation
 {
   public void Start()
   {
+    var client = new Ragon.Simulation.Client();
+    client.Start();
+
     // INetworkConnection protocol = debug ? new RagonNullConnection() : new RagonENetConnection();
     // var network = new RagonClient(protocol, new EntityListener(), 30);
     // var game = new Game(network);

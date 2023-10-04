@@ -37,7 +37,7 @@ public struct RagonRoomInformation
   public ushort Max { get; private set; }
 }
 
-internal class JoinSuccessHandler : Handler
+internal class JoinSuccessHandler : IHandler
 {
   private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
@@ -46,7 +46,6 @@ internal class JoinSuccessHandler : Handler
 
   public JoinSuccessHandler(
     RagonClient client,
-    RagonBuffer buffer,
     RagonListenerList listenerList,
     RagonPlayerCache playerCache,
     RagonEntityCache entityCache

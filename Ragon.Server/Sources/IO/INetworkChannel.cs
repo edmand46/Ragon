@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Ragon.Protocol;
+
 namespace Ragon.Server.IO;
 
 public interface INetworkChannel

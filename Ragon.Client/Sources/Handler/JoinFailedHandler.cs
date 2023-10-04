@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class JoinFailedHandler: Handler
+internal  class JoinFailedHandler: IHandler
 {
   private readonly RagonListenerList _listenerList;
   

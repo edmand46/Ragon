@@ -16,7 +16,7 @@
 
 using NLog;
 using Ragon.Protocol;
-using Ragon.Server.Entity;
+using Ragon.Server.Event;
 
 namespace Ragon.Server.Handler;
 

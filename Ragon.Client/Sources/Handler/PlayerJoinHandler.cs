@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class PlayerJoinHandler : Handler
+internal class PlayerJoinHandler : IHandler
 {
   private RagonPlayerCache _playerCache;
   private RagonListenerList _listenerList;

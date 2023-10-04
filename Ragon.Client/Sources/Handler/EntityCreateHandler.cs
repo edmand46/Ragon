@@ -18,7 +18,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class EntityCreateHandler : Handler
+internal  class EntityCreateHandler : IHandler
 {
   private readonly RagonClient _client;
   private readonly RagonPlayerCache _playerCache;

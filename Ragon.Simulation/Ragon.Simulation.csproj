@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <RootNamespace>Ragon.Client.Simulation</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,12 +16,17 @@
 
     <ItemGroup>
       <PackageReference Include="ENet-CSharp" Version="2.4.8" />
+      <PackageReference Include="Raylib-cs" Version="4.5.0.4" />
     </ItemGroup>
 
     <ItemGroup>
       <None Update="libenet.dylib">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Sources\Server\" />
     </ItemGroup>
 
 </Project>

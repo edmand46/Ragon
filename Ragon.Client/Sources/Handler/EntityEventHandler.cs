@@ -18,19 +18,16 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class EntityEventHandler : Handler
+internal class EntityEventHandler : IHandler
 {
-    private readonly RagonClient _client;
     private readonly RagonPlayerCache _playerCache;
     private readonly RagonEntityCache _entityCache;
 
     public EntityEventHandler(
-        RagonClient client,
         RagonPlayerCache playerCache,
         RagonEntityCache entityCache
     )
     {
-        _client = client;
         _playerCache = playerCache;
         _entityCache = entityCache;
     }

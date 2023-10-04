@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-public interface Handler
+public interface IHandler
 {
   public void Handle(RagonBuffer buffer);
 }

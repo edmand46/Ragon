@@ -18,7 +18,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class SceneLoadHandler: Handler
+internal class SceneLoadHandler: IHandler
 {
   private readonly RagonClient _client;
   private readonly RagonListenerList _listenerList;

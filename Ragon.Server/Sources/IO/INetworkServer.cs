@@ -21,5 +21,7 @@ public interface INetworkServer
   public Executor Executor { get; }
   public void Stop();
   public void Update();
+  public void BroadcastUnreliable(byte[] data);
+  public void BroadcastReliable(byte[] data);
   public void Start(INetworkListener listener, NetworkConfiguration configuration);
 }

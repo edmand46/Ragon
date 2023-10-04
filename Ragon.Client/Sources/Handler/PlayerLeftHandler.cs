@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class PlayerLeftHandler : Handler
+internal class PlayerLeftHandler : IHandler
 {
   private RagonPlayerCache _playerCache;
   private RagonEntityCache _entityCache;

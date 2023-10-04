@@ -17,7 +17,7 @@
 using Ragon.Protocol;
 using Ragon.Server.Room;
 
-namespace Ragon.Server.Entity;
+namespace Ragon.Server.Event;
 
 public class RagonEvent
 {

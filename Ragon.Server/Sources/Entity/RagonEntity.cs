@@ -16,6 +16,7 @@
 
 
 using Ragon.Protocol;
+using Ragon.Server.Event;
 using Ragon.Server.Room;
 
 namespace Ragon.Server.Entity;
@@ -117,32 +118,37 @@ public class RagonEntity : IRagonEntity
   {
     buffer.WriteUShort(Type);
     buffer.WriteUShort(Id);
-    
+
     if (StaticId != 0)
       buffer.WriteUShort(StaticId);
-    
+
     buffer.WriteUShort(Owner.Connection.Id);
     buffer.WriteUShort(Payload.Size);
-    
+
     Payload.Write(buffer);
-    
+
     _state.Snapshot(buffer);
   }
 
   public void ReplicateEvent(
-    RagonRoomPlayer caller,
+    RagonRoomPlayer invoker,
     RagonEvent evnt,
     RagonReplicationMode eventMode,
     RagonRoomPlayer targetPlayer
   )
   {
+    if (Authority == RagonAuthority.OwnerOnly && invoker.Connection.Id != Owner.Connection.Id)
+    {
+      return;
+    }
+
     var room = Owner.Room;
     var buffer = room.Writer;
-
+    
     buffer.Clear();
     buffer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
     buffer.WriteUShort(evnt.EventCode);
-    buffer.WriteUShort(caller.Connection.Id);
+    buffer.WriteUShort(invoker.Connection.Id);
     buffer.WriteByte((byte)eventMode);
     buffer.WriteUShort(Id);
 
@@ -153,21 +159,18 @@ public class RagonEntity : IRagonEntity
   }
 
   public void ReplicateEvent(
-    RagonRoomPlayer caller,
+    RagonRoomPlayer invoker,
     RagonEvent evnt,
     RagonReplicationMode eventMode,
     RagonTarget targetMode
   )
   {
-    if (Authority == RagonAuthority.OwnerOnly &&
-        Owner.Connection.Id != caller.Connection.Id)
+    if (Authority == RagonAuthority.OwnerOnly && invoker.Connection.Id != Owner.Connection.Id)
     {
       return;
     }
 
-    if (eventMode == RagonReplicationMode.Buffered &&
-        targetMode != RagonTarget.Owner &&
-        _bufferedEvents.Count < _limitBufferedEvents)
+    if (eventMode == RagonReplicationMode.Buffered && targetMode != RagonTarget.Owner && _bufferedEvents.Count < _limitBufferedEvents)
     {
       _bufferedEvents.Add(evnt);
     }
@@ -178,7 +181,7 @@ public class RagonEntity : IRagonEntity
     buffer.Clear();
     buffer.WriteOperation(RagonOperation.REPLICATE_ENTITY_EVENT);
     buffer.WriteUShort(evnt.EventCode);
-    buffer.WriteUShort(caller.Connection.Id);
+    buffer.WriteUShort(invoker.Connection.Id);
     buffer.WriteByte((byte)eventMode);
     buffer.WriteUShort(Id);
 
@@ -206,7 +209,7 @@ public class RagonEntity : IRagonEntity
       {
         foreach (var roomPlayer in room.ReadyPlayersList)
         {
-          if (roomPlayer.Connection.Id != caller.Connection.Id)
+          if (roomPlayer.Connection.Id != invoker.Connection.Id)
             roomPlayer.Connection.Reliable.Send(sendData);
         }
 

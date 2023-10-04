@@ -102,6 +102,18 @@ public class WebSocketServer : INetworkServer
     Flush();
   }
 
+  public void BroadcastUnreliable(byte[] data)
+  {
+    foreach (var activeConnection in _activeConnections)
+      activeConnection.Unreliable.Send(data);
+  }
+
+  public void BroadcastReliable(byte[] data)
+  {
+    foreach (var activeConnection in _activeConnections)
+      activeConnection.Reliable.Send(data);
+  }
+
   public async void Flush()
   {
     foreach (var conn in _activeConnections)

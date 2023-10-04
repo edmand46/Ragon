@@ -24,7 +24,7 @@ namespace Ragon.Client
     private readonly NetworkStatistics _stats;
     private IRagonEntityListener _entityListener;
     private IRagonSceneCollector _sceneCollector;
-    private Handler[] _handlers;
+    private IHandler[] _handlers;
     private RagonBuffer _readBuffer;
     private RagonBuffer _writeBuffer;
     private RagonRoom _room;
@@ -35,9 +35,11 @@ namespace Ragon.Client
     private RagonEventCache _eventCache;
     private RagonStatus _status;
 
+    private double _serverTimestamp;
     private float _replicationRate = 0;
     private float _replicationTime = 0;
 
+    public double ServerTimestamp => _serverTimestamp;
     public IRagonConnection Connection => _connection;
     public RagonStatus Status => _status;
     public RagonSession Session => _session;
@@ -45,6 +47,7 @@ namespace Ragon.Client
     public RagonEntityCache Entity => _entityCache;
     public NetworkStatistics Statistics => _stats;
     public RagonRoom Room => _room;
+
 
     internal RagonBuffer Buffer => _writeBuffer;
     internal INetworkChannel Reliable => _connection.Reliable;
@@ -96,15 +99,15 @@ namespace Ragon.Client
 
       _writeBuffer = new RagonBuffer();
       _readBuffer = new RagonBuffer();
-      _session = new RagonSession(this, _readBuffer);
+      _session = new RagonSession(this, _writeBuffer);
 
       _playerCache = new RagonPlayerCache();
       _entityCache = new RagonEntityCache(this, _playerCache, _sceneCollector);
 
-      _handlers = new Handler[byte.MaxValue];
+      _handlers = new IHandler[byte.MaxValue];
       _handlers[(byte)RagonOperation.AUTHORIZED_SUCCESS] = new AuthorizeSuccessHandler(this, listeners);
       _handlers[(byte)RagonOperation.AUTHORIZED_FAILED] = new AuthorizeFailedHandler(listeners);
-      _handlers[(byte)RagonOperation.JOIN_SUCCESS] = new JoinSuccessHandler(this, _readBuffer, listeners, _playerCache, _entityCache);
+      _handlers[(byte)RagonOperation.JOIN_SUCCESS] = new JoinSuccessHandler(this, listeners, _playerCache, _entityCache);
       _handlers[(byte)RagonOperation.JOIN_FAILED] = new JoinFailedHandler(listeners);
       _handlers[(byte)RagonOperation.LEAVE_ROOM] = new LeaveRoomHandler(this, listeners, _entityCache);
       _handlers[(byte)RagonOperation.OWNERSHIP_ROOM_CHANGED] = new OwnershipRoomHandler(listeners, _playerCache, _entityCache);
@@ -115,8 +118,10 @@ namespace Ragon.Client
       _handlers[(byte)RagonOperation.CREATE_ENTITY] = new EntityCreateHandler(this, _playerCache, _entityCache, _entityListener);
       _handlers[(byte)RagonOperation.REMOVE_ENTITY] = new EntityRemoveHandler(_entityCache);
       _handlers[(byte)RagonOperation.REPLICATE_ENTITY_STATE] = new StateEntityHandler(_entityCache);
-      _handlers[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventHandler(this, _playerCache, _entityCache);
+      _handlers[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventHandler(_playerCache, _entityCache);
       _handlers[(byte)RagonOperation.SNAPSHOT] = new SnapshotHandler(this, listeners, _entityCache, _playerCache, _entityListener);
+      _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new EventRoomHandler(this, _playerCache);
+      _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampHandler(this);
 
       var protocolRaw = RagonVersion.Parse(protocol);
       _connection.Connect(address, port, protocolRaw);
@@ -138,8 +143,10 @@ namespace Ragon.Client
         _replicationTime += dt;
         if (_replicationTime >= _replicationRate)
         {
-          _entityCache.WriteState(_readBuffer);
           _replicationTime = 0;
+          _entityCache.WriteState(_writeBuffer);
+
+          SendTimestamp();
         }
 
         _stats.Update(_connection.BytesSent, _connection.BytesReceived, _connection.Ping, dt);
@@ -194,9 +201,28 @@ namespace Ragon.Client
       _status = status;
     }
 
+    internal void SetTimestamp(double time)
+    {
+      _serverTimestamp = time;
+    }
+
     #endregion
 
     #region PRIVATE
+
+    private void SendTimestamp()
+    {
+      var timestamp = RagonTime.CurrentTimestamp();
+      var value = new DoubleToUInt()
+      {
+        Double = timestamp,
+      };
+
+      _writeBuffer.Clear();
+      _writeBuffer.WriteOperation(RagonOperation.TIMESTAMP_SYNCHRONIZATION);
+      _writeBuffer.Write(value.Int0, 32);
+      _writeBuffer.Write(value.Int1, 32);
+    }
 
     private void OnConnected()
     {
@@ -214,7 +240,7 @@ namespace Ragon.Client
       _status = RagonStatus.DISCONNECTED;
     }
 
-    public void OnData(byte[] data)
+    private void OnData(byte[] data)
     {
       _readBuffer.Clear();
       _readBuffer.FromArray(data);

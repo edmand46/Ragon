@@ -18,7 +18,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class StateEntityHandler: Handler
+internal class StateEntityHandler: IHandler
 {
   private readonly RagonEntityCache _entityCache;
   

@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class EntityRemoveHandler: Handler
+internal  class EntityRemoveHandler: IHandler
 {
   private readonly RagonEntityCache _entityCache;
   

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,31 +14,40 @@
  * limitations under the License.
  */
 
-
 using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class LeaveRoomHandler : IHandler
+public class EventRoomHandler: IHandler
 {
   private readonly RagonClient _client;
-  private readonly RagonListenerList _listenerList;
-  private readonly RagonEntityCache _entityCache;
+  private readonly RagonPlayerCache _playerCache;
   
-  public LeaveRoomHandler(
+  public EventRoomHandler(
     RagonClient client,
-    RagonListenerList listenerList,
-    RagonEntityCache entityCache)
+    RagonPlayerCache playerCache
+  )
   {
     _client = client;
-    _listenerList = listenerList;
-    _entityCache = entityCache;
+    _playerCache = playerCache;
   }
-
+  
   public void Handle(RagonBuffer buffer)
-  {    
-    _listenerList.OnLeft();
-    _entityCache.Cleanup();
-    _client.Room.Cleanup();
+  {
+    var eventCode = buffer.ReadUShort();
+    var peerId = buffer.ReadUShort();
+    var executionMode = (RagonReplicationMode)buffer.ReadByte();
+    
+    var player = _playerCache.GetPlayerByPeer(peerId);
+    if (player == null)
+    {
+      RagonLog.Warn($"Player not found for event {eventCode}");
+      return;
+    }
+
+    if (player.IsLocal && executionMode == RagonReplicationMode.LocalAndServer)
+      return;
+
+    _client.Room.Event(eventCode, player, buffer); 
   }
 }

@@ -87,6 +87,8 @@ public class RagonServer : IRagonServer, INetworkListener
     _handlers[(byte) RagonOperation.REPLICATE_ENTITY_STATE] = new EntityStateOperation();
     _handlers[(byte) RagonOperation.TRANSFER_ROOM_OWNERSHIP] = new EntityOwnershipOperation();
     _handlers[(byte) RagonOperation.TRANSFER_ENTITY_OWNERSHIP] = new EntityOwnershipOperation();
+    _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataOperation();
+    _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampSyncOperation();
     
     _logger.Trace($"Server Tick Rate: {_configuration.ServerTickRate}");
   }
@@ -98,8 +100,10 @@ public class RagonServer : IRagonServer, INetworkListener
     {
       if (_timer.ElapsedMilliseconds > _tickRate)
       {
-        _scheduler.Update(_timer.ElapsedMilliseconds / 1000.0f);
         _timer.Restart();
+        _scheduler.Update(_timer.ElapsedMilliseconds / 1000.0f);
+        
+        SendTimestamp();
       }
       
       _executor.Update();
@@ -158,7 +162,7 @@ public class RagonServer : IRagonServer, INetworkListener
     }
     else
     {
-      _logger.Trace($"Disconnected: {connection.Id}");
+      _logger.Trace($"Disconnected without context: {connection.Id}");
     }
   }
 
@@ -190,7 +194,7 @@ public class RagonServer : IRagonServer, INetworkListener
         _writer.Clear();
         _reader.Clear();
         _reader.FromArray(data);
-        
+
         var operation = _reader.ReadByte();
         _handlers[operation].Handle(context, _reader, _writer);
       }
@@ -201,6 +205,23 @@ public class RagonServer : IRagonServer, INetworkListener
     }
   }
 
+  public void SendTimestamp()
+  {
+    var timestamp = RagonTime.CurrentTimestamp();
+    var value = new DoubleToUInt
+    {
+      Double = timestamp,
+    };
+     
+    _writer.Clear();
+    _writer.WriteOperation(RagonOperation.TIMESTAMP_SYNCHRONIZATION);
+    _writer.Write(value.Int0, 32);
+    _writer.Write(value.Int1, 32);
+
+    var sendData = _writer.ToArray();
+    _server.BroadcastUnreliable(sendData);
+  }
+  
   public IRagonOperation ResolveOperation(RagonOperation operation)
   {
     return _handlers[(byte)operation];
