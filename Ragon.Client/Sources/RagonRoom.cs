@@ -21,13 +21,13 @@ namespace Ragon.Client
   public class RagonRoom
   {
     private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
-    
+
     private RagonClient _client;
     private RagonScene _scene;
     private RagonEntityCache _entityCache;
     private RagonPlayerCache _playerCache;
     private RagonRoomInformation _information;
-    
+
     public string Id => _information.RoomId;
     public int MinPlayers => _information.Min;
     public int MaxPlayers => _information.Max;
@@ -36,10 +36,11 @@ namespace Ragon.Client
     public IReadOnlyList<RagonPlayer> Players => _playerCache.Players;
     public RagonPlayer Local => _playerCache.Local;
     public RagonPlayer Owner => _playerCache.Owner;
-    
+
     private readonly Dictionary<int, OnEventDelegate> _events = new Dictionary<int, OnEventDelegate>();
-    private readonly Dictionary<int, Action<RagonPlayer, IRagonEvent>> _localEvents = new Dictionary<int, Action<RagonPlayer, IRagonEvent>>();
-    
+    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _localListeners = new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
+    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _listeners = new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
+
     public RagonRoom(RagonClient client,
       RagonEntityCache entityCache,
       RagonPlayerCache playerCache,
@@ -71,31 +72,55 @@ namespace Ragon.Client
       else
         RagonLog.Warn($"Handler event on entity {Id} with eventCode {eventCode} not defined");
     }
-    
-    public void OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
+
+    public Action<RagonPlayer, IRagonEvent> OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
     {
       var t = new TEvent();
       var eventCode = _client.Event.GetEventCode(t);
-
-      if (_events.ContainsKey(eventCode))
+      var callbacks = _listeners[eventCode];
+      var action = (RagonPlayer player, IRagonEvent eventData) => callback.Invoke(player, (TEvent)eventData);
+      
+      if (callbacks == null)
       {
-        _events.Remove(eventCode);
-        _localEvents.Remove(eventCode);
-
-        RagonLog.Warn($"Event already {eventCode} subscribed, removed old one!");
+        callbacks = new List<Action<RagonPlayer, IRagonEvent>>();
+        _listeners.Add(eventCode, callbacks);
       }
 
-      _localEvents.Add(eventCode, (player, eventData) => { callback.Invoke(player, (TEvent)eventData); });
+      var localCallbacks = _localListeners[eventCode];
+      if (localCallbacks == null)
+      {
+        localCallbacks = new List<Action<RagonPlayer, IRagonEvent>>();
+        _localListeners.Add(eventCode, callbacks);
+      }
+      
+      callbacks.Add(action);
+      localCallbacks.Add(action);
+
       _events.Add(eventCode, (player, serializer) =>
       {
         t.Deserialize(serializer);
-        callback.Invoke(player, t);
+
+        foreach (var callbackListener in callbacks)
+          callbackListener.Invoke(player, t);
       });
+
+      return action;
+    }
+
+    public void OffEvent<TEvent>(Action<RagonPlayer, IRagonEvent> callback) where TEvent : IRagonEvent, new()
+    {
+      var t = new TEvent();
+      var eventCode = _client.Event.GetEventCode(t);
+      var callbacks = _listeners[eventCode];
+      var localCallbacks = _localListeners[eventCode];
+      
+      callbacks?.Remove(callback);
+      localCallbacks?.Remove(callback);
     }
 
     public void LoadScene(string sceneName) => _scene.Load(sceneName);
     public void SceneLoaded() => _scene.SceneLoaded();
-    
+
     public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode mode) where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
     public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode mode) where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
 
