@@ -3,17 +3,21 @@ using Ragon.Protocol;
 
 namespace Ragon.Server.Handler;
 
-public sealed class EntityOwnershipOperation : IRagonOperation
+public sealed class EntityOwnershipOperation : BaseOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  
+  public EntityOwnershipOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  {
+  }
 
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  public override void Handle(RagonContext context, byte[] data)
   {
     var currentOwner = context.RoomPlayer;
     var room = context.Room;
     
-    var entityId = reader.ReadUShort();
-    var playerPeerId = reader.ReadUShort();
+    var entityId = Reader.ReadUShort();
+    var playerPeerId = Reader.ReadUShort();
 
     if (!room.Entities.TryGetValue(entityId, out var entity))
     {
@@ -40,13 +44,13 @@ public sealed class EntityOwnershipOperation : IRagonOperation
     
     _logger.Trace($"Entity {entity.Id} next owner {nextOwner.Connection.Id}");
     
-    writer.Clear();
-    writer.WriteOperation(RagonOperation.OWNERSHIP_ENTITY_CHANGED);
-    writer.WriteUShort(playerPeerId);
-    writer.WriteUShort(1);
-    writer.WriteUShort(entity.Id);
+    Writer.Clear();
+    Writer.WriteOperation(RagonOperation.OWNERSHIP_ENTITY_CHANGED);
+    Writer.WriteUShort(playerPeerId);
+    Writer.WriteUShort(1);
+    Writer.WriteUShort(entity.Id);
     
-    var sendData = writer.ToArray();
+    var sendData = Writer.ToArray();
     foreach (var player in room.PlayerList)
       player.Connection.Reliable.Send(sendData);
   }

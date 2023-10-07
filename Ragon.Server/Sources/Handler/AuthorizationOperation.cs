@@ -22,24 +22,25 @@ using Ragon.Server.Plugin.Web;
 
 namespace Ragon.Server.Handler;
 
-public sealed class AuthorizationOperation: IRagonOperation
+public sealed class AuthorizationOperation: BaseOperation
 {
   private Logger _logger = LogManager.GetCurrentClassLogger();
-  private readonly RagonWebHookPlugin _ragonWebHook;
-  private readonly RagonContextObserver _contextObserver;
+  private readonly RagonWebHookPlugin _webhook;
+  private readonly RagonContextObserver _observer;
   private readonly RagonBuffer _writer;
   
   public AuthorizationOperation(
-    RagonWebHookPlugin ragonWebHook,
-    RagonContextObserver contextObserver,
-    RagonBuffer writer)
+    RagonBuffer reader,
+    RagonBuffer writer,
+    RagonWebHookPlugin webhook,
+    RagonContextObserver observer): base(reader, writer)
   {
-    _ragonWebHook = ragonWebHook;
-    _contextObserver = contextObserver;
+    _webhook = webhook;
+    _observer = observer;
     _writer = writer;
   }
   
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  public override void Handle(RagonContext context, byte[] data)
   {
     if (context.ConnectionStatus == ConnectionStatus.Authorized)
     {
@@ -54,13 +55,13 @@ public sealed class AuthorizationOperation: IRagonOperation
     }
 
     var configuration = context.Configuration; 
-    var key = reader.ReadString();
-    var name = reader.ReadString();
-    var payload = reader.ReadString();
+    var key = Reader.ReadString();
+    var name = Reader.ReadString();
+    var payload = Reader.ReadString();
     
     if (key == configuration.ServerKey)
     {
-      if (_ragonWebHook.RequestAuthorization(context, name, payload)) 
+      if (_webhook.RequestAuthorization(context, name, payload)) 
         return;
       
       var lobbyPlayer = new RagonLobbyPlayer(context.Connection, Guid.NewGuid().ToString(), name, payload);
@@ -78,7 +79,7 @@ public sealed class AuthorizationOperation: IRagonOperation
   {
     context.ConnectionStatus  = ConnectionStatus.Authorized;
 
-    _contextObserver.OnAuthorized(context);
+    _observer.OnAuthorized(context);
     
     var playerId = context.LobbyPlayer.Id;
     var playerName = context.LobbyPlayer.Name;
@@ -108,4 +109,6 @@ public sealed class AuthorizationOperation: IRagonOperation
       
     _logger.Trace($"Connection {context.Connection.Id}");
   }
+
+
 }

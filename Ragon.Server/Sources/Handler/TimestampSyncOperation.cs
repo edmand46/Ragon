@@ -2,12 +2,16 @@ using Ragon.Protocol;
 
 namespace Ragon.Server.Handler;
 
-public class TimestampSyncOperation: IRagonOperation
+public class TimestampSyncOperation: BaseOperation
 {
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  public TimestampSyncOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {
-    var timestamp0 = reader.Read(32);
-    var timestamp1 = reader.Read(32);
+  }
+
+  public override void Handle(RagonContext context, byte[] data)
+  {
+    var timestamp0 = Reader.Read(32);
+    var timestamp1 = Reader.Read(32);
     var value = new DoubleToUInt() { Int0 = timestamp0, Int1 = timestamp1 };
     
     context.RoomPlayer?.SetTimestamp(value.Double);

@@ -118,7 +118,7 @@ namespace Ragon.Server.ENet
             _event.Packet.CopyTo(dataRaw);
             _event.Packet.Dispose();
 
-            _listener.OnData(connection, dataRaw);
+            _listener.OnData(connection, (NetworkChannel) _event.ChannelID, dataRaw);
             break;
           }
         }

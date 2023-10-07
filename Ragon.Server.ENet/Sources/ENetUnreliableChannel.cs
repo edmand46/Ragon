@@ -15,6 +15,7 @@
  */
 
 using ENet;
+using Ragon.Protocol;
 using Ragon.Server.IO;
 
 namespace Ragon.Server.ENet;
@@ -23,11 +24,12 @@ public sealed class ENetUnreliableChannel: INetworkChannel
 {
   private Peer _peer;
   private byte _channelId;
+  private byte[] _data;
   
-  public ENetUnreliableChannel(Peer peer, int channelId)
+  public ENetUnreliableChannel(Peer peer, NetworkChannel channel)
   {
     _peer = peer;
-    _channelId = (byte) channelId;
+    _channelId = (byte) channel;
   }
   
   public void Send(byte[] data)
@@ -35,6 +37,16 @@ public sealed class ENetUnreliableChannel: INetworkChannel
     var newPacket = new Packet();
     newPacket.Create(data, data.Length, PacketFlags.None);
 
+    _peer.Send(_channelId, ref newPacket);
+  }
+  
+  public void Send(RagonBuffer buffer)
+  {
+    buffer.ToArray(_data);
+    
+    var newPacket = new Packet();
+    newPacket.Create(_data, buffer.Length, PacketFlags.None);
+    
     _peer.Send(_channelId, ref newPacket);
   }
 }

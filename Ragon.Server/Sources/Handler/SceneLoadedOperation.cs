@@ -22,16 +22,16 @@ using Ragon.Server.Room;
 
 namespace Ragon.Server.Handler;
 
-public sealed class SceneLoadedOperation : IRagonOperation
+public sealed class SceneLoadedOperation : BaseOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   
-  public SceneLoadedOperation()
+  public SceneLoadedOperation(RagonBuffer reader, RagonBuffer writer): base(reader, writer)
   {
    
   }
-
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  
+  public override void Handle(RagonContext context, byte[] data)
   {
     if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
       return;
@@ -42,13 +42,13 @@ public sealed class SceneLoadedOperation : IRagonOperation
 
     if (player == owner)
     {
-      var statics = reader.ReadUShort();
+      var statics = Reader.ReadUShort();
       for (var staticIndex = 0; staticIndex < statics; staticIndex++)
       {
-        var entityType = reader.ReadUShort();
-        var eventAuthority = (RagonAuthority)reader.ReadByte();
-        var staticId = reader.ReadUShort();
-        var propertiesCount = reader.ReadUShort();
+        var entityType = Reader.ReadUShort();
+        var eventAuthority = (RagonAuthority)Reader.ReadByte();
+        var staticId = Reader.ReadUShort();
+        var propertiesCount = Reader.ReadUShort();
 
         var entityParameters = new RagonEntityParameters()
         {
@@ -62,8 +62,8 @@ public sealed class SceneLoadedOperation : IRagonOperation
         var entity = new RagonEntity(entityParameters);
         for (var propertyIndex = 0; propertyIndex < propertiesCount; propertyIndex++)
         {
-          var propertyType = reader.ReadBool();
-          var propertySize = reader.ReadUShort();
+          var propertyType = Reader.ReadBool();
+          var propertySize = Reader.ReadUShort();
           entity.AddProperty(new RagonProperty(propertySize, propertyType));
         }
         
@@ -86,14 +86,14 @@ public sealed class SceneLoadedOperation : IRagonOperation
 
       foreach (var roomPlayer in room.WaitPlayersList)
       {
-        DispatchPlayerJoinExcludePlayer(room, roomPlayer, writer);
+        DispatchPlayerJoinExcludePlayer(room, roomPlayer, Writer);
 
         roomPlayer.SetReady();
       }
 
       room.UpdateReadyPlayerList();
 
-      DispatchSnapshot(room, room.WaitPlayersList, writer);
+      DispatchSnapshot(room, room.WaitPlayersList, Writer);
 
       room.WaitPlayersList.Clear();
     }
@@ -101,14 +101,14 @@ public sealed class SceneLoadedOperation : IRagonOperation
     {
       player.SetReady();
 
-      DispatchPlayerJoinExcludePlayer(room, player, writer);
+      DispatchPlayerJoinExcludePlayer(room, player, Writer);
 
       room.UpdateReadyPlayerList();
 
-      DispatchSnapshot(room, new List<RagonRoomPlayer>() { player }, writer);
+      DispatchSnapshot(room, new List<RagonRoomPlayer>() { player }, Writer);
 
       foreach (var entity in room.EntityList)
-        entity.RestoreBufferedEvents(player, writer);
+        entity.RestoreBufferedEvents(player, Writer);
     }
     else
     {

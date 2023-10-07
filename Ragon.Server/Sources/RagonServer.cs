@@ -31,7 +31,7 @@ public class RagonServer : IRagonServer, INetworkListener
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   private readonly INetworkServer _server;
-  private readonly IRagonOperation[] _handlers;
+  private readonly BaseOperation[] _handlers;
   private readonly IRagonLobby _lobby;
   private readonly IServerPlugin _serverPlugin;
   private readonly Thread _dedicatedThread;
@@ -46,7 +46,7 @@ public class RagonServer : IRagonServer, INetworkListener
   private readonly Dictionary<string, RagonContext> _contextsByPlayerId;
   private readonly Stopwatch _timer;
   private readonly long _tickRate = 0;
-  
+
   public RagonServer(
     INetworkServer server,
     IServerPlugin plugin,
@@ -68,28 +68,29 @@ public class RagonServer : IRagonServer, INetworkListener
     _writer = new RagonBuffer();
     _tickRate = 1000 / _configuration.ServerTickRate;
     _timer = new Stopwatch();
-    
+
     var contextObserver = new RagonContextObserver(_contextsByPlayerId);
-    
+
     _serverPlugin.OnAttached(this);
-    
-    _handlers = new IRagonOperation[byte.MaxValue];
-    _handlers[(byte) RagonOperation.AUTHORIZE] = new AuthorizationOperation(_webhooks, contextObserver, _writer);
-    _handlers[(byte) RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation(plugin, _webhooks);
-    _handlers[(byte) RagonOperation.CREATE_ROOM] = new RoomCreateOperation(plugin, _webhooks);
-    _handlers[(byte) RagonOperation.JOIN_ROOM] = new RoomJoinOperation(_webhooks);
-    _handlers[(byte) RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation(_webhooks);
-    _handlers[(byte) RagonOperation.LOAD_SCENE] = new SceneLoadOperation();
-    _handlers[(byte) RagonOperation.SCENE_LOADED] = new SceneLoadedOperation();
-    _handlers[(byte) RagonOperation.CREATE_ENTITY] = new EntityCreateOperation();
-    _handlers[(byte) RagonOperation.REMOVE_ENTITY] = new EntityDestroyOperation();
-    _handlers[(byte) RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventOperation();
-    _handlers[(byte) RagonOperation.REPLICATE_ENTITY_STATE] = new EntityStateOperation();
-    _handlers[(byte) RagonOperation.TRANSFER_ROOM_OWNERSHIP] = new EntityOwnershipOperation();
-    _handlers[(byte) RagonOperation.TRANSFER_ENTITY_OWNERSHIP] = new EntityOwnershipOperation();
-    _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataOperation();
-    _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampSyncOperation();
-    
+
+    _handlers = new BaseOperation[byte.MaxValue];
+    _handlers[(byte)RagonOperation.AUTHORIZE] = new AuthorizationOperation(_reader, _writer, _webhooks, contextObserver);
+    _handlers[(byte)RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation(_reader, _writer, plugin, _webhooks);
+    _handlers[(byte)RagonOperation.CREATE_ROOM] = new RoomCreateOperation(_reader, _writer, plugin, _webhooks);
+    _handlers[(byte)RagonOperation.JOIN_ROOM] = new RoomJoinOperation(_reader, _writer, _webhooks);
+    _handlers[(byte)RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation(_reader, _writer, _webhooks);
+    _handlers[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.SCENE_LOADED] = new SceneLoadedOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.CREATE_ENTITY] = new EntityCreateOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.REMOVE_ENTITY] = new EntityDestroyOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.REPLICATE_ENTITY_STATE] = new EntityStateOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.TRANSFER_ROOM_OWNERSHIP] = new EntityOwnershipOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.TRANSFER_ENTITY_OWNERSHIP] = new EntityOwnershipOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampSyncOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.REPLICATE_ROOM_EVENT] = new RoomEventOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataOperation(_reader, _writer);
+
     _logger.Trace($"Server Tick Rate: {_configuration.ServerTickRate}");
   }
 
@@ -102,10 +103,10 @@ public class RagonServer : IRagonServer, INetworkListener
       {
         _timer.Restart();
         _scheduler.Update(_timer.ElapsedMilliseconds / 1000.0f);
-        
+
         SendTimestamp();
       }
-      
+
       _executor.Update();
       _server.Update();
       Thread.Sleep(1);
@@ -121,13 +122,13 @@ public class RagonServer : IRagonServer, INetworkListener
       Address = "0.0.0.0",
       Port = _configuration.Port,
     };
-    
+
     _httpServer.Start(_configuration);
     _server.Start(this, networkConfiguration);
 
     if (executeInDedicatedThread)
       _dedicatedThread.Start();
-    else 
+    else
       Execute();
   }
 
@@ -141,7 +142,7 @@ public class RagonServer : IRagonServer, INetworkListener
   public void OnConnected(INetworkConnection connection)
   {
     var context = new RagonContext(connection, _configuration, _executor, _lobby, _scheduler);
-   
+
     _logger.Trace($"Connected: {connection.Id}");
     _contextsByConnection.Add(connection.Id, context);
   }
@@ -154,10 +155,10 @@ public class RagonServer : IRagonServer, INetworkListener
       if (room != null)
       {
         room.DetachPlayer(context.RoomPlayer);
-        if (_lobby.RemoveIfEmpty(room)) 
+        if (_lobby.RemoveIfEmpty(room))
           _webhooks.RoomRemoved(context, room);
       }
-      
+
       _logger.Trace($"Disconnected: {connection.Id}");
     }
     else
@@ -176,7 +177,7 @@ public class RagonServer : IRagonServer, INetworkListener
         room.DetachPlayer(context.RoomPlayer);
         _lobby.RemoveIfEmpty(room);
       }
-      
+
       _logger.Trace($"Timeout: {connection.Id}|{context.LobbyPlayer.Name}|{context.LobbyPlayer.Id}");
     }
     else
@@ -185,7 +186,7 @@ public class RagonServer : IRagonServer, INetworkListener
     }
   }
 
-  public void OnData(INetworkConnection connection, byte[] data)
+  public void OnData(INetworkConnection connection, NetworkChannel channel, byte[] data)
   {
     try
     {
@@ -193,10 +194,17 @@ public class RagonServer : IRagonServer, INetworkListener
       {
         _writer.Clear();
         _reader.Clear();
-        _reader.FromArray(data);
 
+        if (channel == NetworkChannel.RAW)
+        {
+          _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA].Handle(context, data);
+          return;
+        }
+        
+        _reader.FromArray(data);
+        
         var operation = _reader.ReadByte();
-        _handlers[operation].Handle(context, _reader, _writer);
+        _handlers[operation].Handle(context, data);
       }
     }
     catch (Exception ex)
@@ -212,7 +220,7 @@ public class RagonServer : IRagonServer, INetworkListener
     {
       Double = timestamp,
     };
-     
+
     _writer.Clear();
     _writer.WriteOperation(RagonOperation.TIMESTAMP_SYNCHRONIZATION);
     _writer.Write(value.Int0, 32);
@@ -221,23 +229,19 @@ public class RagonServer : IRagonServer, INetworkListener
     var sendData = _writer.ToArray();
     _server.BroadcastUnreliable(sendData);
   }
-  
-  public IRagonOperation ResolveOperation(RagonOperation operation)
+
+  public BaseOperation ResolveOperation(RagonOperation operation)
   {
     return _handlers[(byte)operation];
   }
 
   public RagonLobbyPlayer? GetPlayerByConnection(INetworkConnection connection)
   {
-    return _contextsByConnection.TryGetValue(connection.Id, out var context) ? 
-      context.LobbyPlayer : 
-      null;
+    return _contextsByConnection.TryGetValue(connection.Id, out var context) ? context.LobbyPlayer : null;
   }
 
   public RagonLobbyPlayer? GetPlayerById(string playerId)
   {
-    return _contextsByPlayerId.TryGetValue(playerId, out var context) ? 
-      context.LobbyPlayer :
-      null;
+    return _contextsByPlayerId.TryGetValue(playerId, out var context) ? context.LobbyPlayer : null;
   }
 }

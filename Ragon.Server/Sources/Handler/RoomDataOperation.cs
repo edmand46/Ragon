@@ -19,31 +19,29 @@ using Ragon.Protocol;
 
 namespace Ragon.Server.Handler;
 
-public sealed class EntityStateOperation: BaseOperation
+public sealed class RoomDataOperation : BaseOperation
 {
-  private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
-
-  public EntityStateOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  public RoomDataOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {
   }
 
   public override void Handle(RagonContext context, byte[] data)
   {
-    var room = context.Room;
     var player = context.RoomPlayer;
-    var entitiesCount = Reader.ReadUShort();
+    var room = context.Room;
+  
+    Writer.Clear();
+    Writer.WriteOperation(RagonOperation.REPLICATE_RAW_DATA);
+    Writer.WriteUShort(player.Connection.Id);
+
+    var playerData = Writer.ToArray();
+    var payloadData = data;
+    var size = playerData.Length + payloadData.Length;
+    var sendData = new byte[size];
     
-    for (var entityIndex = 0; entityIndex < entitiesCount; entityIndex++)
-    {
-      var entityId = Reader.ReadUShort();
-      if (room.Entities.TryGetValue(entityId, out var entity) && entity.TryReadState(player, Reader))
-      {
-        room.Track(entity);
-      }
-      else
-      {
-        _logger.Error($"Entity with Id {entityId} not found, replication interrupted");
-      }
-    }
+    Array.Copy(playerData, 0, sendData, 0, playerData.Length);
+    Array.Copy(payloadData, 0, sendData, playerData.Length, payloadData.Length);
+    
+    room.Broadcast(sendData);
   }
 }

@@ -20,18 +20,22 @@ using Ragon.Server.Entity;
 
 namespace Ragon.Server.Handler;
 
-public sealed class EntityCreateOperation : IRagonOperation
+public sealed class EntityCreateOperation : BaseOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  public EntityCreateOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  {
+  }
+    
+  public override void Handle(RagonContext context, byte[] data)
   {
     var player = context.RoomPlayer;
     var room = context.Room;
-    var attachId = reader.ReadUShort();
-    var entityType = reader.ReadUShort();
-    var eventAuthority = (RagonAuthority) reader.ReadByte();
-    var propertiesCount = reader.ReadUShort();
+    var attachId = Reader.ReadUShort();
+    var entityType = Reader.ReadUShort();
+    var eventAuthority = (RagonAuthority) Reader.ReadByte();
+    var propertiesCount = Reader.ReadUShort();
 
     var entityParameters = new RagonEntityParameters()
     {
@@ -45,14 +49,14 @@ public sealed class EntityCreateOperation : IRagonOperation
     var entity = new RagonEntity(entityParameters);
     for (var i = 0; i < propertiesCount; i++)
     {
-      var propertyType = reader.ReadBool();
-      var propertySize = reader.ReadUShort();
+      var propertyType = Reader.ReadBool();
+      var propertySize = Reader.ReadUShort();
 
       entity.AddProperty(new RagonProperty(propertySize, propertyType));
     }
     
-    if (reader.Capacity > 0)
-      entity.Payload.Read(reader);
+    if (Reader.Capacity > 0)
+      entity.Payload.Read(Reader);
     
     var plugin = room.Plugin;
     if (!plugin.OnEntityCreate(player, entity))
@@ -66,4 +70,6 @@ public sealed class EntityCreateOperation : IRagonOperation
     
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} created entity {entity.Id}:{entity.Type}");
   }
+
+
 }

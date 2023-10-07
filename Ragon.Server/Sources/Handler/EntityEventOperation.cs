@@ -20,15 +20,19 @@ using Ragon.Server.Event;
 
 namespace Ragon.Server.Handler;
 
-public sealed class EntityEventOperation : IRagonOperation
+public sealed class EntityEventOperation : BaseOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  
+  public EntityEventOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  {
+  }
 
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  public override void Handle(RagonContext context, byte[] data)
   {
     var player = context.RoomPlayer;
     var room = context.Room;
-    var entityId = reader.ReadUShort();
+    var entityId = Reader.ReadUShort();
 
     if (!room.Entities.TryGetValue(entityId, out var ent))
     {
@@ -36,16 +40,16 @@ public sealed class EntityEventOperation : IRagonOperation
       return;
     }
 
-    var eventId = reader.ReadUShort();
-    var eventMode = (RagonReplicationMode)reader.ReadByte();
-    var targetMode = (RagonTarget)reader.ReadByte();
+    var eventId = Reader.ReadUShort();
+    var eventMode = (RagonReplicationMode)Reader.ReadByte();
+    var targetMode = (RagonTarget)Reader.ReadByte();
     var targetPlayerPeerId = (ushort)0;
     
     if (targetMode == RagonTarget.Player)
-      targetPlayerPeerId = reader.ReadUShort();
+      targetPlayerPeerId = Reader.ReadUShort();
 
     var @event = new RagonEvent(player, eventId);
-    @event.Read(reader);
+    @event.Read(Reader);
 
     if (targetMode == RagonTarget.Player && room.Players.TryGetValue(targetPlayerPeerId, out var targetPlayer))
     {

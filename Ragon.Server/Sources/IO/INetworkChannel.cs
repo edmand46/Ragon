@@ -21,4 +21,5 @@ namespace Ragon.Server.IO;
 public interface INetworkChannel
 {
   void Send(byte[] data);
+  void Send(RagonBuffer buffer);
 }

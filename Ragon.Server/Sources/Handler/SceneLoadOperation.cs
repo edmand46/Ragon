@@ -20,16 +20,18 @@ using Ragon.Protocol;
 
 namespace Ragon.Server.Handler;
 
-public class SceneLoadOperation: IRagonOperation
+public class SceneLoadOperation: BaseOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-  
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+
+  public SceneLoadOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer) {}
+
+  public override void Handle(RagonContext context, byte[] data)
   {
     var roomOwner = context.Room.Owner;
     var currentPlayer = context.RoomPlayer;
     var room = context.Room;
-    var sceneName = reader.ReadString();
+    var sceneName = Reader.ReadString();
     
     if (roomOwner.Connection.Id != currentPlayer.Connection.Id)
     { 
@@ -39,11 +41,11 @@ public class SceneLoadOperation: IRagonOperation
     
     room.UpdateMap(sceneName);
     
-    writer.Clear();
-    writer.WriteOperation(RagonOperation.LOAD_SCENE);
-    writer.WriteString(sceneName);
+    Writer.Clear();
+    Writer.WriteOperation(RagonOperation.LOAD_SCENE);
+    Writer.WriteString(sceneName);
 
-    var sendData = writer.ToArray();
+    var sendData = Writer.ToArray();
     foreach (var player in room.PlayerList)
       player.Connection.Reliable.Send(sendData);
   }

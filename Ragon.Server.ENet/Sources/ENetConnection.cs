@@ -31,8 +31,8 @@ public sealed class ENetConnection: INetworkConnection
     _peer = peer;
     
     Id = (ushort) peer.ID;
-    Reliable = new ENetReliableChannel(peer, 0);
-    Unreliable = new ENetUnreliableChannel(peer, 1);
+    Reliable = new ENetReliableChannel(peer, NetworkChannel.RELIABLE);
+    Unreliable = new ENetUnreliableChannel(peer, NetworkChannel.UNRELIABLE);
   }
   
   public void Close()

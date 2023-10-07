@@ -21,16 +21,17 @@ using Ragon.Server.Plugin.Web;
 
 namespace Ragon.Server.Handler;
 
-public sealed class RoomLeaveOperation: IRagonOperation
+public sealed class RoomLeaveOperation: BaseOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   private readonly RagonWebHookPlugin _webHook;
-  public RoomLeaveOperation(RagonWebHookPlugin plugin)
+  
+  public RoomLeaveOperation(RagonBuffer reader, RagonBuffer writer, RagonWebHookPlugin plugin): base(reader, writer)
   {
     _webHook = plugin;
   }
 
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  public override void Handle(RagonContext context, byte[] data)
   {
     var room = context.Room;
     var roomPlayer = context.RoomPlayer;

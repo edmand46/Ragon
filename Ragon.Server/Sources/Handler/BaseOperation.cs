@@ -18,7 +18,16 @@ using Ragon.Protocol;
 
 namespace Ragon.Server.Handler;
 
-public interface IRagonOperation
+public abstract class BaseOperation
 {
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer);
+  protected readonly RagonBuffer Reader;
+  protected readonly RagonBuffer Writer;
+  
+  public BaseOperation(RagonBuffer reader, RagonBuffer writer)
+  {
+    Reader = reader;
+    Writer = writer;
+  }
+
+  public abstract void Handle(RagonContext context, byte[] data);
 }

@@ -4,11 +4,16 @@ using Ragon.Server.Entity;
 
 namespace Ragon.Server.Handler;
 
-public sealed class RoomOwnershipOperation : IRagonOperation
+public sealed class RoomOwnershipOperation : BaseOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  
+  public RoomOwnershipOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {
-   
+  }
+
+  public override void Handle(RagonContext context, byte[] data)
+  {
+    
   }
 }

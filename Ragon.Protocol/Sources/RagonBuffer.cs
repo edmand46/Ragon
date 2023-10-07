@@ -425,6 +425,32 @@ namespace Ragon.Protocol
 
       return data;
     }
+    
+    public void ToArray(byte[] outData)
+    {
+      Debug.Assert(outData.Length >= Length);
+      
+      var bucketsCount = (_write >> 5) + 1;
+      var length = Length;
+
+      for (int i = 0; i < bucketsCount; i++)
+      {
+        var dataIdx = i * 4;
+        var bucket = _buckets[i];
+
+        if (dataIdx < length)
+          outData[dataIdx] = (byte)bucket;
+
+        if (dataIdx + 1 < length)
+          outData[dataIdx + 1] = (byte)(bucket >> 8);
+
+        if (dataIdx + 2 < length)
+          outData[dataIdx + 2] = (byte)(bucket >> 16);
+
+        if (dataIdx + 3 < length)
+          outData[dataIdx + 3] = (byte)(bucket >> 24);
+      }
+    }
 
     private void Resize(int capacity)
     {

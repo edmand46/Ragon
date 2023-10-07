@@ -82,9 +82,12 @@ public class WebSocketServer : INetworkServer
       try
       {
         var result = await webSocket.ReceiveAsync(buffer, cancellationToken);
-        var dataRaw = buffer.Slice(0, result.Count);
-        if (dataRaw.Length > 0)
-          _networkListener.OnData(connection, dataRaw.ToArray());
+        if (result.Count > 0)
+        {
+          var channel = (RagonOperation) bytes[0] == RagonOperation.REPLICATE_RAW_DATA ? NetworkChannel.RAW : NetworkChannel.RELIABLE;
+          var payload = buffer.Slice(0, buffer.Length);
+          _networkListener.OnData(connection, channel , payload.ToArray());
+        }
       }
       catch (Exception ex)
       {
