@@ -75,7 +75,7 @@ public class RagonScene
     var buffer = _client.Buffer;
     
     buffer.Clear();
-    buffer.WriteOperation(RagonOperation.REPLICATE_RAW_DATA);
+    buffer.WriteOperation(RagonOperation.REPLICATE_ROOM_EVENT);
     buffer.WriteUShort(evntId);
     buffer.WriteByte((byte)replicationMode);
     buffer.WriteByte((byte)target);
@@ -91,7 +91,7 @@ public class RagonScene
     var buffer = _client.Buffer;
 
     buffer.Clear();
-    buffer.WriteOperation(RagonOperation.REPLICATE_RAW_DATA);
+    buffer.WriteOperation(RagonOperation.REPLICATE_ROOM_EVENT);
     buffer.WriteUShort(evntId);
     buffer.WriteByte((byte)replicationMode);
     buffer.WriteByte((byte)RagonTarget.Player);
