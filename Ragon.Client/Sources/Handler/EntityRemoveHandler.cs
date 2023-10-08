@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class EntityRemoveHandler: IHandler
+internal class EntityRemoveHandler: IHandler
 {
   private readonly RagonEntityCache _entityCache;
   
@@ -28,11 +28,11 @@ internal  class EntityRemoveHandler: IHandler
     _entityCache = entityCache;
   }
   
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var entityId = buffer.ReadUShort();
-    var payload = new RagonPayload(buffer.Capacity);
-    payload.Read(buffer);
+    var entityId = reader.ReadUShort();
+    var payload = new RagonPayload(reader.Capacity);
+    payload.Read(reader);
     
     _entityCache.OnDestroy(entityId, payload);
   }

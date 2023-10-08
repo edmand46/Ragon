@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class AuthorizeSuccessHandler: IHandler
+internal class AuthorizeSuccessHandler: IHandler
 {
   private readonly RagonListenerList _listenerList;
   private readonly RagonClient _client;
@@ -32,11 +32,11 @@ internal  class AuthorizeSuccessHandler: IHandler
     _listenerList = listenerList;
   }
   
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var playerId = buffer.ReadString();
-    var playerName = buffer.ReadString();
-    var playerPayload = buffer.ReadString();
+    var playerId = reader.ReadString();
+    var playerName = reader.ReadString();
+    var playerPayload = reader.ReadString();
 
     _client.SetStatus(RagonStatus.LOBBY);
     _listenerList.OnAuthorizationSuccess(playerId, playerName, playerPayload);

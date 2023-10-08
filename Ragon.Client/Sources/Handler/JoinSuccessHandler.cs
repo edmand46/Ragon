@@ -57,14 +57,14 @@ internal class JoinSuccessHandler : IHandler
     _playerCache = playerCache;
   }
 
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var roomId = buffer.ReadString();
-    var localId = buffer.ReadString();
-    var ownerId = buffer.ReadString();
-    var min = buffer.ReadUShort();
-    var max = buffer.ReadUShort();
-    var sceneName = buffer.ReadString();
+    var roomId = reader.ReadString();
+    var localId = reader.ReadString();
+    var ownerId = reader.ReadString();
+    var min = reader.ReadUShort();
+    var max = reader.ReadUShort();
+    var sceneName = reader.ReadString();
 
     var scene = new RagonScene(_client, _playerCache, _entityCache, sceneName);
     var roomInfo = new RagonRoomInformation(roomId, localId, ownerId, min, max);

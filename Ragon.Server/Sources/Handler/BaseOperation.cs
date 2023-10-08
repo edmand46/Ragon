@@ -29,5 +29,5 @@ public abstract class BaseOperation
     Writer = writer;
   }
 
-  public abstract void Handle(RagonContext context, byte[] data);
+  public abstract void Handle(RagonContext context);
 }

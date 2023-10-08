@@ -68,8 +68,10 @@ namespace Ragon.Protocol
     private int _read;
     private int _write;
     private uint[] _buckets;
+    private byte[] _rawData;
     private readonly UTF8Encoding _utf8Encoding = new UTF8Encoding(false, true);
 
+    public byte[] RawData => _rawData;
     public int ReadOffset => _read;
     public int WriteOffset => _write;
     public int Length => ((_write - 1) >> 3) + 1;
@@ -78,6 +80,7 @@ namespace Ragon.Protocol
     public RagonBuffer(int capacity = 128)
     {
       _buckets = new uint[capacity];
+      _rawData = Array.Empty<byte>();
       _read = 0;
       _write = 0;
     }
@@ -397,6 +400,7 @@ namespace Ragon.Protocol
 
       _write = ((length - 1) * 8) + positionInByte;
       _read = 0;
+      _rawData = data;
     }
 
     public byte[] ToArray()

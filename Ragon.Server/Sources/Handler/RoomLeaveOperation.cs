@@ -31,7 +31,7 @@ public sealed class RoomLeaveOperation: BaseOperation
     _webHook = plugin;
   }
 
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     var room = context.Room;
     var roomPlayer = context.RoomPlayer;

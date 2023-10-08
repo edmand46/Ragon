@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class LeaveRoomHandler : IHandler
+internal class LeaveRoomHandler : IHandler
 {
   private readonly RagonClient _client;
   private readonly RagonListenerList _listenerList;
@@ -35,7 +35,7 @@ internal  class LeaveRoomHandler : IHandler
     _entityCache = entityCache;
   }
 
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {    
     _listenerList.OnLeft();
     _entityCache.Cleanup();

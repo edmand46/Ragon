@@ -32,9 +32,9 @@ internal class SceneLoadHandler: IHandler
     _listenerList = listenerList;
   }
   
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var sceneName = buffer.ReadString();
+    var sceneName = reader.ReadString();
     var room = _client.Room;
     
     room.Cleanup();

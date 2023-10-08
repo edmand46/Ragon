@@ -33,7 +33,7 @@ public sealed class RoomJoinOperation : BaseOperation
   }
 
   
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     var roomId = Reader.ReadString();
     var lobbyPlayer = context.LobbyPlayer;

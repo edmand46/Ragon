@@ -25,15 +25,17 @@ public sealed class RoomDataOperation : BaseOperation
   {
   }
 
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     var player = context.RoomPlayer;
     var room = context.Room;
-  
+    
+    var data = Reader.RawData;
+    
     Writer.Clear();
     Writer.WriteOperation(RagonOperation.REPLICATE_RAW_DATA);
     Writer.WriteUShort(player.Connection.Id);
-
+    
     var playerData = Writer.ToArray();
     var payloadData = data;
     var size = playerData.Length + payloadData.Length;

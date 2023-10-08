@@ -11,7 +11,7 @@ public sealed class EntityOwnershipOperation : BaseOperation
   {
   }
 
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     var currentOwner = context.RoomPlayer;
     var room = context.Room;

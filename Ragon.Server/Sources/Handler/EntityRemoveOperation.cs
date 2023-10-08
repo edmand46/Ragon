@@ -28,7 +28,7 @@ public sealed class EntityDestroyOperation: BaseOperation
   {
   }
 
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     var player = context.RoomPlayer;
     var room = context.Room;

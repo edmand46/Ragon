@@ -12,7 +12,7 @@ public sealed class RoomOwnershipOperation : BaseOperation
   {
   }
 
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     
   }

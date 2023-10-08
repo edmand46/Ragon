@@ -36,7 +36,7 @@ public sealed class RoomCreateOperation : BaseOperation
     _ragonWebHookPlugin = ragonWebHook;
   }
 
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
     {

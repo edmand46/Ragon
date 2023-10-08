@@ -33,11 +33,11 @@ internal class PlayerJoinHandler : IHandler
     _listenerList = listenerList;
   }
 
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var playerPeerId = buffer.ReadUShort();
-    var playerId = buffer.ReadString();
-    var playerName = buffer.ReadString();
+    var playerPeerId = reader.ReadUShort();
+    var playerId = reader.ReadString();
+    var playerName = reader.ReadString();
 
     _playerCache.AddPlayer(playerPeerId, playerId, playerName);
 

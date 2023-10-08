@@ -17,7 +17,7 @@
 using ENet;
 using Ragon.Server.IO;
 
-namespace Ragon.Server.ENet;
+namespace Ragon.Server.ENetServer;
 
 public sealed class ENetConnection: INetworkConnection
 {

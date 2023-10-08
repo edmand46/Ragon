@@ -26,7 +26,7 @@ public class SceneLoadOperation: BaseOperation
 
   public SceneLoadOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer) {}
 
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     var roomOwner = context.Room.Owner;
     var currentPlayer = context.RoomPlayer;

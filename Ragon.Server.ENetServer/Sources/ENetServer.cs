@@ -19,27 +19,20 @@ using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
 
-namespace Ragon.Server.ENet
+namespace Ragon.Server.ENetServer
 {
   public sealed class ENetServer : INetworkServer
   {
     public Executor Executor => _executor;
 
-    private readonly Host _host;
+    private readonly Host _host = new();
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
-    private ENetConnection[] _connections;
+    private ENetConnection[] _connections = Array.Empty<ENetConnection>();
     private INetworkListener _listener;
     private uint _protocol;
-    private global::ENet.Event _event;
-    private Executor _executor;
-
-    public ENetServer()
-    {
-      _host = new Host();
-      _executor = new Executor();
-      _connections = Array.Empty<ENetConnection>();
-    }
+    private ENet.Event _event;
+    private Executor _executor = new();
 
     public void Start(INetworkListener listener, NetworkConfiguration configuration)
     {
@@ -118,7 +111,7 @@ namespace Ragon.Server.ENet
             _event.Packet.CopyTo(dataRaw);
             _event.Packet.Dispose();
 
-            _listener.OnData(connection, (NetworkChannel) _event.ChannelID, dataRaw);
+            _listener.OnData(connection, (NetworkChannel)_event.ChannelID, dataRaw);
             break;
           }
         }
@@ -129,16 +122,16 @@ namespace Ragon.Server.ENet
     {
       var packet = new Packet();
       packet.Create(data, PacketFlags.Reliable);
-      
-      _host.Broadcast(0, ref packet);
+
+      _host.Broadcast((byte)NetworkChannel.RELIABLE, ref packet);
     }
 
     public void BroadcastUnreliable(byte[] data)
     {
       var packet = new Packet();
       packet.Create(data, PacketFlags.None);
-      
-      _host.Broadcast(1, ref packet);
+
+      _host.Broadcast((byte)NetworkChannel.UNRELIABLE, ref packet);
     }
 
     public void Stop()

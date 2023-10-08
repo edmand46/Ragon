@@ -31,7 +31,7 @@ public sealed class SceneLoadedOperation : BaseOperation
    
   }
   
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
       return;

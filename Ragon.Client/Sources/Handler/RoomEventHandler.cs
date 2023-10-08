@@ -18,12 +18,12 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-public class EventRoomHandler: IHandler
+public class RoomEventHandler: IHandler
 {
   private readonly RagonClient _client;
   private readonly RagonPlayerCache _playerCache;
   
-  public EventRoomHandler(
+  public RoomEventHandler(
     RagonClient client,
     RagonPlayerCache playerCache
   )

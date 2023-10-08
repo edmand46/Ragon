@@ -16,7 +16,7 @@
 
 using NLog;
 using Ragon.Server;
-using Ragon.Server.ENet;
+using Ragon.Server.ENetServer;
 using Ragon.Server.WebSocketServer;
 using Ragon.Server.IO;
 using Ragon.Server.Plugin;

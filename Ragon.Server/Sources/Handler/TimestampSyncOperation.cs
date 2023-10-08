@@ -8,7 +8,7 @@ public class TimestampSyncOperation: BaseOperation
   {
   }
 
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     var timestamp0 = Reader.Read(32);
     var timestamp1 = Reader.Read(32);

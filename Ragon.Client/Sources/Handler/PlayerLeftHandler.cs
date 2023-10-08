@@ -36,20 +36,20 @@ internal class PlayerLeftHandler : IHandler
     _listenerList = listenerList;
   }
 
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var playerId = buffer.ReadString();
+    var playerId = reader.ReadString();
     var player = _playerCache.GetPlayerById(playerId);
     if (player != null)
     {
       _playerCache.RemovePlayer(playerId);
       _listenerList.OnPlayerLeft(player);
 
-      var entities = buffer.ReadUShort();
+      var entities = reader.ReadUShort();
       var toDeleteIds = new ushort[entities];
       for (var i = 0; i < entities; i++)
       {
-        var entityId = buffer.ReadUShort();
+        var entityId = reader.ReadUShort();
         toDeleteIds[i] = entityId;
       }
 

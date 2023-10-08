@@ -9,7 +9,7 @@ public class RoomEventOperation : BaseOperation
   {
   }
 
-  public override void Handle(RagonContext context, byte[] data)
+  public override void Handle(RagonContext context)
   {
     var room = context.Room;
     var player = context.RoomPlayer;

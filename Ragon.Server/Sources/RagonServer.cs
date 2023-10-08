@@ -194,17 +194,10 @@ public class RagonServer : IRagonServer, INetworkListener
       {
         _writer.Clear();
         _reader.Clear();
-
-        if (channel == NetworkChannel.RAW)
-        {
-          _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA].Handle(context, data);
-          return;
-        }
-        
         _reader.FromArray(data);
         
         var operation = _reader.ReadByte();
-        _handlers[operation].Handle(context, data);
+        _handlers[operation].Handle(context);
       }
     }
     catch (Exception ex)
