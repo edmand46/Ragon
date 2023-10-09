@@ -215,10 +215,12 @@ public sealed class RagonEntityCache
   {
     if (_entityMap.TryGetValue(entityId, out var entity))
     {
+      
       _entityMap.Remove(entityId);
       _entityList.Remove(entity);
 
       entity.Detach(payload);
+      entity.Dispose();
     }
   }
 

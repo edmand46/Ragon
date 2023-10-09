@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client
 {
-  public sealed class RagonEntity
+  public sealed class RagonEntity: IDisposable
   {
     private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
 
@@ -265,6 +265,13 @@ namespace Ragon.Client
       HasAuthority = player.IsLocal;
 
       OwnershipChanged?.Invoke(prevOwner, player);
+    }
+
+    public void Dispose()
+    {
+      _events.Clear();
+      _listeners.Clear();
+      _localListeners.Clear();
     }
   }
 }

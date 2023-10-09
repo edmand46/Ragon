@@ -193,6 +193,7 @@ namespace Ragon.Client
 
     internal void AssignRoom(RagonRoom room)
     {
+      _room?.Dispose();
       _room = room;
     }
 

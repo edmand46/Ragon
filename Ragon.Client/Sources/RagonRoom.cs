@@ -18,7 +18,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client
 {
-  public class RagonRoom
+  public class RagonRoom: IDisposable
   {
     private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
 
@@ -130,5 +130,14 @@ namespace Ragon.Client
 
     public void DestroyEntity(RagonEntity entityId) => DestroyEntity(entityId, null);
     public void DestroyEntity(RagonEntity entityId, RagonPayload payload) => _entityCache.Destroy(entityId, payload);
+
+    public void Dispose()
+    {
+      Cleanup();
+
+      _events.Clear();
+      _listeners.Clear();
+      _localListeners.Clear();
+    }
   }
 }
