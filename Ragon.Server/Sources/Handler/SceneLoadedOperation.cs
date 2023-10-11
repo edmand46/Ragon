@@ -17,6 +17,7 @@
 using NLog;
 using Ragon.Protocol;
 using Ragon.Server.Entity;
+using Ragon.Server.IO;
 using Ragon.Server.Lobby;
 using Ragon.Server.Room;
 
@@ -31,7 +32,7 @@ public sealed class SceneLoadedOperation : BaseOperation
    
   }
   
-  public override void Handle(RagonContext context)
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
       return;

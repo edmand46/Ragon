@@ -1,5 +1,6 @@
 using Ragon.Protocol;
 using Ragon.Server.Event;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.Handler;
 
@@ -9,7 +10,7 @@ public class RoomEventOperation : BaseOperation
   {
   }
 
-  public override void Handle(RagonContext context)
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     var room = context.Room;
     var player = context.RoomPlayer;

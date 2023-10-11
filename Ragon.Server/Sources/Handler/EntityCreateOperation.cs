@@ -17,6 +17,7 @@
 using NLog;
 using Ragon.Protocol;
 using Ragon.Server.Entity;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.Handler;
 
@@ -28,7 +29,7 @@ public sealed class EntityCreateOperation : BaseOperation
   {
   }
     
-  public override void Handle(RagonContext context)
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     var player = context.RoomPlayer;
     var room = context.Room;

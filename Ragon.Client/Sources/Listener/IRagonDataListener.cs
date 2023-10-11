@@ -14,23 +14,9 @@
  * limitations under the License.
  */
 
-using Ragon.Protocol;
-using Ragon.Server.IO;
+namespace Ragon.Client;
 
-namespace Ragon.Server.Handler;
-
-public class TimestampSyncOperation: BaseOperation
+public interface IRagonDataListener
 {
-  public TimestampSyncOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
-  {
-  }
-
-  public override void Handle(RagonContext context, NetworkChannel channel)
-  {
-    var timestamp0 = Reader.Read(32);
-    var timestamp1 = Reader.Read(32);
-    var value = new DoubleToUInt() { Int0 = timestamp0, Int1 = timestamp1 };
-    
-    context.RoomPlayer?.SetTimestamp(value.Double);
-  }
+  public void OnData(RagonPlayer player, byte[] data);
 }

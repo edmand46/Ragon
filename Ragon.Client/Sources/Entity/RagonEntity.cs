@@ -77,6 +77,11 @@ namespace Ragon.Client
       Attached?.Invoke(this);
     }
 
+    internal void PrepareDetach()
+    {
+      IsAttached = false;
+    }
+    
     internal void Detach(RagonPayload payload)
     {
       _destroyPayload = payload;
@@ -188,32 +193,34 @@ namespace Ragon.Client
     {
       var t = new TEvent();
       var eventCode = _client.Event.GetEventCode(t);
-      var callbacks = _listeners[eventCode];
+      
       var action = (RagonPlayer player, IRagonEvent eventData) => callback.Invoke(player, (TEvent)eventData);
       
-      if (callbacks == null)
+      if (!_listeners.TryGetValue(eventCode, out var callbacks))
       {
         callbacks = new List<Action<RagonPlayer, IRagonEvent>>();
         _listeners.Add(eventCode, callbacks);
       }
-
-      var localCallbacks = _localListeners[eventCode];
-      if (localCallbacks == null)
+      
+      if (!_localListeners.TryGetValue(eventCode, out var localCallbacks))
       {
         localCallbacks = new List<Action<RagonPlayer, IRagonEvent>>();
-        _localListeners.Add(eventCode, callbacks);
+        _localListeners.Add(eventCode, localCallbacks);
       }
 
       callbacks.Add(action);
       localCallbacks.Add(action);
 
-      _events.Add(eventCode, (player, serializer) =>
+      if (!_events.ContainsKey(eventCode))
       {
-        t.Deserialize(serializer);
+        _events.Add(eventCode, (player, serializer) =>
+        {
+          t.Deserialize(serializer);
 
-        foreach (var callbackListener in callbacks)
-          callbackListener.Invoke(player, t);
-      });
+          foreach (var callbackListener in callbacks)
+            callbackListener.Invoke(player, t);
+        });
+      }
 
       return action;
     }
@@ -222,11 +229,12 @@ namespace Ragon.Client
     {
       var t = new TEvent();
       var eventCode = _client.Event.GetEventCode(t);
-      var callbacks = _listeners[eventCode];
-      var localCallbacks = _localListeners[eventCode];
       
-      callbacks?.Remove(callback);
-      localCallbacks?.Remove(callback);
+      if (_listeners.TryGetValue(eventCode, out var callbacks))
+        callbacks.Remove(callback);
+      
+      if (_localListeners.TryGetValue(eventCode, out var localCallbacks))
+        localCallbacks.Remove(callback);
     }
 
     internal void Write(RagonBuffer buffer)

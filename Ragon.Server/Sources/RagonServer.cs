@@ -197,7 +197,7 @@ public class RagonServer : IRagonServer, INetworkListener
         _reader.FromArray(data);
         
         var operation = _reader.ReadByte();
-        _handlers[operation].Handle(context);
+        _handlers[operation].Handle(context, channel);
       }
     }
     catch (Exception ex)
@@ -220,7 +220,7 @@ public class RagonServer : IRagonServer, INetworkListener
     _writer.Write(value.Int1, 32);
 
     var sendData = _writer.ToArray();
-    _server.BroadcastUnreliable(sendData);
+    _server.Broadcast(sendData, NetworkChannel.UNRELIABLE);
   }
 
   public BaseOperation ResolveOperation(RagonOperation operation)

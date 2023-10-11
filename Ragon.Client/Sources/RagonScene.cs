@@ -102,4 +102,16 @@ public class RagonScene
     var sendData = buffer.ToArray();
     _client.Reliable.Send(sendData);
   }
+
+  public void ReplicateData(byte[] data, bool reliable)
+  {
+    var sendData = new byte[data.Length + 1];
+    sendData[0] = (byte) RagonOperation.REPLICATE_RAW_DATA;
+    Array.Copy(data, 0, sendData, 1, data.Length);
+    
+    if (reliable)
+      _client.Reliable.Send(sendData);
+    else
+      _client.Unreliable.Send(sendData);
+  }
 }

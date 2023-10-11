@@ -16,6 +16,7 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.Handler;
 
@@ -25,7 +26,7 @@ public sealed class RoomDataOperation : BaseOperation
   {
   }
 
-  public override void Handle(RagonContext context)
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     var player = context.RoomPlayer;
     var room = context.Room;
@@ -42,8 +43,8 @@ public sealed class RoomDataOperation : BaseOperation
     var sendData = new byte[size];
     
     Array.Copy(playerData, 0, sendData, 0, playerData.Length);
-    Array.Copy(payloadData, 0, sendData, playerData.Length, payloadData.Length);
+    Array.Copy(payloadData, 1, sendData, playerData.Length, payloadData.Length - 1);
     
-    room.Broadcast(sendData);
+    room.Broadcast(sendData, channel);
   }
 }

@@ -24,6 +24,7 @@ internal class EntityCreateHandler : IHandler
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
   private readonly IRagonEntityListener _entityListener;
+  
   public EntityCreateHandler(
     RagonClient client,
     RagonPlayerCache playerCache,

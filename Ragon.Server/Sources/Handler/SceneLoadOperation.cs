@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.Handler;
 
@@ -26,7 +26,7 @@ public class SceneLoadOperation: BaseOperation
 
   public SceneLoadOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer) {}
 
-  public override void Handle(RagonContext context)
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     var roomOwner = context.Room.Owner;
     var currentPlayer = context.RoomPlayer;

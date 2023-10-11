@@ -15,6 +15,7 @@
  */
 
 using Ragon.Protocol;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.Handler;
 
@@ -29,5 +30,5 @@ public abstract class BaseOperation
     Writer = writer;
   }
 
-  public abstract void Handle(RagonContext context);
+  public abstract void Handle(RagonContext context, NetworkChannel channel);
 }

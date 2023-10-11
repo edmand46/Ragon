@@ -57,13 +57,13 @@ namespace Ragon.Client
 
     public RagonClient(INetworkConnection connection, int rate)
     {
+      listeners = new RagonListenerList(this);
+      
       _connection = connection;
       _connection.OnData += OnData;
       _connection.OnConnected += OnConnected;
       _connection.OnDisconnected += OnDisconnected;
-
-      listeners = new RagonListenerList(this);
-
+      
       _replicationRate = (1000.0f / rate) / 1000.0f;
       _replicationTime = 0;
 
@@ -119,9 +119,10 @@ namespace Ragon.Client
       _handlers[(byte)RagonOperation.REMOVE_ENTITY] = new EntityRemoveHandler(_entityCache);
       _handlers[(byte)RagonOperation.REPLICATE_ENTITY_STATE] = new StateEntityHandler(_entityCache);
       _handlers[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventHandler(_playerCache, _entityCache);
+      _handlers[(byte)RagonOperation.REPLICATE_ROOM_EVENT] = new RoomEventHandler(this, _playerCache);
       _handlers[(byte)RagonOperation.SNAPSHOT] = new SnapshotHandler(this, listeners, _entityCache, _playerCache, _entityListener);
-      _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomEventHandler(this, _playerCache);
       _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampHandler(this);
+      _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataHandler(_playerCache, listeners);
 
       var protocolRaw = RagonVersion.Parse(protocol);
       _connection.Connect(address, port, protocolRaw);
@@ -158,8 +159,11 @@ namespace Ragon.Client
 
     public void Dispose()
     {
-      _status = RagonStatus.DISCONNECTED;
-      _connection.Disconnect();
+      if (_status != RagonStatus.DISCONNECTED)
+      {
+        _status = RagonStatus.DISCONNECTED;
+        _connection.Disconnect();
+      }
       _connection.Dispose();
     }
 
@@ -174,6 +178,7 @@ namespace Ragon.Client
     public void AddListener(IRagonPlayerLeftListener listener) => listeners.Add(listener);
     public void AddListener(IRagonSceneListener listener) => listeners.Add(listener);
     public void AddListener(IRagonSceneRequestListener listener) => listeners.Add(listener);
+    public void AddListener(IRagonDataListener listener) => listeners.Add(listener);
 
     public void RemoveListener(IRagonListener listener) => listeners.Remove(listener);
     public void RemoveListener(IRagonAuthorizationListener listener) => listeners.Remove(listener);
@@ -186,6 +191,7 @@ namespace Ragon.Client
     public void RemoveListener(IRagonPlayerLeftListener listener) => listeners.Remove(listener);
     public void RemoveListener(IRagonSceneListener listener) => listeners.Remove(listener);
     public void RemoveListener(IRagonSceneRequestListener listener) => listeners.Remove(listener);
+    public void RemoveListener(IRagonDataListener listener) => listeners.Remove(listener);
 
     #endregion
 

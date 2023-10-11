@@ -16,7 +16,7 @@
 
 using NLog;
 using Ragon.Protocol;
-using Ragon.Server.Plugin;
+using Ragon.Server.IO;
 using Ragon.Server.Plugin.Web;
 using Ragon.Server.Room;
 
@@ -33,7 +33,7 @@ public sealed class RoomJoinOperation : BaseOperation
   }
 
   
-  public override void Handle(RagonContext context)
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     var roomId = Reader.ReadString();
     var lobbyPlayer = context.LobbyPlayer;

@@ -88,7 +88,9 @@ public sealed class RagonEntityCache
       RagonLog.Warn("Can't destroy object, he is not created");
       return;
     }
-
+    
+    entity.PrepareDetach();
+    
     var buffer = _client.Buffer;
 
     buffer.Clear();

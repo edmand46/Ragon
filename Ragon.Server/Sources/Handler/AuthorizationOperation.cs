@@ -16,6 +16,7 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.IO;
 using Ragon.Server.Lobby;
 using Ragon.Server.Plugin.Web;
 
@@ -40,7 +41,7 @@ public sealed class AuthorizationOperation: BaseOperation
     _writer = writer;
   }
   
-  public override void Handle(RagonContext context)
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     if (context.ConnectionStatus == ConnectionStatus.Authorized)
     {

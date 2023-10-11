@@ -118,22 +118,16 @@ namespace Ragon.Server.ENetServer
       }
     }
 
-    public void BroadcastReliable(byte[] data)
+    public void Broadcast(byte[] data, NetworkChannel channel)
     {
       var packet = new Packet();
-      packet.Create(data, PacketFlags.Reliable);
+      var flag = channel == NetworkChannel.RELIABLE? PacketFlags.Reliable: PacketFlags.None;
+      
+      packet.Create(data, flag);
 
-      _host.Broadcast((byte)NetworkChannel.RELIABLE, ref packet);
+      _host.Broadcast((byte)channel, ref packet);
     }
-
-    public void BroadcastUnreliable(byte[] data)
-    {
-      var packet = new Packet();
-      packet.Create(data, PacketFlags.None);
-
-      _host.Broadcast((byte)NetworkChannel.UNRELIABLE, ref packet);
-    }
-
+    
     public void Stop()
     {
       _host?.Dispose();

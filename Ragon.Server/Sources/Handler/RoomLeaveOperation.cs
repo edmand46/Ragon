@@ -16,6 +16,7 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.IO;
 using Ragon.Server.Plugin;
 using Ragon.Server.Plugin.Web;
 
@@ -31,7 +32,7 @@ public sealed class RoomLeaveOperation: BaseOperation
     _webHook = plugin;
   }
 
-  public override void Handle(RagonContext context)
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     var room = context.Room;
     var roomPlayer = context.RoomPlayer;

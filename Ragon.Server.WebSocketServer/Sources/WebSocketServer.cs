@@ -25,7 +25,7 @@ namespace Ragon.Server.WebSocketServer;
 public class WebSocketServer : INetworkServer
 {
   public Executor Executor => _executor;
-  
+
   private ILogger _logger = LogManager.GetCurrentClassLogger();
   private INetworkListener _networkListener;
   private Stack<ushort> _sequencer;
@@ -34,7 +34,7 @@ public class WebSocketServer : INetworkServer
   private WebSocketConnection[] _connections;
   private List<WebSocketConnection> _activeConnections;
   private CancellationTokenSource _cancellationTokenSource;
-  
+
   public WebSocketServer()
   {
     _sequencer = new Stack<ushort>();
@@ -42,7 +42,7 @@ public class WebSocketServer : INetworkServer
     _activeConnections = new List<WebSocketConnection>();
     _executor = new Executor();
   }
-  
+
   public async void StartAccept(CancellationToken cancellationToken)
   {
     while (!cancellationToken.IsCancellationRequested)
@@ -61,7 +61,7 @@ public class WebSocketServer : INetworkServer
 
       var peerId = _sequencer.Pop();
       var connection = new WebSocketConnection(webSocket, peerId);
-      
+
       _connections[peerId] = connection;
       StartListen(connection, cancellationToken);
     }
@@ -84,9 +84,8 @@ public class WebSocketServer : INetworkServer
         var result = await webSocket.ReceiveAsync(buffer, cancellationToken);
         if (result.Count > 0)
         {
-          var channel = (RagonOperation) bytes[0] == RagonOperation.REPLICATE_RAW_DATA ? NetworkChannel.RAW : NetworkChannel.RELIABLE;
           var payload = buffer.Slice(0, buffer.Length);
-          _networkListener.OnData(connection, channel , payload.ToArray());
+          _networkListener.OnData(connection, NetworkChannel.RELIABLE, payload.ToArray());
         }
       }
       catch (Exception ex)
@@ -105,16 +104,10 @@ public class WebSocketServer : INetworkServer
     Flush();
   }
 
-  public void BroadcastUnreliable(byte[] data)
+  public void Broadcast(byte[] data, NetworkChannel channel)
   {
     foreach (var activeConnection in _activeConnections)
-      activeConnection.Unreliable.Send(data);
-  }
-
-  public void BroadcastReliable(byte[] data)
-  {
-    foreach (var activeConnection in _activeConnections)
-      activeConnection.Reliable.Send(data);
+      activeConnection.Reliable.Send(data);    
   }
 
   public async void Flush()
