@@ -200,10 +200,18 @@ public class RagonRoom : IRagonRoom, IRagonAction
     _entitiesDirtySet.Add(entity);
   }
 
-  public void Broadcast(byte[] data)
+  public void Broadcast(byte[] data, NetworkChannel channel = NetworkChannel.RELIABLE)
   {
-    foreach (var readyPlayer in ReadyPlayersList)
-      readyPlayer.Connection.Reliable.Send(data);
+    if (channel == NetworkChannel.RELIABLE)
+    {
+      foreach (var readyPlayer in ReadyPlayersList)
+        readyPlayer.Connection.Reliable.Send(data);
+    }
+    else
+    {
+      foreach (var readyPlayer in ReadyPlayersList)
+        readyPlayer.Connection.Unreliable.Send(data);
+    }
   }
 
   public RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection)
