@@ -40,6 +40,11 @@ public sealed class SceneLoadedOperation : BaseOperation
     var owner = context.Room.Owner;
     var player = context.RoomPlayer;
     var room = context.Room;
+    if (player.IsLoaded)
+    {
+      _logger.Warn($"Player {player.Name}:{player.Connection.Id} already ready");
+      return;
+    }
 
     if (player == owner)
     {
