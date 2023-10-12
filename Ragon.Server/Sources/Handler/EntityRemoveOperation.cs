@@ -35,7 +35,7 @@ public sealed class EntityDestroyOperation: BaseOperation
     var room = context.Room;
     var entityId = Reader.ReadUShort();
     
-    if (room.Entities.TryGetValue(entityId, out var entity))
+    if (room.Entities.TryGetValue(entityId, out var entity) && entity.Owner.Connection.Id == player.Connection.Id)
     {
       var payload = new RagonPayload();
       payload.Read(Reader);
@@ -46,6 +46,10 @@ public sealed class EntityDestroyOperation: BaseOperation
       entity.Destroy();
       
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} destoyed entity {entity.Id}");
+    }
+    else
+    {
+      _logger.Trace($"Entity ${entity.Id} not found or Player {context.Connection.Id}|{context.LobbyPlayer.Name} have not authority");
     }
   }
 }

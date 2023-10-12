@@ -77,9 +77,9 @@ namespace Ragon.Client
       Attached?.Invoke(this);
     }
 
-    internal void PrepareDetach()
+    internal void SetReplication(bool enabled)
     {
-      IsAttached = false;
+      Replication = enabled;
     }
     
     internal void Detach(RagonPayload payload)
