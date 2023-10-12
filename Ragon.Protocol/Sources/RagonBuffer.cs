@@ -405,6 +405,8 @@ namespace Ragon.Protocol
 
     public byte[] ToArray()
     {
+      Write(1, 1);
+      
       var data = new byte[Length];
       int bucketsCount = (_write >> 5) + 1;
       int length = data.Length;
