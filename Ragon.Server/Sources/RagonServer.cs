@@ -169,7 +169,7 @@ public class RagonServer : IRagonServer, INetworkListener
 
   public void OnTimeout(INetworkConnection connection)
   {
-    if (_contextsByConnection.Remove(connection.Id, out var context))
+    if (_contextsByConnection.Remove(connection.Id, out var context) && context.ConnectionStatus == ConnectionStatus.Authorized)
     {
       var room = context.Room;
       if (room != null)
