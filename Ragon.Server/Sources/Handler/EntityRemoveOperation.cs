@@ -49,7 +49,7 @@ public sealed class EntityDestroyOperation: BaseOperation
     }
     else
     {
-      _logger.Trace($"Entity ${entity.Id} not found or Player {context.Connection.Id}|{context.LobbyPlayer.Name} have not authority");
+      _logger.Trace($"Entity {entity.Id} not found or Player {context.Connection.Id}|{context.LobbyPlayer.Name} have not authority");
     }
   }
 }
