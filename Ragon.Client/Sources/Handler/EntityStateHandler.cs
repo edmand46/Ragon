@@ -18,7 +18,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class StateEntityHandler: Handler
+internal class StateEntityHandler: IHandler
 {
   private readonly RagonEntityCache _entityCache;
   
@@ -27,13 +27,13 @@ internal class StateEntityHandler: Handler
     _entityCache = entityCache;
   }
   
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var entitiesCount = buffer.ReadUShort();
+    var entitiesCount = reader.ReadUShort();
     for (var i = 0; i < entitiesCount; i++)
     {
-      var entityId = buffer.ReadUShort();
-      _entityCache.OnState(entityId, buffer);
+      var entityId = reader.ReadUShort();
+      _entityCache.OnState(entityId, reader);
     }
   }
 }

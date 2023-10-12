@@ -68,8 +68,10 @@ namespace Ragon.Protocol
     private int _read;
     private int _write;
     private uint[] _buckets;
+    private byte[] _rawData;
     private readonly UTF8Encoding _utf8Encoding = new UTF8Encoding(false, true);
 
+    public byte[] RawData => _rawData;
     public int ReadOffset => _read;
     public int WriteOffset => _write;
     public int Length => ((_write - 1) >> 3) + 1;
@@ -78,6 +80,7 @@ namespace Ragon.Protocol
     public RagonBuffer(int capacity = 128)
     {
       _buckets = new uint[capacity];
+      _rawData = Array.Empty<byte>();
       _read = 0;
       _write = 0;
     }
@@ -397,10 +400,13 @@ namespace Ragon.Protocol
 
       _write = ((length - 1) * 8) + positionInByte;
       _read = 0;
+      _rawData = data;
     }
 
     public byte[] ToArray()
     {
+      Write(1, 1);
+      
       var data = new byte[Length];
       int bucketsCount = (_write >> 5) + 1;
       int length = data.Length;
@@ -424,6 +430,32 @@ namespace Ragon.Protocol
       }
 
       return data;
+    }
+    
+    public void ToArray(byte[] outData)
+    {
+      Debug.Assert(outData.Length >= Length);
+      
+      var bucketsCount = (_write >> 5) + 1;
+      var length = Length;
+
+      for (int i = 0; i < bucketsCount; i++)
+      {
+        var dataIdx = i * 4;
+        var bucket = _buckets[i];
+
+        if (dataIdx < length)
+          outData[dataIdx] = (byte)bucket;
+
+        if (dataIdx + 1 < length)
+          outData[dataIdx + 1] = (byte)(bucket >> 8);
+
+        if (dataIdx + 2 < length)
+          outData[dataIdx + 2] = (byte)(bucket >> 16);
+
+        if (dataIdx + 3 < length)
+          outData[dataIdx + 3] = (byte)(bucket >> 24);
+      }
     }
 
     private void Resize(int capacity)

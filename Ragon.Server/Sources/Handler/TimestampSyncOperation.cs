@@ -15,37 +15,22 @@
  */
 
 using Ragon.Protocol;
-using Ragon.Server.Room;
+using Ragon.Server.IO;
 
-namespace Ragon.Server.Entity;
+namespace Ragon.Server.Handler;
 
-public class RagonEvent
+public class TimestampSyncOperation: BaseOperation
 {
-  public RagonRoomPlayer Invoker { get; private set; }
-  public ushort EventCode { get; private set; }
-  public ushort Size => (ushort) _size;
-  
-  private uint[] _data = new uint[128];
-  private int _size = 0;
-
-  public RagonEvent(
-    RagonRoomPlayer invoker,
-    ushort eventCode
-  )
+  public TimestampSyncOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {
-    Invoker = invoker;
-    EventCode = eventCode;
-  }
-  
-  public void Read(RagonBuffer buffer)
-  {
-    _size = buffer.Capacity;
-    buffer.ReadArray(_data, _size);
   }
 
-  public void Write(RagonBuffer buffer)
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
-    if (_size == 0) return;
-    buffer.WriteArray(_data, _size);
+    var timestamp0 = Reader.Read(32);
+    var timestamp1 = Reader.Read(32);
+    var value = new DoubleToUInt() { Int0 = timestamp0, Int1 = timestamp1 };
+    
+    context.RoomPlayer?.SetTimestamp(value.Double);
   }
 }

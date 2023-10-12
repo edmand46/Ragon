@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-
 using Ragon.Protocol;
+using Ragon.Server.IO;
 
-namespace Ragon.Client;
+namespace Ragon.Server.Handler;
 
-public interface Handler
+public abstract class BaseOperation
 {
-  public void Handle(RagonBuffer buffer);
+  protected readonly RagonBuffer Reader;
+  protected readonly RagonBuffer Writer;
+  
+  public BaseOperation(RagonBuffer reader, RagonBuffer writer)
+  {
+    Reader = reader;
+    Writer = writer;
+  }
+
+  public abstract void Handle(RagonContext context, NetworkChannel channel);
 }

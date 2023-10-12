@@ -16,23 +16,28 @@
 
 using NLog;
 using Ragon.Protocol;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.Handler;
 
-public sealed class EntityStateOperation: IRagonOperation
+public sealed class EntityStateOperation: BaseOperation
 {
   private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
-  
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+
+  public EntityStateOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  {
+  }
+
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     var room = context.Room;
     var player = context.RoomPlayer;
-    var entitiesCount = reader.ReadUShort();
+    var entitiesCount = Reader.ReadUShort();
     
     for (var entityIndex = 0; entityIndex < entitiesCount; entityIndex++)
     {
-      var entityId = reader.ReadUShort();
-      if (room.Entities.TryGetValue(entityId, out var entity) && entity.TryReadState(player, reader))
+      var entityId = Reader.ReadUShort();
+      if (room.Entities.TryGetValue(entityId, out var entity) && entity.TryReadState(player, Reader))
       {
         room.Track(entity);
       }

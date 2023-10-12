@@ -19,40 +19,33 @@ using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
 
-namespace Ragon.Server.ENet
+namespace Ragon.Server.ENetServer
 {
-  public sealed class ENetServer: INetworkServer 
+  public sealed class ENetServer : INetworkServer
   {
     public Executor Executor => _executor;
-    
-    private readonly Host _host;
+
+    private readonly Host _host = new();
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
-    
-    private ENetConnection[] _connections;
+
+    private ENetConnection[] _connections = Array.Empty<ENetConnection>();
     private INetworkListener _listener;
     private uint _protocol;
-    private Event _event;
-    private Executor _executor;
-    
-    public ENetServer()
-    {
-      _host = new Host();
-      _executor = new Executor();
-      _connections = Array.Empty<ENetConnection>();
-    }
+    private ENet.Event _event;
+    private Executor _executor = new();
 
     public void Start(INetworkListener listener, NetworkConfiguration configuration)
     {
       Library.Initialize();
-      
+
       _connections = new ENetConnection[configuration.LimitConnections];
-      
+
       _listener = listener;
       _protocol = configuration.Protocol;
-      
+
       var address = new Address
       {
-        Port = (ushort) configuration.Port,
+        Port = (ushort)configuration.Port,
       };
 
       _host.Create(address, _connections.Length, 2, 0, 0, 1024 * 1024);
@@ -74,7 +67,7 @@ namespace Ragon.Server.ENet
 
           polled = true;
         }
-        
+
         switch (_event.Type)
         {
           case EventType.None:
@@ -90,8 +83,9 @@ namespace Ragon.Server.ENet
               _event.Peer.DisconnectNow(0);
               break;
             }
+
             var connection = new ENetConnection(_event.Peer);
-            
+
             _connections[_event.Peer.ID] = connection;
             _listener.OnConnected(connection);
             break;
@@ -110,24 +104,34 @@ namespace Ragon.Server.ENet
           }
           case EventType.Receive:
           {
-            var peerId = (ushort) _event.Peer.ID;
+            var peerId = (ushort)_event.Peer.ID;
             var connection = _connections[peerId];
             var dataRaw = new byte[_event.Packet.Length];
-            
+
             _event.Packet.CopyTo(dataRaw);
             _event.Packet.Dispose();
-            
-            _listener.OnData(connection, dataRaw);
+
+            _listener.OnData(connection, (NetworkChannel)_event.ChannelID, dataRaw);
             break;
           }
         }
       }
     }
 
+    public void Broadcast(byte[] data, NetworkChannel channel)
+    {
+      var packet = new Packet();
+      var flag = channel == NetworkChannel.RELIABLE? PacketFlags.Reliable: PacketFlags.None;
+      
+      packet.Create(data, flag);
+
+      _host.Broadcast((byte)channel, ref packet);
+    }
+    
     public void Stop()
     {
       _host?.Dispose();
-      
+
       Library.Deinitialize();
     }
 

@@ -8,11 +8,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server", "Ragon.Serve
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.WebSocketServer", "Ragon.Server.WebSocketServer\Ragon.Server.WebSocketServer.csproj", "{81050343-A9B8-487B-86C8-7A5B7DD9C39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.ENet", "Ragon.Server.ENet\Ragon.Server.ENet.csproj", "{DD79AC4F-9E5C-4938-850E-805D537E68D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.ENetServer", "Ragon.Server.ENetServer\Ragon.Server.ENetServer.csproj", "{DD79AC4F-9E5C-4938-850E-805D537E68D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Client", "Ragon.Client\Ragon.Client.csproj", "{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Client.Simulation", "Ragon.Client.Simulation\Ragon.Client.Simulation.csproj", "{0384848D-3B63-4B3A-B15F-A836EBB3E95D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Simulation", "Ragon.Simulation\Ragon.Simulation.csproj", "{0384848D-3B63-4B3A-B15F-A836EBB3E95D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Client.Property", "Ragon.Client.Property\Ragon.Client.Property.csproj", "{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}"
 EndProject

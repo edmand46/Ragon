@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,31 +14,40 @@
  * limitations under the License.
  */
 
-
 using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class AuthorizeSuccessHandler: IHandler
+public class RoomEventHandler: IHandler
 {
-  private readonly RagonListenerList _listenerList;
   private readonly RagonClient _client;
+  private readonly RagonPlayerCache _playerCache;
   
-  public AuthorizeSuccessHandler(
+  public RoomEventHandler(
     RagonClient client,
-    RagonListenerList listenerList)
+    RagonPlayerCache playerCache
+  )
   {
     _client = client;
-    _listenerList = listenerList;
+    _playerCache = playerCache;
   }
   
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonBuffer buffer)
   {
-    var playerId = reader.ReadString();
-    var playerName = reader.ReadString();
-    var playerPayload = reader.ReadString();
+    var eventCode = buffer.ReadUShort();
+    var peerId = buffer.ReadUShort();
+    var executionMode = (RagonReplicationMode)buffer.ReadByte();
+    
+    var player = _playerCache.GetPlayerByPeer(peerId);
+    if (player == null)
+    {
+      RagonLog.Warn($"Player not found for event {eventCode}");
+      return;
+    }
 
-    _client.SetStatus(RagonStatus.LOBBY);
-    _listenerList.OnAuthorizationSuccess(playerId, playerName, playerPayload);
+    if (player.IsLocal && executionMode == RagonReplicationMode.LocalAndServer)
+      return;
+
+    _client.Room.Event(eventCode, player, buffer); 
   }
 }

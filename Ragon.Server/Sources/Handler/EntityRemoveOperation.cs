@@ -17,23 +17,28 @@
 using NLog;
 using Ragon.Protocol;
 using Ragon.Server.Entity;
+using Ragon.Server.IO;
 
 namespace Ragon.Server.Handler;
 
-public sealed class EntityDestroyOperation: IRagonOperation
+public sealed class EntityDestroyOperation: BaseOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  public EntityDestroyOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  {
+  }
+
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
     var player = context.RoomPlayer;
     var room = context.Room;
-    var entityId = reader.ReadUShort();
+    var entityId = Reader.ReadUShort();
     
-    if (room.Entities.TryGetValue(entityId, out var entity))
+    if (room.Entities.TryGetValue(entityId, out var entity) && entity.Owner.Connection.Id == player.Connection.Id)
     {
       var payload = new RagonPayload();
-      payload.Read(reader);
+      payload.Read(Reader);
       
       room.DetachEntity(entity);
       player.DetachEntity(entity);
@@ -41,6 +46,10 @@ public sealed class EntityDestroyOperation: IRagonOperation
       entity.Destroy();
       
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} destoyed entity {entity.Id}");
+    }
+    else
+    {
+      _logger.Trace($"Entity {entity.Id} not found or Player {context.Connection.Id}|{context.LobbyPlayer.Name} have not authority");
     }
   }
 }

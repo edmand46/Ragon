@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+using Ragon.Protocol;
+
 namespace Ragon.Server.IO;
 
 public interface INetworkChannel
 {
   void Send(byte[] data);
+  void Send(RagonBuffer buffer);
 }

@@ -25,7 +25,7 @@ namespace Ragon.Server.WebSocketServer;
 public class WebSocketServer : INetworkServer
 {
   public Executor Executor => _executor;
-  
+
   private ILogger _logger = LogManager.GetCurrentClassLogger();
   private INetworkListener _networkListener;
   private Stack<ushort> _sequencer;
@@ -34,7 +34,7 @@ public class WebSocketServer : INetworkServer
   private WebSocketConnection[] _connections;
   private List<WebSocketConnection> _activeConnections;
   private CancellationTokenSource _cancellationTokenSource;
-  
+
   public WebSocketServer()
   {
     _sequencer = new Stack<ushort>();
@@ -42,7 +42,7 @@ public class WebSocketServer : INetworkServer
     _activeConnections = new List<WebSocketConnection>();
     _executor = new Executor();
   }
-  
+
   public async void StartAccept(CancellationToken cancellationToken)
   {
     while (!cancellationToken.IsCancellationRequested)
@@ -61,7 +61,7 @@ public class WebSocketServer : INetworkServer
 
       var peerId = _sequencer.Pop();
       var connection = new WebSocketConnection(webSocket, peerId);
-      
+
       _connections[peerId] = connection;
       StartListen(connection, cancellationToken);
     }
@@ -82,9 +82,11 @@ public class WebSocketServer : INetworkServer
       try
       {
         var result = await webSocket.ReceiveAsync(buffer, cancellationToken);
-        var dataRaw = buffer.Slice(0, result.Count);
-        if (dataRaw.Length > 0)
-          _networkListener.OnData(connection, dataRaw.ToArray());
+        if (result.Count > 0)
+        {
+          var payload = buffer.Slice(0, buffer.Length);
+          _networkListener.OnData(connection, NetworkChannel.RELIABLE, payload.ToArray());
+        }
       }
       catch (Exception ex)
       {
@@ -100,6 +102,12 @@ public class WebSocketServer : INetworkServer
   public void Update()
   {
     Flush();
+  }
+
+  public void Broadcast(byte[] data, NetworkChannel channel)
+  {
+    foreach (var activeConnection in _activeConnections)
+      activeConnection.Reliable.Send(data);    
   }
 
   public async void Flush()

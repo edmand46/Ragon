@@ -18,12 +18,13 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class EntityCreateHandler : Handler
+internal class EntityCreateHandler : IHandler
 {
   private readonly RagonClient _client;
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
   private readonly IRagonEntityListener _entityListener;
+  
   public EntityCreateHandler(
     RagonClient client,
     RagonPlayerCache playerCache,
@@ -37,15 +38,15 @@ internal  class EntityCreateHandler : Handler
     _entityListener = entityListener;
   }
 
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var attachId = buffer.ReadUShort();
-    var entityType = buffer.ReadUShort();
-    var entityId = buffer.ReadUShort();
-    var ownerId = buffer.ReadUShort();
+    var attachId = reader.ReadUShort();
+    var entityType = reader.ReadUShort();
+    var entityId = reader.ReadUShort();
+    var ownerId = reader.ReadUShort();
     var player = _playerCache.GetPlayerByPeer(ownerId);
-    var payload = new RagonPayload(buffer.Capacity);
-    payload.Read(buffer);
+    var payload = new RagonPayload(reader.Capacity);
+    payload.Read(reader);
 
     if (player == null)
     {

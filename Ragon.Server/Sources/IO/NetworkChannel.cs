@@ -14,27 +14,11 @@
  * limitations under the License.
  */
 
-using ENet;
-using Ragon.Server.IO;
 
-namespace Ragon.Server.ENet;
+namespace Ragon.Server.IO;
 
-public sealed class ENetUnreliableChannel: INetworkChannel
+public enum NetworkChannel
 {
-  private Peer _peer;
-  private byte _channelId;
-  
-  public ENetUnreliableChannel(Peer peer, int channelId)
-  {
-    _peer = peer;
-    _channelId = (byte) channelId;
-  }
-  
-  public void Send(byte[] data)
-  {
-    var newPacket = new Packet();
-    newPacket.Create(data, data.Length, PacketFlags.None);
-
-    _peer.Send(_channelId, ref newPacket);
-  }
+  RELIABLE = 0,
+  UNRELIABLE = 1,
 }

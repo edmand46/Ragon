@@ -18,7 +18,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class SceneLoadHandler: Handler
+internal class SceneLoadHandler: IHandler
 {
   private readonly RagonClient _client;
   private readonly RagonListenerList _listenerList;
@@ -32,9 +32,9 @@ internal class SceneLoadHandler: Handler
     _listenerList = listenerList;
   }
   
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var sceneName = buffer.ReadString();
+    var sceneName = reader.ReadString();
     var room = _client.Room;
     
     room.Cleanup();

@@ -16,9 +16,34 @@
 
 
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Ragon.Protocol
 {
+  [StructLayout(LayoutKind.Explicit)]
+  public struct DoubleToUInt
+  {
+    [FieldOffset(0)]
+    public double Double;
+    
+    [FieldOffset(0)]
+    public uint Int0;
+    
+    [FieldOffset(4)]
+    public uint Int1;
+  }
+  
+  public static class RagonTime {
+    public static double CurrentTimestamp()
+    {
+      var currentTime = System.DateTime.UtcNow.ToUniversalTime().Subtract(
+        new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc)
+      ).TotalMilliseconds;
+      
+      return currentTime; 
+    }
+  }
+  
   public static class DeBruijn
   {
     private static readonly int[] _lookup = new int[32]

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,23 +14,38 @@
  * limitations under the License.
  */
 
-
 using Ragon.Protocol;
+using Ragon.Server.Room;
 
-namespace Ragon.Client;
+namespace Ragon.Server.Event;
 
-internal  class JoinFailedHandler: IHandler
+public class RagonEvent
 {
-  private readonly RagonListenerList _listenerList;
+  public RagonRoomPlayer Invoker { get; private set; }
+  public ushort EventCode { get; private set; }
+  public ushort Size => (ushort) _size;
   
-  public JoinFailedHandler(RagonListenerList listenerList)
+  private uint[] _data = new uint[128];
+  private int _size = 0;
+
+  public RagonEvent(
+    RagonRoomPlayer invoker,
+    ushort eventCode
+  )
   {
-    _listenerList = listenerList;
+    Invoker = invoker;
+    EventCode = eventCode;
   }
   
-  public void Handle(RagonBuffer reader)
+  public void Read(RagonBuffer buffer)
   {
-    var message = reader.ReadString();
-    _listenerList.OnFailed(message);
+    _size = buffer.Capacity - 1;
+    buffer.ReadArray(_data, _size);
+  }
+
+  public void Write(RagonBuffer buffer)
+  {
+    if (_size == 0) return;
+    buffer.WriteArray(_data, _size);
   }
 }

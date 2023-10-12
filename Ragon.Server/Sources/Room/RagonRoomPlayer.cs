@@ -25,6 +25,7 @@ public class RagonRoomPlayer
   public string Id { get; }
   public string Name { get; }
   public bool IsLoaded { get; private set; }
+  public double Timestamp { get; private set; }
   public RagonRoom Room { get; private set; }
   public RagonEntityCache Entities { get; private set; }
   
@@ -64,5 +65,10 @@ public class RagonRoomPlayer
   internal void UnsetReady()
   {
     IsLoaded = false;
+  }
+
+  internal void SetTimestamp(double time)
+  {
+    Timestamp = time;
   }
 }

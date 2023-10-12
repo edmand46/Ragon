@@ -20,7 +20,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class SnapshotHandler : Handler
+internal class SnapshotHandler : IHandler
 {
   private readonly IRagonEntityListener _entityListener;
   private readonly RagonClient _client;

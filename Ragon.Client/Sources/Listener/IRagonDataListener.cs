@@ -14,29 +14,9 @@
  * limitations under the License.
  */
 
-using ENet;
-using Ragon.Server.IO;
+namespace Ragon.Client;
 
-namespace Ragon.Server.ENet;
-
-public sealed class ENetConnection: INetworkConnection
+public interface IRagonDataListener
 {
-  public ushort Id { get; }
-  public INetworkChannel Reliable { get; private set; }
-  public INetworkChannel Unreliable { get; private set; }
-  private Peer _peer;
-  
-  public ENetConnection(Peer peer)
-  {
-    _peer = peer;
-    
-    Id = (ushort) peer.ID;
-    Reliable = new ENetReliableChannel(peer, 0);
-    Unreliable = new ENetUnreliableChannel(peer, 1);
-  }
-  
-  public void Close()
-  {
-    _peer.Disconnect(0);
-  }
+  public void OnData(RagonPlayer player, byte[] data);
 }

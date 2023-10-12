@@ -18,5 +18,5 @@ namespace Ragon.Client;
 
 public interface IRagonConnection
 {
- 
+  public void Close();
 }

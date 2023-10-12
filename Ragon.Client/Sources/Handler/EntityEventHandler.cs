@@ -18,29 +18,26 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class EntityEventHandler : Handler
+internal class EntityEventHandler : IHandler
 {
-    private readonly RagonClient _client;
     private readonly RagonPlayerCache _playerCache;
     private readonly RagonEntityCache _entityCache;
 
     public EntityEventHandler(
-        RagonClient client,
         RagonPlayerCache playerCache,
         RagonEntityCache entityCache
     )
     {
-        _client = client;
         _playerCache = playerCache;
         _entityCache = entityCache;
     }
-
-    public void Handle(RagonBuffer buffer)
+    
+    public void Handle(RagonBuffer reader)
     {
-        var eventCode = buffer.ReadUShort();
-        var peerId = buffer.ReadUShort();
-        var executionMode = (RagonReplicationMode)buffer.ReadByte();
-        var entityId = buffer.ReadUShort();
+        var eventCode = reader.ReadUShort();
+        var peerId = reader.ReadUShort();
+        var executionMode = (RagonReplicationMode)reader.ReadByte();
+        var entityId = reader.ReadUShort();
 
         var player = _playerCache.GetPlayerByPeer(peerId);
         if (player == null)
@@ -52,6 +49,6 @@ internal class EntityEventHandler : Handler
         if (player.IsLocal && executionMode == RagonReplicationMode.LocalAndServer)
             return;
 
-        _entityCache.OnEvent(player, entityId, eventCode, buffer);
+        _entityCache.OnEvent(player, entityId, eventCode, reader);
     }
 }

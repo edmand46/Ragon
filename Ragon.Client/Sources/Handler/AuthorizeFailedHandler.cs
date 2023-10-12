@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class AuthorizeFailedHandler: Handler
+internal class AuthorizeFailedHandler: IHandler
 {
   private readonly RagonListenerList _listenerList;
   public AuthorizeFailedHandler(RagonListenerList list)
@@ -27,9 +27,9 @@ internal class AuthorizeFailedHandler: Handler
     _listenerList = list;
   }
   
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var message = buffer.ReadString();
+    var message = reader.ReadString();
     _listenerList.OnAuthorizationFailed(message);
   }
 }

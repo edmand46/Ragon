@@ -21,5 +21,6 @@ public interface INetworkServer
   public Executor Executor { get; }
   public void Stop();
   public void Update();
+  public void Broadcast(byte[] data, NetworkChannel channel);
   public void Start(INetworkListener listener, NetworkConfiguration configuration);
 }

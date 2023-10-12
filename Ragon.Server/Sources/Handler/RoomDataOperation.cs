@@ -17,36 +17,34 @@
 using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
-using Ragon.Server.Plugin;
-using Ragon.Server.Plugin.Web;
 
 namespace Ragon.Server.Handler;
 
-public sealed class RoomLeaveOperation: BaseOperation
+public sealed class RoomDataOperation : BaseOperation
 {
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-  private readonly RagonWebHookPlugin _webHook;
-  
-  public RoomLeaveOperation(RagonBuffer reader, RagonBuffer writer, RagonWebHookPlugin plugin): base(reader, writer)
+  public RoomDataOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {
-    _webHook = plugin;
   }
 
   public override void Handle(RagonContext context, NetworkChannel channel)
   {
+    var player = context.RoomPlayer;
     var room = context.Room;
-    var roomPlayer = context.RoomPlayer;
     
-    if (room != null)
-    {
-      var plugin = room.Plugin; 
-      
-      plugin.OnPlayerLeaved(roomPlayer);
-      room.DetachPlayer(roomPlayer);
-      
-      _webHook.RoomLeaved(context, room, roomPlayer);
-      
-      _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} leaved from {room.Id}");
-    }
+    var data = Reader.RawData;
+    
+    Writer.Clear();
+    Writer.WriteOperation(RagonOperation.REPLICATE_RAW_DATA);
+    Writer.WriteUShort(player.Connection.Id);
+    
+    var playerData = Writer.ToArray();
+    var payloadData = data;
+    var size = playerData.Length + payloadData.Length;
+    var sendData = new byte[size];
+    
+    Array.Copy(playerData, 0, sendData, 0, playerData.Length);
+    Array.Copy(payloadData, 1, sendData, playerData.Length, payloadData.Length - 1);
+    
+    room.Broadcast(sendData, channel);
   }
 }

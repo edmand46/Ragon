@@ -37,7 +37,7 @@ public struct RagonRoomInformation
   public ushort Max { get; private set; }
 }
 
-internal class JoinSuccessHandler : Handler
+internal class JoinSuccessHandler : IHandler
 {
   private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
@@ -46,7 +46,6 @@ internal class JoinSuccessHandler : Handler
 
   public JoinSuccessHandler(
     RagonClient client,
-    RagonBuffer buffer,
     RagonListenerList listenerList,
     RagonPlayerCache playerCache,
     RagonEntityCache entityCache
@@ -58,14 +57,14 @@ internal class JoinSuccessHandler : Handler
     _playerCache = playerCache;
   }
 
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var roomId = buffer.ReadString();
-    var localId = buffer.ReadString();
-    var ownerId = buffer.ReadString();
-    var min = buffer.ReadUShort();
-    var max = buffer.ReadUShort();
-    var sceneName = buffer.ReadString();
+    var roomId = reader.ReadString();
+    var localId = reader.ReadString();
+    var ownerId = reader.ReadString();
+    var min = reader.ReadUShort();
+    var max = reader.ReadUShort();
+    var sceneName = reader.ReadString();
 
     var scene = new RagonScene(_client, _playerCache, _entityCache, sceneName);
     var roomInfo = new RagonRoomInformation(roomId, localId, ownerId, min, max);

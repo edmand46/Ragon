@@ -23,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Ragon.Server.ENet\Ragon.Server.ENet.csproj" />
+      <ProjectReference Include="..\Ragon.Server.ENetServer\Ragon.Server.ENetServer.csproj" />
       <ProjectReference Include="..\Ragon.Server.WebSocketServer\Ragon.Server.WebSocketServer.csproj" />
       <ProjectReference Include="..\Ragon.Server\Ragon.Server.csproj" />
     </ItemGroup>

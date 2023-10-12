@@ -19,7 +19,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class PlayerJoinHandler : Handler
+internal class PlayerJoinHandler : IHandler
 {
   private RagonPlayerCache _playerCache;
   private RagonListenerList _listenerList;
@@ -33,11 +33,11 @@ internal class PlayerJoinHandler : Handler
     _listenerList = listenerList;
   }
 
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonBuffer reader)
   {
-    var playerPeerId = buffer.ReadUShort();
-    var playerId = buffer.ReadString();
-    var playerName = buffer.ReadString();
+    var playerPeerId = reader.ReadUShort();
+    var playerId = reader.ReadString();
+    var playerName = reader.ReadString();
 
     _playerCache.AddPlayer(playerPeerId, playerId, playerName);
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,18 +19,29 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal  class JoinFailedHandler: IHandler
+internal class RoomDataHandler: IHandler
 {
-  private readonly RagonListenerList _listenerList;
-  
-  public JoinFailedHandler(RagonListenerList listenerList)
+  private readonly RagonListenerList _listeners;
+  private readonly RagonPlayerCache _playerCache;
+    
+  public RoomDataHandler(
+    RagonPlayerCache playerCache,
+    RagonListenerList listeners)
   {
-    _listenerList = listenerList;
+    _playerCache = playerCache;
+    _listeners = listeners;
   }
-  
+
   public void Handle(RagonBuffer reader)
   {
-    var message = reader.ReadString();
-    _listenerList.OnFailed(message);
+    var rawData = reader.RawData;
+    var peerId = (ushort)(rawData[1] + (rawData[2] << 8));
+    var player = _playerCache.GetPlayerByPeer(peerId);
+    var headerSize = 3;
+    var payload = new byte[rawData.Length - headerSize];
+    
+    Array.Copy(rawData, headerSize, payload, 0, payload.Length);
+    
+    _listeners.OnData(player, payload);
   }
 }

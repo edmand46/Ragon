@@ -17,7 +17,7 @@
 
 using Ragon.Protocol;
 
-namespace Ragon.Client.Simulation
+namespace Ragon.Client.Property
 {
   [Serializable]
   public class RagonBool : RagonProperty

@@ -16,46 +16,46 @@
 
 using NLog;
 using Ragon.Protocol;
-using Ragon.Server.Plugin;
+using Ragon.Server.IO;
 using Ragon.Server.Plugin.Web;
 using Ragon.Server.Room;
 
 namespace Ragon.Server.Handler;
 
-public sealed class RoomJoinOperation : IRagonOperation
+public sealed class RoomJoinOperation : BaseOperation
 {
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-
   private readonly RagonWebHookPlugin _webHook;
-  
-  public RoomJoinOperation(RagonWebHookPlugin plugin)
+
+  public RoomJoinOperation(RagonBuffer reader, RagonBuffer writer, RagonWebHookPlugin plugin) : base(reader, writer)
   {
     _webHook = plugin;
   }
 
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer)
+  
+  public override void Handle(RagonContext context, NetworkChannel channel)
   {
-    var roomId = reader.ReadString();
+    var roomId = Reader.ReadString();
     var lobbyPlayer = context.LobbyPlayer;
 
     if (!context.Lobby.FindRoomById(roomId, out var existsRoom))
     {
-      JoinFailed(context, writer);
-      
+      JoinFailed(context, Writer);
+
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} failed to join room {roomId}");
       return;
     }
 
     var player = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
     context.SetRoom(existsRoom, player);
-    
+
     if (!existsRoom.Plugin.OnPlayerJoined(player))
       return;
-    
+
     _webHook.RoomJoined(context, existsRoom, player);
-    
-    JoinSuccess(context, existsRoom, writer);
-    
+
+    JoinSuccess(context, existsRoom, Writer);
+
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to {existsRoom.Id}");
   }
 
@@ -66,8 +66,8 @@ public sealed class RoomJoinOperation : IRagonOperation
     writer.WriteString(room.Id);
     writer.WriteString(context.RoomPlayer.Id);
     writer.WriteString(room.Owner.Id);
-    writer.WriteUShort((ushort) room.PlayerMin);
-    writer.WriteUShort((ushort) room.PlayerMax);
+    writer.WriteUShort((ushort)room.PlayerMin);
+    writer.WriteUShort((ushort)room.PlayerMax);
     writer.WriteString(room.Scene);
 
     var sendData = writer.ToArray();

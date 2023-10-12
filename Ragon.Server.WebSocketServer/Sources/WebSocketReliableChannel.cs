@@ -15,6 +15,7 @@
  */
 
 using System.Net.WebSockets;
+using Ragon.Protocol;
 using Ragon.Server.IO;
 
 namespace Ragon.Server.WebSocketServer;
@@ -35,9 +36,17 @@ public class WebSocketReliableChannel : INetworkChannel
         _queue.Enqueue(data);
     }
 
+    public void Send(RagonBuffer buffer)
+    {
+        var sendData = buffer.ToArray();
+        _queue.Enqueue(sendData);
+    }
+
     public async Task Flush()
     {
         while (_queue.TryDequeue(out var sendData) && _socket.State == WebSocketState.Open)
+        {
             await _socket.SendAsync(sendData, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage, CancellationToken.None);
+        }
     }
 }

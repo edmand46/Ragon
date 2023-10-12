@@ -14,11 +14,29 @@
  * limitations under the License.
  */
 
-using Ragon.Protocol;
+using ENet;
+using Ragon.Server.IO;
 
-namespace Ragon.Server.Handler;
+namespace Ragon.Server.ENetServer;
 
-public interface IRagonOperation
+public sealed class ENetConnection: INetworkConnection
 {
-  public void Handle(RagonContext context, RagonBuffer reader, RagonBuffer writer);
+  public ushort Id { get; }
+  public INetworkChannel Reliable { get; private set; }
+  public INetworkChannel Unreliable { get; private set; }
+  private Peer _peer;
+  
+  public ENetConnection(Peer peer)
+  {
+    _peer = peer;
+    
+    Id = (ushort) peer.ID;
+    Reliable = new ENetReliableChannel(peer, NetworkChannel.RELIABLE);
+    Unreliable = new ENetUnreliableChannel(peer, NetworkChannel.UNRELIABLE);
+  }
+  
+  public void Close()
+  {
+    _peer.Disconnect(0);
+  }
 }

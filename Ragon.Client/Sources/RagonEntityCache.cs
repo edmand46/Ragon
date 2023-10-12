@@ -83,12 +83,14 @@ public sealed class RagonEntityCache
 
   public void Destroy(RagonEntity entity, RagonPayload destroyPayload)
   {
-    if (!entity.IsAttached)
+    if (!entity.IsAttached && !entity.HasAuthority)
     {
-      RagonLog.Warn("Can't destroy object, he is not created");
+      RagonLog.Warn("Can't destroy object");
       return;
     }
-
+    
+    entity.SetReplication(false);
+    
     var buffer = _client.Buffer;
 
     buffer.Clear();
@@ -215,10 +217,12 @@ public sealed class RagonEntityCache
   {
     if (_entityMap.TryGetValue(entityId, out var entity))
     {
+      
       _entityMap.Remove(entityId);
       _entityList.Remove(entity);
 
       entity.Detach(payload);
+      entity.Dispose();
     }
   }
 
