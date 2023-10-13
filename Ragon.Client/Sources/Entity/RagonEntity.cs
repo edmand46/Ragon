@@ -41,6 +41,10 @@ namespace Ragon.Client
       {
         _callbacks.Remove(_callback);
         _localCallbacks.Remove(_callback);
+
+        _callbacks = null!;
+        _localCallbacks = null!;
+        _callback = null!;
       }
     }
 
