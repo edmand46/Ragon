@@ -30,21 +30,20 @@ public sealed class RoomDataOperation : BaseOperation
   {
     var player = context.RoomPlayer;
     var room = context.Room;
-    
+
     var data = Reader.RawData;
-    
-    Writer.Clear();
-    Writer.WriteOperation(RagonOperation.REPLICATE_RAW_DATA);
-    Writer.WriteUShort(player.Connection.Id);
-    
-    var playerData = Writer.ToArray();
-    var payloadData = data;
-    var size = playerData.Length + payloadData.Length;
+    var dataSize = data.Length - 1;
+    var headerSize = 3;
+    var size = headerSize + dataSize;
     var sendData = new byte[size];
-    
-    Array.Copy(playerData, 0, sendData, 0, playerData.Length);
-    Array.Copy(payloadData, 1, sendData, playerData.Length, payloadData.Length - 1);
-    
+    var peerId = player.Connection.Id;
+
+    sendData[0] = (byte)RagonOperation.REPLICATE_RAW_DATA;
+    sendData[1] = (byte)peerId;
+    sendData[2] = (byte)(peerId >> 8);
+
+    Array.Copy(data, 1, sendData, headerSize, dataSize);
+
     room.Broadcast(sendData, channel);
   }
 }

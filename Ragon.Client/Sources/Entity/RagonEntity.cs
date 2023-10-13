@@ -19,8 +19,31 @@ using Ragon.Protocol;
 
 namespace Ragon.Client
 {
-  public sealed class RagonEntity: IDisposable
+  public sealed class RagonEntity : IDisposable
   {
+    private class EventSubscription : IDisposable
+    {
+      private List<Action<RagonPlayer, IRagonEvent>> _callbacks;
+      private List<Action<RagonPlayer, IRagonEvent>> _localCallbacks;
+      private Action<RagonPlayer, IRagonEvent> _callback;
+
+      public EventSubscription(
+        List<Action<RagonPlayer, IRagonEvent>> callbacks,
+        List<Action<RagonPlayer, IRagonEvent>> localCallbacks,
+        Action<RagonPlayer, IRagonEvent> callback)
+      {
+        _callbacks = callbacks;
+        _localCallbacks = localCallbacks;
+        _callback = callback;
+      }
+
+      public void Dispose()
+      {
+        _callbacks.Remove(_callback);
+        _localCallbacks.Remove(_callback);
+      }
+    }
+
     private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
 
     private RagonClient _client;
@@ -189,19 +212,18 @@ namespace Ragon.Client
       _client.Reliable.Send(sendData);
     }
 
-    public Action<RagonPlayer, IRagonEvent> OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
+    public IDisposable OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
     {
       var t = new TEvent();
       var eventCode = _client.Event.GetEventCode(t);
-      
       var action = (RagonPlayer player, IRagonEvent eventData) => callback.Invoke(player, (TEvent)eventData);
-      
+
       if (!_listeners.TryGetValue(eventCode, out var callbacks))
       {
         callbacks = new List<Action<RagonPlayer, IRagonEvent>>();
         _listeners.Add(eventCode, callbacks);
       }
-      
+
       if (!_localListeners.TryGetValue(eventCode, out var localCallbacks))
       {
         localCallbacks = new List<Action<RagonPlayer, IRagonEvent>>();
@@ -222,19 +244,7 @@ namespace Ragon.Client
         });
       }
 
-      return action;
-    }
-
-    public void OffEvent<TEvent>(Action<RagonPlayer, IRagonEvent> callback) where TEvent : IRagonEvent, new()
-    {
-      var t = new TEvent();
-      var eventCode = _client.Event.GetEventCode(t);
-      
-      if (_listeners.TryGetValue(eventCode, out var callbacks))
-        callbacks.Remove(callback);
-      
-      if (_localListeners.TryGetValue(eventCode, out var localCallbacks))
-        localCallbacks.Remove(callback);
+      return new EventSubscription(callbacks, localCallbacks, action);
     }
 
     internal void Write(RagonBuffer buffer)
