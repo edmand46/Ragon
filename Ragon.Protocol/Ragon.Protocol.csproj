@@ -6,7 +6,6 @@
         <LangVersion>8</LangVersion>
         <RootNamespace>Ragon.Common</RootNamespace>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>1.2.4-rc</Version>
         <Title>Ragon.Protocol</Title>
         <Copyright>Eduard Kargin</Copyright>
         <PackageProjectUrl>https://ragon-server.com</PackageProjectUrl>

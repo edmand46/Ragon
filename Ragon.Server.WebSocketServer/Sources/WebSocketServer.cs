@@ -75,6 +75,7 @@ public class WebSocketServer : INetworkServer
     var webSocket = connection.Socket;
     var bytes = new byte[2048];
     var buffer = new Memory<byte>(bytes);
+    
     while (
       webSocket.State == WebSocketState.Open ||
       !cancellationToken.IsCancellationRequested)
@@ -84,7 +85,7 @@ public class WebSocketServer : INetworkServer
         var result = await webSocket.ReceiveAsync(buffer, cancellationToken);
         if (result.Count > 0)
         {
-          var payload = buffer.Slice(0, buffer.Length);
+          var payload = buffer.Slice(0, result.Count);
           _networkListener.OnData(connection, NetworkChannel.RELIABLE, payload.ToArray());
         }
       }

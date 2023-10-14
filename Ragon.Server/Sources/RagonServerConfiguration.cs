@@ -47,7 +47,7 @@ public struct RagonServerConfiguration
   public Dictionary<string, string> WebHooks;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-  private static readonly string ServerVersion = "1.2.9-rc";
+  private static readonly string ServerVersion = "1.3.2";
   private static Dictionary<string, ServerType> _serverTypes = new Dictionary<string, ServerType>()
   {
     {"enet", Server.ServerType.ENET},
@@ -65,7 +65,11 @@ public struct RagonServerConfiguration
 
   private static void CopyrightInfo()
   {
-    Logger.Info($"Server Version: {ServerVersion}");
+    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+    var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+    var version = fvi.ProductVersion;
+    
+    Logger.Info($"Server Version: {version}");
     Logger.Info($"Machine Name: {Environment.MachineName}");
     Logger.Info($"OS: {Environment.OSVersion}");
     Logger.Info($"Processors: {Environment.ProcessorCount}");
