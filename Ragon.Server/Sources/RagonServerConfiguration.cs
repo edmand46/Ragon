@@ -25,11 +25,6 @@ public enum ServerType
   WEBSOCKET,
 }
 
-public class WebHook
-{
-  
-}
-
 [Serializable]
 public struct RagonServerConfiguration
 {
@@ -47,7 +42,7 @@ public struct RagonServerConfiguration
   public Dictionary<string, string> WebHooks;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-  private static readonly string ServerVersion = "1.3.2";
+  private static readonly string ServerVersion = "1.3.1";
   private static Dictionary<string, ServerType> _serverTypes = new Dictionary<string, ServerType>()
   {
     {"enet", Server.ServerType.ENET},
@@ -65,11 +60,7 @@ public struct RagonServerConfiguration
 
   private static void CopyrightInfo()
   {
-    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-    var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
-    var version = fvi.ProductVersion;
-    
-    Logger.Info($"Server Version: {version}");
+    Logger.Info($"Server Version: {ServerVersion}");
     Logger.Info($"Machine Name: {Environment.MachineName}");
     Logger.Info($"OS: {Environment.OSVersion}");
     Logger.Info($"Processors: {Environment.ProcessorCount}");
