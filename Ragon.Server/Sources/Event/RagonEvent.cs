@@ -45,7 +45,7 @@ public class RagonEvent
 
   public void Write(RagonBuffer buffer)
   {
-    if (_size > 0) return;
+    if (_size <= 0) return;
     buffer.WriteArray(_data, _size);
   }
 }
