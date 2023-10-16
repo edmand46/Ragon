@@ -21,6 +21,8 @@ namespace Ragon.Client;
 
 public class RagonPayload
 {
+  public static RagonPayload Empty = new RagonPayload(0);
+  
   private readonly uint[] _data = new uint[128];
   private readonly int _size = 0;
 

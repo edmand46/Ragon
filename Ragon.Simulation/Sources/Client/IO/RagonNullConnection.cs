@@ -128,5 +128,10 @@ namespace Ragon.Client
       if (_libraryLoaded)
         Library.Deinitialize();
     }
+
+    public void Close()
+    {
+      
+    }
   }
 }

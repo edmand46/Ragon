@@ -47,8 +47,7 @@ namespace Ragon.Client
     public RagonEntityCache Entity => _entityCache;
     public NetworkStatistics Statistics => _stats;
     public RagonRoom Room => _room;
-
-
+    
     internal RagonBuffer Buffer => _writeBuffer;
     internal INetworkChannel Reliable => _connection.Reliable;
     internal INetworkChannel Unreliable => _connection.Unreliable;

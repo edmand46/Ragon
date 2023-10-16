@@ -116,7 +116,7 @@ public sealed class RagonEntityCache
     foreach (var ent in _entityList)
     {
       if (!ent.IsAttached ||
-          !ent.Replication ||
+          !ent.IsReplicated ||
           !ent.PropertiesChanged) continue;
 
       ent.Write(buffer);

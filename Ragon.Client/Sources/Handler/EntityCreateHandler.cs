@@ -57,11 +57,11 @@ internal class EntityCreateHandler : IHandler
     var hasAuthority = _playerCache.Local.Id == player.Id;
     var entity = _entityCache.TryGetEntity(attachId, entityType, 0, entityId, hasAuthority, out var hasCreated);
     
-    entity.AttachPayload(payload);
+    entity.Prepare(_client, entityId, entityType, hasAuthority, player, payload);
 
     if (hasCreated)
       _entityListener.OnEntityCreated(entity);
     
-    entity.Attach(_client, entityId, entityType, hasAuthority, player);
+    entity.Attach();
   }
 }

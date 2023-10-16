@@ -27,7 +27,7 @@ internal class SnapshotHandler : IHandler
   private readonly RagonListenerList _listenerList;
   private readonly RagonEntityCache _entityCache;
   private readonly RagonPlayerCache _playerCache;
-
+  
   public SnapshotHandler(
     RagonClient ragonClient,
     RagonListenerList listenerList,
@@ -76,19 +76,19 @@ internal class SnapshotHandler : IHandler
 
       var hasAuthority = _playerCache.Local.Id == player.Id;
       var entity = _entityCache.TryGetEntity(0, entityType, 0, entityId, hasAuthority, out _);
-      
+      var payload = RagonPayload.Empty;
       if (payloadSize > 0)
       {
-        var payload = new RagonPayload(payloadSize);
+        payload = new RagonPayload(payloadSize);
         payload.Read(buffer);
-       
-        entity.AttachPayload(payload);
       }
+      
+      entity.Prepare(_client, entityId, entityType, hasAuthority, player, payload);
       
       _entityListener.OnEntityCreated(entity);
       
       entity.Read(buffer);
-      entity.Attach(_client, entityId, entityType, hasAuthority, player);
+      entity.Attach();
     }
 
     var staticEntities = buffer.ReadUShort();
@@ -111,8 +111,10 @@ internal class SnapshotHandler : IHandler
       var hasAuthority = _playerCache.Local.Id == player.Id;
       var entity = _entityCache.TryGetEntity(0, entityType, staticId, entityId, hasAuthority, out _);
       
+      entity.Prepare(_client, entityId, entityType, hasAuthority, player, RagonPayload.Empty);
+      
       entity.Read(buffer);
-      entity.Attach(_client, entityId, entityType, hasAuthority, player);
+      entity.Attach();
     }
 
     if (_client.Status == RagonStatus.LOBBY)
