@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Ragon.Protocol;
+using Ragon.Server.Handler;
 using Ragon.Server.IO;
 using Ragon.Server.Lobby;
 
@@ -21,6 +23,7 @@ namespace Ragon.Server;
 
 public interface IRagonServer
 {
+  BaseOperation ResolveHandler(RagonOperation operation);
   RagonLobbyPlayer? GetPlayerByConnection(INetworkConnection connection);
   RagonLobbyPlayer? GetPlayerById(string id);
 }

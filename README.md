@@ -1,4 +1,4 @@
-<p align="center">
+<p>
   <img src="Images/ragon-logo.png" width="200" >
 </p>
 

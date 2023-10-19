@@ -1,6 +1,7 @@
 .DS_Store
 .idea
 .vs
+.vscode
 obj
 bin
 *.user

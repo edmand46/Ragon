@@ -28,10 +28,10 @@ public class RagonWebHookPlugin
 {
   private Dictionary<string, string> _webHooks;
 
-  private RagonServer _server;
+  private IRagonServer _server;
   private HttpClient _httpClient;
 
-  public RagonWebHookPlugin(RagonServer server, RagonServerConfiguration configuration)
+  public RagonWebHookPlugin(IRagonServer server, RagonServerConfiguration configuration)
   {
     _webHooks = new Dictionary<string, string>(configuration.WebHooks);
     _httpClient = new HttpClient();
@@ -46,7 +46,7 @@ public class RagonWebHookPlugin
       var executor = context.Executor;
       executor.Run(async () =>
       {
-        var authorizationOperation = (AuthorizationOperation) _server.ResolveOperation(RagonOperation.AUTHORIZE);
+        var authorizationOperation = (AuthorizationOperation) _server.ResolveHandler(RagonOperation.AUTHORIZE);
         var response = await _httpClient.PostAsync(new Uri(value), httpContent);
         if (response.StatusCode != HttpStatusCode.OK)
         {

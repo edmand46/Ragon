@@ -223,7 +223,7 @@ public class RagonServer : IRagonServer, INetworkListener
     _server.Broadcast(sendData, NetworkChannel.UNRELIABLE);
   }
 
-  public BaseOperation ResolveOperation(RagonOperation operation)
+  public BaseOperation ResolveHandler(RagonOperation operation)
   {
     return _handlers[(byte)operation];
   }

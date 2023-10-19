@@ -47,22 +47,32 @@ public class WebSocketServer : INetworkServer
   {
     while (!cancellationToken.IsCancellationRequested)
     {
-      var context = await _httpListener.GetContextAsync();
-      if (!context.Request.IsWebSocketRequest)
+      WebSocketConnection connection = null!;
+      try
       {
-        context.Response.StatusCode = 200;
-        context.Response.ContentLength64 = 0;
-        context.Response.Close();
-        continue;
+        var context = await _httpListener.GetContextAsync();
+        if (!context.Request.IsWebSocketRequest)
+        {
+          context.Response.StatusCode = 200;
+          context.Response.ContentLength64 = 0;
+          context.Response.Close();
+          continue;
+        }
+        
+        var webSocketContext = await context.AcceptWebSocketAsync(null);
+        var webSocket = webSocketContext.WebSocket;
+        var peerId = _sequencer.Pop();
+        
+        connection = new WebSocketConnection(webSocket, peerId);  
       }
-
-      var webSocketContext = await context.AcceptWebSocketAsync(null);
-      var webSocket = webSocketContext.WebSocket;
-
-      var peerId = _sequencer.Pop();
-      var connection = new WebSocketConnection(webSocket, peerId);
-
-      _connections[peerId] = connection;
+      catch (Exception ex)
+      {
+          _logger.Warn(ex);
+          continue;
+      }
+      
+      _connections[connection.Id] = connection;
+      
       StartListen(connection, cancellationToken);
     }
   }
@@ -97,6 +107,7 @@ public class WebSocketServer : INetworkServer
 
     _sequencer.Push(connection.Id);
     _activeConnections.Remove(connection);
+    
     _networkListener.OnDisconnected(connection);
   }
 
