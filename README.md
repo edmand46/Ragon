@@ -1,6 +1,7 @@
-<p>
-  <img src="Images/ragon-logo.png" width="200" >
-</p>
+<div style="height: 200px; display: flex; justify-content: center; align-items: center">
+  <img src="Images/R.png" width="120" height="120">
+  <img src="Images/Text.png" height="30%" style="padding-left: 30px">
+</div>
 
 ## Ragon Server
 
