@@ -1,5 +1,5 @@
-<p>
-  <img src="Images/logo.png" width="250" >
+<p align="center">
+  <img src="Images/logo.png">
 </p>
 
 ## Ragon Server
