@@ -42,7 +42,7 @@ public struct RagonServerConfiguration
   public Dictionary<string, string> WebHooks;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-  private static readonly string ServerVersion = "1.3.1";
+  private static readonly string ServerVersion = "1.3.2";
   private static Dictionary<string, ServerType> _serverTypes = new Dictionary<string, ServerType>()
   {
     {"enet", Server.ServerType.ENET},
