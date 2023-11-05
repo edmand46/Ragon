@@ -26,9 +26,22 @@ public sealed class RagonPlayerCache
   public RagonPlayer Owner { get; private set; }
   public RagonPlayer Local { get; private set; }
   public bool IsRoomOwner => _ownerId == _localId;
-  
-  public RagonPlayer? GetPlayerById(string playerId) => _playersById[playerId];
-  public RagonPlayer? GetPlayerByPeer(ushort peerId) => _playersByConnection[peerId];
+
+  public RagonPlayer? GetPlayerById(string playerId)
+  {
+    if (_playersById.TryGetValue(playerId, out var player))
+      return player;
+    
+    return null;
+  }
+
+  public RagonPlayer? GetPlayerByPeer(ushort peerId)
+  {
+    if (_playersByConnection.TryGetValue(peerId, out var player))
+      return player;
+    
+    return null;
+  }
 
   private string _ownerId;
   private string _localId;
