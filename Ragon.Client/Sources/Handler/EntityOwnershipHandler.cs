@@ -41,6 +41,14 @@ internal class EntityOwnershipHandler: IHandler
     var entities = reader.ReadUShort();
     
     var player = _playerCache.GetPlayerByPeer(newOwnerId);
+    if (player == null)
+    {
+      RagonLog.Error($"Player with Id:{newOwnerId} not found in cache");
+      
+      _playerCache.Dump();
+      return;
+    }
+    
     for (var i = 0; i < entities; i++)
     {
       var entityId = reader.ReadUShort();

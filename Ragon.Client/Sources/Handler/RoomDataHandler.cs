@@ -37,6 +37,15 @@ internal class RoomDataHandler: IHandler
     var rawData = reader.RawData;
     var peerId = (ushort)(rawData[1] + (rawData[2] << 8));
     var player = _playerCache.GetPlayerByPeer(peerId);
+    
+    if (player == null)
+    {
+      RagonLog.Error($"Player with peerId:{peerId} not found");
+      
+      _playerCache.Dump();
+      return;
+    }
+    
     var headerSize = 3;
     var payload = new byte[rawData.Length - headerSize];
     

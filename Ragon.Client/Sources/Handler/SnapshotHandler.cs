@@ -71,6 +71,8 @@ internal class SnapshotHandler : IHandler
       if (player == null)
       {
         RagonLog.Error($"Player not found with peerId: ${ownerPeerId}");
+
+        _playerCache.Dump();
         return;
       }
 
@@ -105,6 +107,8 @@ internal class SnapshotHandler : IHandler
       if (player == null)
       {
         RagonLog.Error($"Player not found with peerId: ${ownerPeerId}");
+        
+        _playerCache.Dump();
         return;
       }
 
@@ -112,7 +116,6 @@ internal class SnapshotHandler : IHandler
       var entity = _entityCache.TryGetEntity(0, entityType, staticId, entityId, hasAuthority, out _);
       
       entity.Prepare(_client, entityId, entityType, hasAuthority, player, RagonPayload.Empty);
-      
       entity.Read(buffer);
       entity.Attach();
     }

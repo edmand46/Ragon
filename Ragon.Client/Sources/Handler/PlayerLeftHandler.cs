@@ -57,5 +57,9 @@ internal class PlayerLeftHandler : IHandler
       foreach (var id in toDeleteIds)
         _entityCache.OnDestroy(id, emptyPayload);
     }
+    else
+    {
+      RagonLog.Warn($"Player with Id:{playerId} not found in cache");
+    }
   }
 }

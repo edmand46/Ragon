@@ -31,7 +31,7 @@ public sealed class RagonPlayerCache
   {
     if (_playersById.TryGetValue(playerId, out var player))
       return player;
-    
+
     return null;
   }
 
@@ -39,7 +39,7 @@ public sealed class RagonPlayerCache
   {
     if (_playersByConnection.TryGetValue(peerId, out var player))
       return player;
-    
+
     return null;
   }
 
@@ -103,5 +103,15 @@ public sealed class RagonPlayerCache
     _players.Clear();
     _playersByConnection.Clear();
     _playersById.Clear();
+  }
+
+  public void Dump()
+  {
+    RagonLog.Trace("Players: ");
+    RagonLog.Trace("[Connection] [ID] [Name]");
+    foreach (var player in _players)
+    {
+      RagonLog.Trace($"[{player.PeerId}] {player.Id} {player.Name}");
+    }
   }
 }

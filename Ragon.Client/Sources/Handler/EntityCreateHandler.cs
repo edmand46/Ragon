@@ -51,6 +51,8 @@ internal class EntityCreateHandler : IHandler
     if (player == null)
     {
       RagonLog.Warn($"Owner {ownerId}|{player.Name} not found in players");
+      
+      _playerCache.Dump();
       return;
     }
     

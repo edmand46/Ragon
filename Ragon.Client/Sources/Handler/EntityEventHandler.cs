@@ -20,35 +20,37 @@ namespace Ragon.Client;
 
 internal class EntityEventHandler : IHandler
 {
-    private readonly RagonPlayerCache _playerCache;
-    private readonly RagonEntityCache _entityCache;
+  private readonly RagonPlayerCache _playerCache;
+  private readonly RagonEntityCache _entityCache;
 
-    public EntityEventHandler(
-        RagonPlayerCache playerCache,
-        RagonEntityCache entityCache
-    )
+  public EntityEventHandler(
+    RagonPlayerCache playerCache,
+    RagonEntityCache entityCache
+  )
+  {
+    _playerCache = playerCache;
+    _entityCache = entityCache;
+  }
+
+  public void Handle(RagonBuffer reader)
+  {
+    var eventCode = reader.ReadUShort();
+    var peerId = reader.ReadUShort();
+    var executionMode = (RagonReplicationMode)reader.ReadByte();
+    var entityId = reader.ReadUShort();
+
+    var player = _playerCache.GetPlayerByPeer(peerId);
+    if (player == null)
     {
-        _playerCache = playerCache;
-        _entityCache = entityCache;
+      RagonLog.Error($"Player with peerId:{peerId} not found as owner of event with code:{eventCode}");
+      
+      _playerCache.Dump();
+      return;
     }
-    
-    public void Handle(RagonBuffer reader)
-    {
-        var eventCode = reader.ReadUShort();
-        var peerId = reader.ReadUShort();
-        var executionMode = (RagonReplicationMode)reader.ReadByte();
-        var entityId = reader.ReadUShort();
 
-        var player = _playerCache.GetPlayerByPeer(peerId);
-        if (player == null)
-        {
-            RagonLog.Warn($"Player not found for event {eventCode}");
-            return;
-        }
+    if (player.IsLocal && executionMode == RagonReplicationMode.LocalAndServer)
+      return;
 
-        if (player.IsLocal && executionMode == RagonReplicationMode.LocalAndServer)
-            return;
-
-        _entityCache.OnEvent(player, entityId, eventCode, reader);
-    }
+    _entityCache.OnEvent(player, entityId, eventCode, reader);
+  }
 }

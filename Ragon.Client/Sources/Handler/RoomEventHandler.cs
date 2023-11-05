@@ -18,11 +18,11 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-public class RoomEventHandler: IHandler
+public class RoomEventHandler : IHandler
 {
   private readonly RagonClient _client;
   private readonly RagonPlayerCache _playerCache;
-  
+
   public RoomEventHandler(
     RagonClient client,
     RagonPlayerCache playerCache
@@ -31,23 +31,25 @@ public class RoomEventHandler: IHandler
     _client = client;
     _playerCache = playerCache;
   }
-  
+
   public void Handle(RagonBuffer buffer)
   {
     var eventCode = buffer.ReadUShort();
     var peerId = buffer.ReadUShort();
     var executionMode = (RagonReplicationMode)buffer.ReadByte();
-    
+
     var player = _playerCache.GetPlayerByPeer(peerId);
     if (player == null)
     {
-      RagonLog.Warn($"Player not found for event {eventCode}");
+      RagonLog.Error($"Player with peerId:{peerId} not found as owner of event with code:{eventCode}");
+      
+      _playerCache.Dump();
       return;
     }
 
     if (player.IsLocal && executionMode == RagonReplicationMode.LocalAndServer)
       return;
 
-    _client.Room.Event(eventCode, player, buffer); 
+    _client.Room.Event(eventCode, player, buffer);
   }
 }

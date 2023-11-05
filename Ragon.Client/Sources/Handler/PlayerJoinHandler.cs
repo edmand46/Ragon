@@ -45,6 +45,6 @@ internal class PlayerJoinHandler : IHandler
     if (player != null)
       _listenerList.OnPlayerJoined(player);
     else
-      RagonLog.Trace($"[Joined] {playerId}");
+      RagonLog.Warn($"Player with Id:{playerId} not found in cache");
   }
 }

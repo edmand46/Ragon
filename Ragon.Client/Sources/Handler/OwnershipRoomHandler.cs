@@ -19,12 +19,12 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class OwnershipRoomHandler: IHandler
+internal class OwnershipRoomHandler : IHandler
 {
   private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
-  
+
   public OwnershipRoomHandler(
     RagonListenerList listenerList,
     RagonPlayerCache playerCache,
@@ -34,11 +34,18 @@ internal class OwnershipRoomHandler: IHandler
     _playerCache = playerCache;
     _entityCache = entityCache;
   }
-  
+
   public void Handle(RagonBuffer reader)
   {
     var newOwnerId = reader.ReadUShort();
     var player = _playerCache.GetPlayerByPeer(newOwnerId);
+    if (player == null)
+    {
+      RagonLog.Warn($"Player with peerId:{newOwnerId} not found in cache");
+      
+      _playerCache.Dump();
+      return;
+    }
 
     _playerCache.OnOwnershipChanged(newOwnerId);
     _listenerList.OnOwnershipChanged(player);
