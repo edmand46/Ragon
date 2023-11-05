@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 using Ragon.Protocol;
 
 namespace Ragon.Server.Entity;

@@ -54,6 +54,13 @@ public class RagonProperty : RagonPayload
 
   public void Write(RagonBuffer buffer)
   {
+    if (IsFixed)
+    {
+      buffer.WriteArray(_data, Size);
+      return;
+    }
+    
+    buffer.Write((ushort) Size);
     buffer.WriteArray(_data, Size);
   }
 

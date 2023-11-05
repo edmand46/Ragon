@@ -99,6 +99,11 @@ public class RagonServer : IRagonServer, INetworkListener
     _timer.Start();
     while (true)
     {
+      if (_timer.ElapsedMilliseconds > _tickRate * 2)
+      {
+        _logger.Warn($"Slow perfomance: {_timer.ElapsedMilliseconds}");
+      }
+
       if (_timer.ElapsedMilliseconds > _tickRate)
       {
         _timer.Restart();
@@ -197,7 +202,7 @@ public class RagonServer : IRagonServer, INetworkListener
         _reader.FromArray(data);
         
         var operation = _reader.ReadByte();
-        _handlers[operation].Handle(context, channel);
+        _handlers[operation]?.Handle(context, channel);
       }
     }
     catch (Exception ex)

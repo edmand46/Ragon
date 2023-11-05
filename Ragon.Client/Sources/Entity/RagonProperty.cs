@@ -106,7 +106,7 @@ namespace Ragon.Client
       {
         Serialize(_propertyBuffer);
         
-        buffer.FromBuffer(_propertyBuffer, _size);
+        buffer.CopyFrom(_propertyBuffer, _size);
         return;
       }
 
@@ -114,7 +114,7 @@ namespace Ragon.Client
 
       var propertySize = (ushort) _propertyBuffer.WriteOffset;
       buffer.WriteUShort(propertySize);;
-      buffer.FromBuffer(_propertyBuffer, propertySize);
+      buffer.CopyFrom(_propertyBuffer, propertySize);
     }
 
     internal void Read(RagonBuffer buffer)

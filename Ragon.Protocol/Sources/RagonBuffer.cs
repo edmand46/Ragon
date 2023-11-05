@@ -236,9 +236,6 @@ namespace Ragon.Protocol
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(uint value, int numBits = 16)
     {
-      Debug.Assert(!(numBits < 0));
-      Debug.Assert(!(numBits > 32));
-
       var currentBucketIndex = _write >> 5;
       var used = _write & 0x0000001F;
       var mask = (1UL << used) - 1;
@@ -357,7 +354,7 @@ namespace Ragon.Protocol
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void FromBuffer(RagonBuffer buffer, int size)
+    public void CopyFrom(RagonBuffer buffer, int size)
     {
       WriteArray(buffer._buckets, size);
     }
@@ -406,7 +403,7 @@ namespace Ragon.Protocol
     public byte[] ToArray()
     {
       Write(1, 1);
-      
+
       var data = new byte[Length];
       int bucketsCount = (_write >> 5) + 1;
       int length = data.Length;
@@ -431,11 +428,11 @@ namespace Ragon.Protocol
 
       return data;
     }
-    
+
     public void ToArray(byte[] outData)
     {
-      Debug.Assert(outData.Length >= Length);
-      
+      Write(1, 1);
+
       var bucketsCount = (_write >> 5) + 1;
       var length = Length;
 
