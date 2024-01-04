@@ -51,9 +51,9 @@ namespace Ragon.Client
       Create(null, new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers});
     }
 
-    public void Create(string roomId, string sceneNa, int minPlayers, int maxPlayers)
+    public void Create(string roomId, string sceneName, int minPlayers, int maxPlayers)
     {
-      Create(roomId, new RagonRoomParameters() {Scene = sceneNa, Min = minPlayers, Max = maxPlayers});
+      Create(roomId, new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers});
     }
     
     public  void Create(string roomId, RagonRoomParameters parameters)

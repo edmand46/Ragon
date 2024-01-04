@@ -28,7 +28,7 @@ public class RagonPayload
 
   public void Read(RagonBuffer buffer)
   {
-    _size = buffer.Capacity - 1;
+    _size = buffer.Capacity;
     buffer.ReadArray(_data, _size);
   }
 

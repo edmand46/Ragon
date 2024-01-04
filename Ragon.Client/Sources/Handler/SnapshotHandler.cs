@@ -70,7 +70,7 @@ internal class SnapshotHandler : IHandler
       var player = _playerCache.GetPlayerByPeer(ownerPeerId);
       if (player == null)
       {
-        RagonLog.Error($"Player not found with peerId: ${ownerPeerId}");
+        RagonLog.Error($"Player not found with peerId: {ownerPeerId}");
 
         _playerCache.Dump();
         return;
@@ -106,7 +106,7 @@ internal class SnapshotHandler : IHandler
       var player = _playerCache.GetPlayerByPeer(ownerPeerId);
       if (player == null)
       {
-        RagonLog.Error($"Player not found with peerId: ${ownerPeerId}");
+        RagonLog.Error($"Player not found with peerId: {ownerPeerId}");
         
         _playerCache.Dump();
         return;

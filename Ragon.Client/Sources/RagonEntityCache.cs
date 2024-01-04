@@ -88,9 +88,9 @@ public sealed class RagonEntityCache
       RagonLog.Warn("Can't destroy object");
       return;
     }
-    
+
     entity.SetReplication(false);
-    
+
     var buffer = _client.Buffer;
 
     buffer.Clear();
@@ -168,7 +168,7 @@ public sealed class RagonEntityCache
     _entityMap.Clear();
     _entityList.Clear();
   }
-  
+
   internal RagonEntity TryGetEntity(ushort attachId, ushort entityType, ushort sceneId, ushort entityId, bool hasAuthority, out bool hasCreated)
   {
     if (sceneId > 0)
@@ -179,36 +179,33 @@ public sealed class RagonEntityCache
 
         if (hasAuthority)
           _entityList.Add(sceneEntity);
-        
+
         hasCreated = false;
-        
+
         return sceneEntity;
       }
     }
 
-    if (_pendingEntities.TryGetValue(attachId, out var pendingEntity))
+    if (_pendingEntities.TryGetValue(attachId, out var pendingEntity) && hasAuthority)
     {
       _pendingEntities.Remove(attachId);
       _entityMap.Add(entityId, pendingEntity);
-
-      if (hasAuthority)
-        _entityList.Add(pendingEntity);
+      _entityList.Add(pendingEntity);
 
       hasCreated = false;
 
       return pendingEntity;
     }
 
-
     var entity = new RagonEntity(entityType, sceneId);
-    
+
     _entityMap.Add(entityId, entity);
-    
+
     if (hasAuthority)
       _entityList.Add(entity);
 
     hasCreated = true;
-    
+
     return entity;
   }
 
@@ -217,7 +214,6 @@ public sealed class RagonEntityCache
   {
     if (_entityMap.TryGetValue(entityId, out var entity))
     {
-      
       _entityMap.Remove(entityId);
       _entityList.Remove(entity);
 

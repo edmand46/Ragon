@@ -75,7 +75,7 @@ namespace Ragon.Protocol
     public int ReadOffset => _read;
     public int WriteOffset => _write;
     public int Length => ((_write - 1) >> 3) + 1;
-    public int Capacity => _write - _read;
+    public int Capacity => _write - _read - 1;
 
     public RagonBuffer(int capacity = 128)
     {
