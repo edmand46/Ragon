@@ -39,8 +39,8 @@ namespace Ragon.Client
 
       public void Dispose()
       {
-        _callbacks.Remove(_callback);
-        _localCallbacks.Remove(_callback);
+        _callbacks?.Remove(_callback);
+        _localCallbacks?.Remove(_callback);
 
         _callbacks = null!;
         _localCallbacks = null!;

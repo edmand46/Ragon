@@ -49,7 +49,7 @@ public class BaseServerPlugin: IServerPlugin
     return true;
   }
 
-  public IRoomPlugin CreateRoomPlugin(RoomInformation information)
+  public virtual IRoomPlugin CreateRoomPlugin(RoomInformation information)
   {
     return new BaseRoomPlugin();
   }

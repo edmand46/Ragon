@@ -12,7 +12,7 @@
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
       <DebugType>none</DebugType>
-      <OutputPath>/Users/edmand46/RagonProjects/ragon-oss-examples/Assets/Ragon/Runtime/Plugins</OutputPath>
+      <OutputPath>/Users/edmand46/UnityProjects/itd-client/Assets/Ragon/Runtime/Plugins/</OutputPath>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

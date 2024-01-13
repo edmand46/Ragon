@@ -65,7 +65,7 @@ namespace Ragon.Client
     {
       if (!InvokeLocal)
         return;
-
+      
       Changed?.Invoke();
     }
 

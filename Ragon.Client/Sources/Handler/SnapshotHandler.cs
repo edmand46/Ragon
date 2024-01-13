@@ -45,6 +45,7 @@ internal class SnapshotHandler : IHandler
 
   public void Handle(RagonBuffer buffer)
   {
+    var entities = new List<RagonEntity>();
     var playersCount = buffer.ReadUShort();
     RagonLog.Trace("Players: " + playersCount);
     for (var i = 0; i < playersCount; i++)
@@ -90,7 +91,8 @@ internal class SnapshotHandler : IHandler
       _entityListener.OnEntityCreated(entity);
       
       entity.Read(buffer);
-      entity.Attach();
+      
+      entities.Add(entity);
     }
 
     var staticEntities = buffer.ReadUShort();
@@ -117,7 +119,8 @@ internal class SnapshotHandler : IHandler
       
       entity.Prepare(_client, entityId, entityType, hasAuthority, player, RagonPayload.Empty);
       entity.Read(buffer);
-      entity.Attach();
+      
+      entities.Add(entity);
     }
 
     if (_client.Status == RagonStatus.LOBBY)
@@ -125,6 +128,9 @@ internal class SnapshotHandler : IHandler
       _client.SetStatus(RagonStatus.ROOM);
       _listenerList.OnJoined();
     }
+
+    foreach (var entity in entities)
+      entity.Attach();
 
     _listenerList.OnSceneLoaded();
   }
