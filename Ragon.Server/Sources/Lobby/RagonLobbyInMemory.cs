@@ -25,12 +25,20 @@ public class LobbyInMemory : IRagonLobby
   private readonly List<RagonRoom> _rooms = new();
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-  public bool FindRoomById(string RagonRoomId, [MaybeNullWhen(false)] out RagonRoom room)
+  public bool FindRoomById(string roomId, [MaybeNullWhen(false)] out RagonRoom room)
   {
     foreach (var existRagonRoom in _rooms)
     {
-      if (existRagonRoom.Id == RagonRoomId && existRagonRoom.PlayerMin < existRagonRoom.PlayerMax)
+      if (existRagonRoom.Id == roomId)
       {
+        if (existRagonRoom.PlayerCount >= existRagonRoom.PlayerMax)
+        {
+          _logger.Warn($"Room with id {roomId} fulfilled");
+          
+          room = default;
+          return false;
+        }
+        
         room = existRagonRoom;
         return true;
       }
@@ -44,8 +52,16 @@ public class LobbyInMemory : IRagonLobby
   {
     foreach (var existsRoom in _rooms)
     {
-      if (existsRoom.Scene == sceneName && existsRoom.PlayerCount < existsRoom.PlayerMax)
+      if (existsRoom.Scene == sceneName)
       {
+        if (existsRoom.PlayerCount >= existsRoom.PlayerMax)
+        {
+          _logger.Warn($"Room with scene {sceneName} fulfilled");
+          
+          room = default;
+          return false;          
+        }
+        
         room = existsRoom;
         return true;
       }
