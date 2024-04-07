@@ -20,6 +20,33 @@ namespace Ragon.Client
 {
   public class RagonRoom: IDisposable
   {
+    private class EventSubscription : IDisposable
+    {
+      private List<Action<RagonPlayer, IRagonEvent>> _callbacks;
+      private List<Action<RagonPlayer, IRagonEvent>> _localCallbacks;
+      private Action<RagonPlayer, IRagonEvent> _callback;
+
+      public EventSubscription(
+        List<Action<RagonPlayer, IRagonEvent>> callbacks,
+        List<Action<RagonPlayer, IRagonEvent>> localCallbacks,
+        Action<RagonPlayer, IRagonEvent> callback)
+      {
+        _callbacks = callbacks;
+        _localCallbacks = localCallbacks;
+        _callback = callback;
+      }
+
+      public void Dispose()
+      {
+        _callbacks?.Remove(_callback);
+        _localCallbacks?.Remove(_callback);
+
+        _callbacks = null!;
+        _localCallbacks = null!;
+        _callback = null!;
+      }
+    }
+      
     private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
 
     private RagonClient _client;
@@ -73,11 +100,10 @@ namespace Ragon.Client
         RagonLog.Warn($"Handler event on entity {Id} with eventCode {eventCode} not defined");
     }
 
-    public Action<RagonPlayer, IRagonEvent> OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
+    public IDisposable OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
     {
       var t = new TEvent();
       var eventCode = _client.Event.GetEventCode(t);
-      
       var action = (RagonPlayer player, IRagonEvent eventData) => callback.Invoke(player, (TEvent)eventData);
       
       if (!_listeners.TryGetValue(eventCode, out var callbacks))
@@ -106,19 +132,7 @@ namespace Ragon.Client
         });
       }
 
-      return action;
-    }
-
-    public void OffEvent<TEvent>(Action<RagonPlayer, IRagonEvent> callback) where TEvent : IRagonEvent, new()
-    {
-      var t = new TEvent();
-      var eventCode = _client.Event.GetEventCode(t);
-      
-      if (_listeners.TryGetValue(eventCode, out var callbacks))
-        callbacks.Remove(callback);
-      
-      if (_localListeners.TryGetValue(eventCode, out var localCallbacks))
-        localCallbacks.Remove(callback);
+      return new EventSubscription(callbacks, localCallbacks, action);
     }
 
     public void LoadScene(string sceneName) => _scene.Load(sceneName);
