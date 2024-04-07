@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,6 +122,21 @@ namespace Ragon.Protocol
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteFloat(float value)
+    {
+      var bytes = BitConverter.GetBytes(value);
+      WriteBytes(bytes);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float ReadFloat()
+    {
+      var bytes = ReadBytes(4);
+      var value = BitConverter.ToSingle(bytes, 0);
+      return value;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteFloat(float value, float min, float max, float precision)
     {
       var requiredBits = DeBruijn.Log2((uint)((max - min) * (1.0f / precision) + 0.5f)) + 1;
@@ -145,6 +160,23 @@ namespace Ragon.Protocol
         adjusted = max;
 
       return adjusted;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteInt(int value)
+    {
+      var bytes = BitConverter.GetBytes(value);
+      
+      WriteBytes(bytes);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ReadInt()
+    {
+      var bytes = ReadBytes(4);
+      var value = BitConverter.ToInt32(bytes, 0);
+
+      return value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -281,10 +313,10 @@ namespace Ragon.Protocol
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Obsolete("Do not use this method, will be removed")]
-    public byte[] ReadBytes(int lenght)
+    public byte[] ReadBytes(int len)
     {
-      var data = new byte[lenght];
-      for (int i = 0; i < lenght; i++)
+      var data = new byte[len];
+      for (int i = 0; i < len; i++)
         data[i] = (byte)Read(8);
 
       return data;
