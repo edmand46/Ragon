@@ -179,6 +179,7 @@ namespace Ragon.Client
     public void AddListener(IRagonSceneListener listener) => _listeners.Add(listener);
     public void AddListener(IRagonSceneRequestListener listener) => _listeners.Add(listener);
     public void AddListener(IRagonDataListener listener) => _listeners.Add(listener);
+    public void AddListener(IRagonRoomListListener listener) => _listeners.Add(listener);
     public void RemoveListener(IRagonListener listener) => _listeners.Remove(listener);
     public void RemoveListener(IRagonAuthorizationListener listener) => _listeners.Remove(listener);
     public void RemoveListener(IRagonConnectionListener listener) => _listeners.Remove(listener);
@@ -191,6 +192,7 @@ namespace Ragon.Client
     public void RemoveListener(IRagonSceneListener listener) => _listeners.Remove(listener);
     public void RemoveListener(IRagonSceneRequestListener listener) => _listeners.Remove(listener);
     public void RemoveListener(IRagonDataListener listener) => _listeners.Remove(listener);
+    public void RemoveListener(IRagonRoomListListener listener) => _listeners.Remove(listener);
 
     #endregion
 

@@ -15,7 +15,7 @@ public class RagonLobbyDispatcher
   public void Write(RagonBuffer writer)
   {
     writer.Clear();
-    writer.Write((byte)RagonOperation.ROOM_LIST_UPDATED);
+    writer.WriteOperation(RagonOperation.ROOM_LIST_UPDATED);
     var rooms = _lobby.Rooms;
 
     writer.WriteUShort((ushort)rooms.Count);

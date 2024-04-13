@@ -2,7 +2,7 @@ namespace Ragon.Server.Logging
 {
   public class LoggerManager
   {
-    private static IRagonLoggerFactory _factory;
+    private static IRagonLoggerFactory _factory = null!;
 
     public static void SetLoggerFactory(IRagonLoggerFactory loggerFactory)
     {

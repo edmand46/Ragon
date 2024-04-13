@@ -16,6 +16,9 @@ public class RagonActionTimer: IRagonAction
   {
     _timer += dt;
     if (_timer >= _time)
+    {
       _callback?.Invoke();
+      _timer = 0;
+    }
   }
 }

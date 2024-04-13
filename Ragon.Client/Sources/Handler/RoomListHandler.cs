@@ -21,10 +21,10 @@ internal class RoomListHandler: IHandler
     {
       var id = reader.ReadString();
       var scene = reader.ReadString();
-      var players = reader.ReadUShort();
       var maxPlayers = reader.ReadUShort();
       var minPlayers = reader.ReadUShort();
-      
+      var players = reader.ReadUShort();
+
       var roomInfo = new RagonRoomInformation()
       {
         Id = id,

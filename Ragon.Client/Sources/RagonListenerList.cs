@@ -132,6 +132,11 @@ namespace Ragon.Client
       _playerLeftListeners.Add(listener);
     }
     
+    public void Add(IRagonRoomListListener listener)
+    {
+      _roomListListeners.Add(listener);
+    }
+    
     public void Remove(IRagonDataListener listener)
     {
       _delayedActions.Add(() => _dataListeners.Remove(listener));
@@ -185,6 +190,11 @@ namespace Ragon.Client
     public void Remove(IRagonPlayerLeftListener listener)
     {
       _delayedActions.Add(() => _playerLeftListeners.Remove(listener));
+    }
+    
+    public void Remove(IRagonRoomListListener listener)
+    {
+      _delayedActions.Add(() => _roomListListeners.Remove(listener));
     }
 
     public void OnAuthorizationSuccess(string playerId, string playerName, string payload)

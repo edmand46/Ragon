@@ -111,7 +111,7 @@ public class RagonServer : IRagonServer, INetworkListener
       if (_timer.ElapsedMilliseconds > _tickRate)
       {
         _timer.Restart();
-        _scheduler.Update(_timer.ElapsedMilliseconds / 1000.0f);
+        _scheduler.Update(_tickRate);
 
         SendTimestamp();
       }
