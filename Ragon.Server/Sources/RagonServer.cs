@@ -45,6 +45,7 @@ public class RagonServer : IRagonServer, INetworkListener
   private readonly Dictionary<ushort, RagonContext> _contextsByConnection;
   private readonly Dictionary<string, RagonContext> _contextsByPlayerId;
   private readonly Stopwatch _timer;
+  private readonly RagonLobbyDispatcher _lobbySerializer;
   private readonly long _tickRate = 0;
 
   public RagonServer(
@@ -59,6 +60,7 @@ public class RagonServer : IRagonServer, INetworkListener
     _contextsByConnection = new Dictionary<ushort, RagonContext>();
     _contextsByPlayerId = new Dictionary<string, RagonContext>();
     _lobby = new LobbyInMemory();
+    _lobbySerializer = new RagonLobbyDispatcher(_lobby);
     _scheduler = new RagonScheduler();
     _webhooks = new RagonWebHookPlugin(this, configuration);
     _dedicatedThread = new Thread(Execute);
@@ -68,9 +70,11 @@ public class RagonServer : IRagonServer, INetworkListener
     _writer = new RagonBuffer();
     _tickRate = 1000 / _configuration.ServerTickRate;
     _timer = new Stopwatch();
-
+    
     var contextObserver = new RagonContextObserver(_contextsByPlayerId);
-
+    
+    _scheduler.Run(new RagonActionTimer(SendRoomList, 1.0f));
+    
     _serverPlugin.OnAttached(this);
 
     _handlers = new BaseOperation[byte.MaxValue];
@@ -226,6 +230,18 @@ public class RagonServer : IRagonServer, INetworkListener
 
     var sendData = _writer.ToArray();
     _server.Broadcast(sendData, NetworkChannel.UNRELIABLE);
+  }
+
+  public void SendRoomList()
+  {
+    _lobbySerializer.Write(_writer);
+
+    var sendData = _writer.ToArray();
+    foreach (var (_, value) in _contextsByPlayerId)
+    {
+      if (value.Room == null) // If only in lobby, then send room list data
+        value.Connection.Reliable.Send(sendData);
+    }
   }
 
   public BaseOperation ResolveHandler(RagonOperation operation)

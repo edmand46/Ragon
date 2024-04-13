@@ -21,6 +21,12 @@ namespace Ragon.Server.Room;
 
 public interface IRagonRoom
 {
+  public string Id { get; }
+  public string Scene { get; }
+  public int PlayerMin { get; }
+  public int PlayerMax { get; }
+  public int PlayerCount { get; }
+  
   RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection);
   RagonRoomPlayer GetPlayerById(string id);
   IRagonEntity GetEntityById(ushort id);

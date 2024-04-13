@@ -25,6 +25,8 @@ public class LobbyInMemory : IRagonLobby
   private readonly List<RagonRoom> _rooms = new();
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
+  public IReadOnlyList<IRagonRoom> Rooms => _rooms.AsReadOnly();
+
   public bool FindRoomById(string roomId, [MaybeNullWhen(false)] out RagonRoom room)
   {
     foreach (var existRagonRoom in _rooms)

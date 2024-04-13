@@ -32,6 +32,7 @@ namespace Ragon.Client
     private readonly List<IRagonPlayerJoinListener> _playerJoinListeners = new();
     private readonly List<IRagonPlayerLeftListener> _playerLeftListeners = new();
     private readonly List<IRagonDataListener> _dataListeners = new();
+    private readonly List<IRagonRoomListListener> _roomListListeners = new();
     private readonly List<Action> _delayedActions = new();
 
     public RagonListenerList(RagonClient client)
@@ -262,6 +263,12 @@ namespace Ragon.Client
     {
       foreach (var listener in _dataListeners)
         listener.OnData(player, data);
+    }
+
+    public void OnRoomList(RagonRoomInformation[] roomInfos)
+    {
+      foreach (var listListener in _roomListListeners)
+        listListener.OnRoomListUpdate(roomInfos);
     }
   }
 }

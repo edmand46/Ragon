@@ -21,6 +21,7 @@ namespace Ragon.Server.Lobby;
 
 public interface IRagonLobby
 {
+  public IReadOnlyList<IRagonRoom> Rooms { get; }
   public bool FindRoomById(string roomId, [MaybeNullWhen(false)] out RagonRoom room);
   public bool FindRoomByScene(string sceneName, [MaybeNullWhen(false)] out RagonRoom room);
   public void Persist(RagonRoom room);

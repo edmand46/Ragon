@@ -53,11 +53,11 @@ namespace Ragon.Client
     private RagonScene _scene;
     private RagonEntityCache _entityCache;
     private RagonPlayerCache _playerCache;
-    private RagonRoomInformation _information;
+    private RoomParameters _parameters;
 
-    public string Id => _information.RoomId;
-    public int MinPlayers => _information.Min;
-    public int MaxPlayers => _information.Max;
+    public string Id => _parameters.RoomId;
+    public int MinPlayers => _parameters.Min;
+    public int MaxPlayers => _parameters.Max;
     public string Scene => _scene.Name;
 
     public IReadOnlyList<RagonPlayer> Players => _playerCache.Players;
@@ -71,11 +71,11 @@ namespace Ragon.Client
     public RagonRoom(RagonClient client,
       RagonEntityCache entityCache,
       RagonPlayerCache playerCache,
-      RagonRoomInformation information,
+      RoomParameters parameters,
       RagonScene scene)
     {
       _client = client;
-      _information = information;
+      _parameters = parameters;
       _entityCache = entityCache;
       _playerCache = playerCache;
       _scene = scene;

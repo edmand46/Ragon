@@ -80,6 +80,9 @@ public sealed class RoomCreateOperation : BaseOperation
     var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
     var room = new RagonRoom(roomId, information, roomPlugin);
 
+    if (!roomPlugin.OnPlayerJoined(roomPlayer))
+      return;
+    
     roomPlayer.OnAttached(room);
 
     context.Scheduler.Run(room);
