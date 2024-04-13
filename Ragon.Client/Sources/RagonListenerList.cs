@@ -32,6 +32,7 @@ namespace Ragon.Client
     private readonly List<IRagonPlayerJoinListener> _playerJoinListeners = new();
     private readonly List<IRagonPlayerLeftListener> _playerLeftListeners = new();
     private readonly List<IRagonDataListener> _dataListeners = new();
+    private readonly List<IRagonRoomListListener> _roomListListeners = new();
     private readonly List<Action> _delayedActions = new();
 
     public RagonListenerList(RagonClient client)
@@ -131,6 +132,11 @@ namespace Ragon.Client
       _playerLeftListeners.Add(listener);
     }
     
+    public void Add(IRagonRoomListListener listener)
+    {
+      _roomListListeners.Add(listener);
+    }
+    
     public void Remove(IRagonDataListener listener)
     {
       _delayedActions.Add(() => _dataListeners.Remove(listener));
@@ -184,6 +190,11 @@ namespace Ragon.Client
     public void Remove(IRagonPlayerLeftListener listener)
     {
       _delayedActions.Add(() => _playerLeftListeners.Remove(listener));
+    }
+    
+    public void Remove(IRagonRoomListListener listener)
+    {
+      _delayedActions.Add(() => _roomListListeners.Remove(listener));
     }
 
     public void OnAuthorizationSuccess(string playerId, string playerName, string payload)
@@ -262,6 +273,12 @@ namespace Ragon.Client
     {
       foreach (var listener in _dataListeners)
         listener.OnData(player, data);
+    }
+
+    public void OnRoomList(RagonRoomInformation[] roomInfos)
+    {
+      foreach (var listListener in _roomListListeners)
+        listListener.OnRoomListUpdate(roomInfos);
     }
   }
 }

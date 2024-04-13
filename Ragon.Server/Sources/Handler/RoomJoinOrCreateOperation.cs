@@ -26,7 +26,7 @@ namespace Ragon.Server.Handler;
 
 public sealed class RoomJoinOrCreateOperation : BaseOperation
 {
-  private readonly RagonRoomParameters _roomParameters = new();
+  private readonly RagonRoomPayload _roomPayload = new();
   private readonly Logger _logger = LogManager.GetCurrentClassLogger();
   private readonly IServerPlugin _serverPlugin;
   private readonly RagonWebHookPlugin _ragonWebHookPlugin;
@@ -48,11 +48,15 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
     var roomId = Guid.NewGuid().ToString();
     var lobbyPlayer = context.LobbyPlayer;
     
-    _roomParameters.Deserialize(Reader);
+    _roomPayload.Deserialize(Reader);
 
-    if (context.Lobby.FindRoomByScene(_roomParameters.Scene, out var existsRoom))
+    if (context.Lobby.FindRoomByScene(_roomPayload.Scene, out var existsRoom))
     {
       var player = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
+      
+      if (!existsRoom.Plugin.OnPlayerJoined(player))
+        return;
+      
       context.SetRoom(existsRoom, player);
       
       _ragonWebHookPlugin.RoomJoined(context, existsRoom, player);
@@ -63,14 +67,17 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
     {
       var information = new RoomInformation()
       {
-        Scene = _roomParameters.Scene,
-        Max = _roomParameters.Max,
-        Min = _roomParameters.Min,
+        Scene = _roomPayload.Scene,
+        Max = _roomPayload.Max,
+        Min = _roomPayload.Min,
       };
 
       var roomPlayer = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
       var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
       var room = new RagonRoom(roomId, information, roomPlugin);
+      
+      if (!roomPlugin.OnPlayerJoined(roomPlayer))
+        return;
       
       _ragonWebHookPlugin.RoomCreated(context, room, roomPlayer);
       

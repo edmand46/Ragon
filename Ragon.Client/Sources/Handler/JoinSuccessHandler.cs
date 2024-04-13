@@ -19,9 +19,9 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-public struct RagonRoomInformation
+public struct RoomParameters
 {
-  public RagonRoomInformation(string roomId, string playerId, string ownerId, ushort min, ushort max)
+  public RoomParameters(string roomId, string playerId, string ownerId, ushort min, ushort max)
   {
     RoomId = roomId;
     PlayerId = playerId;
@@ -39,6 +39,8 @@ public struct RagonRoomInformation
 
 internal class JoinSuccessHandler : IHandler
 {
+  
+  
   private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
@@ -67,7 +69,7 @@ internal class JoinSuccessHandler : IHandler
     var sceneName = reader.ReadString();
 
     var scene = new RagonScene(_client, _playerCache, _entityCache, sceneName);
-    var roomInfo = new RagonRoomInformation(roomId, localId, ownerId, min, max);
+    var roomInfo = new RoomParameters(roomId, localId, ownerId, min, max);
     var room = new RagonRoom(_client, _entityCache, _playerCache, roomInfo, scene);
 
     _playerCache.SetOwnerAndLocal(ownerId, localId);

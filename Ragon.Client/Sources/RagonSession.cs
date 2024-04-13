@@ -31,11 +31,11 @@ namespace Ragon.Client
 
     public void CreateOrJoin(string sceneName, int minPlayers, int maxPlayers)
     {
-      var parameters = new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers};
+      var parameters = new RagonRoomPayload() {Scene = sceneName, Min = minPlayers, Max = maxPlayers};
       CreateOrJoin(parameters);
     }
     
-    public void CreateOrJoin(RagonRoomParameters parameters)
+    public void CreateOrJoin(RagonRoomPayload parameters)
     {
       _buffer.Clear();
       _buffer.WriteOperation(RagonOperation.JOIN_OR_CREATE_ROOM);
@@ -48,15 +48,15 @@ namespace Ragon.Client
 
     public void Create(string sceneName, int minPlayers, int maxPlayers)
     {
-      Create(null, new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers});
+      Create(null, new RagonRoomPayload() {Scene = sceneName, Min = minPlayers, Max = maxPlayers});
     }
 
     public void Create(string roomId, string sceneName, int minPlayers, int maxPlayers)
     {
-      Create(roomId, new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers});
+      Create(roomId, new RagonRoomPayload() {Scene = sceneName, Min = minPlayers, Max = maxPlayers});
     }
     
-    public  void Create(string roomId, RagonRoomParameters parameters)
+    public  void Create(string roomId, RagonRoomPayload parameters)
     {
       _buffer.Clear();
       _buffer.WriteOperation(RagonOperation.CREATE_ROOM);

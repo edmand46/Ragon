@@ -17,7 +17,7 @@
 
 namespace Ragon.Protocol
 {
-  public class RagonRoomParameters: IRagonSerializable
+  public class RagonRoomPayload: IRagonSerializable
   {
     public string Scene { get; set; }
     public int Min { get; set; } 
