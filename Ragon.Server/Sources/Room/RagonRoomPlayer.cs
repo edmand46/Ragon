@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Ragon.Server.Data;
 using Ragon.Server.Entity;
 using Ragon.Server.IO;
 
@@ -29,12 +30,15 @@ public class RagonRoomPlayer
   public RagonRoom Room { get; private set; }
   public RagonEntityCache Entities { get; private set; }
   
+  public RagonData UserData { get; private set; }
+  
   public RagonRoomPlayer(INetworkConnection connection, string id, string name)
   {
     Id = id;
     Name = name;
     Connection = connection;
     Entities = new RagonEntityCache();
+    UserData = new RagonData(Array.Empty<byte>());
   }
 
   public void AttachEntity(RagonEntity entity)

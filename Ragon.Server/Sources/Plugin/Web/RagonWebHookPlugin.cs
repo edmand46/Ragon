@@ -16,6 +16,7 @@
 
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using Newtonsoft.Json;
 using Ragon.Protocol;
 using Ragon.Server.Handler;
@@ -58,7 +59,8 @@ public class RagonWebHookPlugin
         var authorizationResponse = JsonConvert.DeserializeObject<AuthorizationResponse>(content);
         if (authorizationResponse != null)
         {
-          var lobbyPlayer = new RagonLobbyPlayer(context.Connection, authorizationResponse.Id, authorizationResponse.Name, authorizationResponse.Payload);
+          var bytes = Encoding.UTF8.GetBytes(authorizationResponse.Payload);
+          var lobbyPlayer = new RagonLobbyPlayer(context.Connection, authorizationResponse.Id, authorizationResponse.Name, bytes);
 
           context.SetPlayer(lobbyPlayer);
           authorizationOperation.Approve(context);

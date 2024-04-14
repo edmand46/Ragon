@@ -24,9 +24,20 @@ namespace Ragon.Server.Handler
 
       var playerDataLen = Reader.ReadUShort();
       var playerData = Reader.ReadBytes(playerDataLen);
-      var player = context.RoomPlayer;
       
-      // player.SetData(playerData);
+      var roomPlayer = context.RoomPlayer;
+      if (roomPlayer != null)
+      {
+        roomPlayer.UserData.Data = playerData;
+        return;
+      }
+      
+      var lobbyPlayer = context.RoomPlayer;
+      if (lobbyPlayer != null)
+      {
+        lobbyPlayer.UserData.Data = playerData;
+      }
+      
     }
   }
 }

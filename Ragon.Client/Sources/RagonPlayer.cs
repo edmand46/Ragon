@@ -26,8 +26,7 @@ namespace Ragon.Client
     public ushort PeerId { get; set; }
     public bool IsRoomOwner { get; set; }
     public bool IsLocal { get; set; }
-    
-    public IRagonSerializable Data { get; set; }
+    public byte[] Data { get; private set; }
     
     public RagonPlayer(ushort peerId, string playerId, string name, bool isRoomOwner, bool isLocal)
     {
@@ -36,6 +35,11 @@ namespace Ragon.Client
       IsLocal = isLocal;
       Name = name;
       Id = playerId;
+    }
+
+    public void SetData(byte[] data)
+    {
+      Data = data;
     }
   }
 }
