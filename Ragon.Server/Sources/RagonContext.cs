@@ -26,7 +26,7 @@ public class RagonContext
   public ConnectionStatus ConnectionStatus { get; set; }
   public INetworkConnection Connection { get; }
   public IExecutor Executor { get; private set; }
-  public RagonServerConfiguration Configuration { get; private set; }
+  public int LimitBufferedEvents { get; private set; }
   public IRagonLobby Lobby { get; private set; }
   public RagonLobbyPlayer? LobbyPlayer { get; private set; }
 
@@ -36,14 +36,14 @@ public class RagonContext
   public RagonScheduler Scheduler { get; private set; }
 
   public RagonContext(
-    INetworkConnection connection, 
-    RagonServerConfiguration configuration,
-    IExecutor executor, 
-    IRagonLobby lobby, 
-    RagonScheduler scheduler)
+    INetworkConnection connection,
+    IExecutor executor,
+    IRagonLobby lobby,
+    RagonScheduler scheduler,
+    int limitBufferedEvents)
   {
     ConnectionStatus = ConnectionStatus.Unauthorized;
-    Configuration = configuration;
+    LimitBufferedEvents = limitBufferedEvents;
     Connection = connection;
     Executor = executor;
     Lobby = lobby;
@@ -54,15 +54,14 @@ public class RagonContext
   {
     LobbyPlayer = player;
   }
-  
+
   internal void SetRoom(RagonRoom room, RagonRoomPlayer player)
   {
     Room?.DetachPlayer(RoomPlayer);
-    
+
     Room = room;
     RoomPlayer = player;
-    
+
     Room.AttachPlayer(RoomPlayer);
   }
-  
 }

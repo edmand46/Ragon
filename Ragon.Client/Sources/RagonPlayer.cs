@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Ragon.Protocol;
+
 namespace Ragon.Client
 {
   [Serializable]
@@ -25,6 +27,8 @@ namespace Ragon.Client
     public bool IsRoomOwner { get; set; }
     public bool IsLocal { get; set; }
     
+    public IRagonSerializable Data { get; set; }
+    
     public RagonPlayer(ushort peerId, string playerId, string name, bool isRoomOwner, bool isLocal)
     {
       PeerId = peerId;
@@ -32,6 +36,6 @@ namespace Ragon.Client
       IsLocal = isLocal;
       Name = name;
       Id = playerId;
-    } 
+    }
   }
 }
