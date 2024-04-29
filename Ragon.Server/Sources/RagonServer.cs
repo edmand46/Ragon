@@ -74,6 +74,7 @@ public class RagonServer : IRagonServer, INetworkListener
     var contextObserver = new RagonContextObserver(_contextsByPlayerId);
     
     _scheduler.Run(new RagonActionTimer(SendRoomList, 1.0f));
+    _scheduler.Run(new RagonActionTimer(SendUserData, 0.2f));
     
     _serverPlugin.OnAttached(this);
 
@@ -243,6 +244,23 @@ public class RagonServer : IRagonServer, INetworkListener
     {
       if (value.Room == null) // If only in lobby, then send room list data
         value.Connection.Reliable.Send(sendData);
+    }
+  }
+
+  public void SendUserData()
+  {
+    foreach (var (_, value) in _contextsByPlayerId)
+    {
+      if (value.UserData.IsDirty)
+      {
+        _writer.Clear();
+        _writer.WriteOperation(RagonOperation.PLAYER_DATA_UPDATED);
+        _writer.WriteUShort(value.Connection.Id);
+        _writer.WriteBytes(value.UserData.Data);
+        
+        var sendData = _writer.ToArray();
+        _server.Broadcast(sendData, NetworkChannel.RELIABLE);
+      }
     }
   }
 

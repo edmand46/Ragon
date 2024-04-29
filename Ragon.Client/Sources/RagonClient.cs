@@ -121,7 +121,7 @@ namespace Ragon.Client
       _handlers[(byte)RagonOperation.REPLICATE_ROOM_EVENT] = new RoomEventHandler(this, _playerCache);
       _handlers[(byte)RagonOperation.SNAPSHOT] = new SnapshotHandler(this, _listeners, _entityCache, _playerCache, _entityListener);
       _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampHandler(this);
-      _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataHandler(_playerCache, _listeners);
+      _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RawDataHandler(_playerCache, _listeners);
       _handlers[(byte)RagonOperation.ROOM_LIST_UPDATED] = new RoomListHandler(_session, _listeners);
       
       var protocolRaw = RagonVersion.Parse(protocol);

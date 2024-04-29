@@ -5,7 +5,6 @@ using Ragon.Server.Lobby;
 
 namespace Ragon.Server.Handler
 {
-
   public class PlayerDataOperation : BaseOperation
   {
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
@@ -24,20 +23,8 @@ namespace Ragon.Server.Handler
 
       var playerDataLen = Reader.ReadUShort();
       var playerData = Reader.ReadBytes(playerDataLen);
-      
-      var roomPlayer = context.RoomPlayer;
-      if (roomPlayer != null)
-      {
-        roomPlayer.UserData.Data = playerData;
-        return;
-      }
-      
-      var lobbyPlayer = context.RoomPlayer;
-      if (lobbyPlayer != null)
-      {
-        lobbyPlayer.UserData.Data = playerData;
-      }
-      
+
+      context.UserData.Data = playerData;
     }
   }
 }

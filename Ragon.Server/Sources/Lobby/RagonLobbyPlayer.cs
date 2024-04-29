@@ -31,14 +31,13 @@ public class RagonLobbyPlayer
   public INetworkConnection Connection { get; }
   public string Id { get; private set; }
   public string Name { get; private set; }
+  public string Payload { get; private set; }
   
-  public RagonData UserData { get; private set; }
-  
-  public RagonLobbyPlayer(INetworkConnection connection, string id, string name, byte[] payload)
+  public RagonLobbyPlayer(INetworkConnection connection, string id, string name, string payload)
   {
     Id = id;
     Name = name;
     Connection = connection;
-    UserData = new RagonData(payload);
+    Payload = payload;
   }
 }

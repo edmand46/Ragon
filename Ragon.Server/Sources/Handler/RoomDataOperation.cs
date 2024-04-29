@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
 
@@ -28,22 +27,11 @@ public sealed class RoomDataOperation : BaseOperation
 
   public override void Handle(RagonContext context, NetworkChannel channel)
   {
-    var player = context.RoomPlayer;
+    var playerDataLen = Reader.ReadUShort();
+    var playerData = Reader.ReadBytes(playerDataLen);
+
     var room = context.Room;
-
-    var data = Reader.RawData;
-    var dataSize = data.Length - 1;
-    var headerSize = 3;
-    var size = headerSize + dataSize;
-    var sendData = new byte[size];
-    var peerId = player.Connection.Id;
-
-    sendData[0] = (byte)RagonOperation.REPLICATE_RAW_DATA;
-    sendData[1] = (byte)peerId;
-    sendData[2] = (byte)(peerId >> 8);
-
-    Array.Copy(data, 1, sendData, headerSize, dataSize);
-
-    room.Broadcast(sendData, channel);
+    if (room != null)
+      room.UserData.Data = playerData;
   }
 }

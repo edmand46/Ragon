@@ -15,6 +15,7 @@
  */
 
 using Ragon.Protocol;
+using Ragon.Server.Data;
 using Ragon.Server.Entity;
 using Ragon.Server.IO;
 using Ragon.Server.Plugin;
@@ -29,7 +30,8 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public int PlayerMax { get; private set; }
   public int PlayerMin { get; private set; }
   public int PlayerCount => WaitPlayersList.Count;
-
+  
+  public RagonData UserData { get; set; }
   public RagonRoomPlayer Owner { get; private set; }
   public RagonBuffer Writer { get; }
   public IRoomPlugin Plugin { get; private set; }

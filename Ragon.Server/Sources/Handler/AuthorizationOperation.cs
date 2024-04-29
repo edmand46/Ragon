@@ -86,7 +86,6 @@ public sealed class AuthorizationOperation: BaseOperation
     
     var playerId = context.LobbyPlayer.Id;
     var playerName = context.LobbyPlayer.Name;
-    
     var playerPayload = context.LobbyPlayer.Payload;
 
     _writer.Clear();

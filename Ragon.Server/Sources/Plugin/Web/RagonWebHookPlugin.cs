@@ -59,8 +59,7 @@ public class RagonWebHookPlugin
         var authorizationResponse = JsonConvert.DeserializeObject<AuthorizationResponse>(content);
         if (authorizationResponse != null)
         {
-          var bytes = Encoding.UTF8.GetBytes(authorizationResponse.Payload);
-          var lobbyPlayer = new RagonLobbyPlayer(context.Connection, authorizationResponse.Id, authorizationResponse.Name, bytes);
+          var lobbyPlayer = new RagonLobbyPlayer(context.Connection, authorizationResponse.Id, authorizationResponse.Name, authorizationResponse.Payload);
 
           context.SetPlayer(lobbyPlayer);
           authorizationOperation.Approve(context);

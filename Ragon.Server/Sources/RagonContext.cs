@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Ragon.Server.Data;
 using Ragon.Server.IO;
 using Ragon.Server.Lobby;
 using Ragon.Server.Time;
@@ -29,10 +30,11 @@ public class RagonContext
   public int LimitBufferedEvents { get; private set; }
   public IRagonLobby Lobby { get; private set; }
   public RagonLobbyPlayer? LobbyPlayer { get; private set; }
-
   public RagonRoom? Room { get; private set; }
   public RagonRoomPlayer? RoomPlayer { get; private set; }
 
+  public RagonData UserData { get; private set; }
+    
   public RagonScheduler Scheduler { get; private set; }
 
   public RagonContext(
@@ -48,6 +50,7 @@ public class RagonContext
     Executor = executor;
     Lobby = lobby;
     Scheduler = scheduler;
+    UserData = new RagonData(Array.Empty<byte>());
   }
 
   internal void SetPlayer(RagonLobbyPlayer player)
