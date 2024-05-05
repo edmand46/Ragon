@@ -282,6 +282,7 @@ namespace Ragon.Protocol
 
       _write += numBits;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint Read(int numBits = 16)

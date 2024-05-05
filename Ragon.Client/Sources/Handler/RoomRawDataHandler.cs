@@ -19,12 +19,12 @@ using Ragon.Protocol;
 
 namespace Ragon.Client;
 
-internal class RawDataHandler: IHandler
+internal class RoomRawDataHandler: IHandler
 {
   private readonly RagonListenerList _listeners;
   private readonly RagonPlayerCache _playerCache;
     
-  public RawDataHandler(
+  public RoomRawDataHandler(
     RagonPlayerCache playerCache,
     RagonListenerList listeners)
   {

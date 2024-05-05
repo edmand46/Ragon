@@ -46,20 +46,21 @@ namespace Ragon.Client
         _callback = null!;
       }
     }
-      
+    
     private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
 
-    private RagonClient _client;
-    private RagonScene _scene;
-    private RagonEntityCache _entityCache;
-    private RagonPlayerCache _playerCache;
-    private RoomParameters _parameters;
-
+    private readonly RagonClient _client;
+    private readonly RagonScene _scene;
+    private readonly RagonEntityCache _entityCache;
+    private readonly RagonPlayerCache _playerCache;
+    private readonly RoomParameters _parameters;
+    private readonly Dictionary<string, RagonProperty> _properties = new();
+    
     public string Id => _parameters.RoomId;
     public int MinPlayers => _parameters.Min;
     public int MaxPlayers => _parameters.Max;
     public string Scene => _scene.Name;
-
+    
     public IReadOnlyList<RagonPlayer> Players => _playerCache.Players;
     public RagonPlayer Local => _playerCache.Local;
     public RagonPlayer Owner => _playerCache.Owner;
@@ -98,6 +99,11 @@ namespace Ragon.Client
         evnt?.Invoke(caller, buffer);
       else
         RagonLog.Warn($"Handler event on entity {Id} with eventCode {eventCode} not defined");
+    }
+
+    internal void Data(RagonBuffer buffer)
+    {
+            
     }
 
     public IDisposable OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()

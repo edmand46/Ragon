@@ -30,7 +30,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public int PlayerMax { get; private set; }
   public int PlayerMin { get; private set; }
   public int PlayerCount => WaitPlayersList.Count;
-  
+
   public RagonData UserData { get; set; }
   public RagonRoomPlayer Owner { get; private set; }
   public RagonBuffer Writer { get; }
@@ -109,6 +109,20 @@ public class RagonRoom : IRagonRoom, IRagonAction
       var sendData = Writer.ToArray();
       foreach (var roomPlayer in ReadyPlayersList)
         roomPlayer.Connection.Unreliable.Send(sendData);
+    }
+
+    if (UserData.IsDirty)
+    {
+      Writer.Clear();
+      Writer.WriteOperation(RagonOperation.ROOM_DATA_UPDATED);
+      Writer.WriteUShort((ushort)UserData.Data.Length);
+      Writer.WriteBytes(UserData.Data);
+
+      var sendData = Writer.ToArray();
+      foreach (var roomPlayer in ReadyPlayersList)
+        roomPlayer.Connection.Reliable.Send(sendData);
+
+      UserData.IsDirty = false;
     }
   }
 
