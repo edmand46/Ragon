@@ -68,6 +68,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
 
     _entitiesDirtySet = new HashSet<RagonEntity>();
 
+    UserData = new RagonData(Array.Empty<byte>());
     Writer = new RagonBuffer();
   }
 
@@ -109,20 +110,6 @@ public class RagonRoom : IRagonRoom, IRagonAction
       var sendData = Writer.ToArray();
       foreach (var roomPlayer in ReadyPlayersList)
         roomPlayer.Connection.Unreliable.Send(sendData);
-    }
-
-    if (UserData.IsDirty)
-    {
-      Writer.Clear();
-      Writer.WriteOperation(RagonOperation.ROOM_DATA_UPDATED);
-      Writer.WriteUShort((ushort)UserData.Data.Length);
-      Writer.WriteBytes(UserData.Data);
-
-      var sendData = Writer.ToArray();
-      foreach (var roomPlayer in ReadyPlayersList)
-        roomPlayer.Connection.Reliable.Send(sendData);
-
-      UserData.IsDirty = false;
     }
   }
 

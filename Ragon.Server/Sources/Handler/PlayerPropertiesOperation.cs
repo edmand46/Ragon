@@ -5,11 +5,11 @@ using Ragon.Server.Lobby;
 
 namespace Ragon.Server.Handler
 {
-  public class PlayerDataOperation : BaseOperation
+  public class PlayerPropertiesOperation : BaseOperation
   {
     private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
-    public PlayerDataOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+    public PlayerPropertiesOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
     {
     }
 
@@ -20,10 +20,8 @@ namespace Ragon.Server.Handler
         _logger.Warn($"Player {context.Connection.Id} not authorized for this request");
         return;
       }
-
-      var playerDataLen = Reader.ReadUShort();
-      var playerData = Reader.ReadBytes(playerDataLen);
-
+      
+      var playerData = Reader.ReadBytes(Reader.Capacity);
       context.UserData.Data = playerData;
     }
   }

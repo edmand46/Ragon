@@ -32,9 +32,7 @@ public class RagonContext
   public RagonLobbyPlayer? LobbyPlayer { get; private set; }
   public RagonRoom? Room { get; private set; }
   public RagonRoomPlayer? RoomPlayer { get; private set; }
-
   public RagonData UserData { get; private set; }
-    
   public RagonScheduler Scheduler { get; private set; }
 
   public RagonContext(

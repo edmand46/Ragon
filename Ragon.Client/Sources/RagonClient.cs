@@ -121,8 +121,9 @@ namespace Ragon.Client
       _handlers[(byte)RagonOperation.REPLICATE_ROOM_EVENT] = new RoomEventHandler(this, _playerCache);
       _handlers[(byte)RagonOperation.SNAPSHOT] = new SnapshotHandler(this, _listeners, _entityCache, _playerCache, _entityListener);
       _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampHandler(this);
-      _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomRawDataHandler(_playerCache, _listeners);
+      _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataHandler(_playerCache, _listeners);
       _handlers[(byte)RagonOperation.ROOM_LIST_UPDATED] = new RoomListHandler(_session, _listeners);
+      _handlers[(byte)RagonOperation.ROOM_PROPERTIES_UPDATED] = new RoomUserDataHandler(this, _listeners);
       
       var protocolRaw = RagonVersion.Parse(protocol);
       _connection.Connect(address, port, protocolRaw);
@@ -148,6 +149,7 @@ namespace Ragon.Client
           _entityCache.WriteState(_writeBuffer);
 
           SendTimestamp();
+          SendProperties();
         }
 
         _stats.Update(_connection.BytesSent, _connection.BytesReceived, _connection.Ping, dt);
@@ -230,6 +232,22 @@ namespace Ragon.Client
       _writeBuffer.WriteOperation(RagonOperation.TIMESTAMP_SYNCHRONIZATION);
       _writeBuffer.Write(value.Int0, 32);
       _writeBuffer.Write(value.Int1, 32);
+    }
+    
+    private void SendProperties()
+    {
+      if (_room == null) return;
+      
+      var props = _room.UserData;
+      if (!props.Dirty) return;  
+         
+      _writeBuffer.Clear();
+      _writeBuffer.WriteOperation(RagonOperation.ROOM_PROPERTIES_UPDATED);
+      
+      _room.UserData.Write(_writeBuffer);
+
+      var sendData = _writeBuffer.ToArray();
+      _connection.Reliable.Send(sendData);
     }
 
     private void OnConnected()

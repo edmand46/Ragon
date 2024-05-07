@@ -33,6 +33,7 @@ namespace Ragon.Client
     private readonly List<IRagonPlayerLeftListener> _playerLeftListeners = new();
     private readonly List<IRagonDataListener> _dataListeners = new();
     private readonly List<IRagonRoomListListener> _roomListListeners = new();
+    private readonly List<IRagonRoomUserDataListener> _roomUserDataListeners = new();
     private readonly List<Action> _delayedActions = new();
 
     public RagonListenerList(RagonClient client)
@@ -51,6 +52,7 @@ namespace Ragon.Client
       _ownershipChangedListeners.Add(listener);
       _playerJoinListeners.Add(listener);
       _playerLeftListeners.Add(listener);
+      _roomUserDataListeners.Add(listener);
     }
 
     public void Remove(IRagonListener listener)
@@ -66,6 +68,7 @@ namespace Ragon.Client
         _ownershipChangedListeners.Remove(listener);
         _playerJoinListeners.Remove(listener);
         _playerLeftListeners.Remove(listener);
+        _roomUserDataListeners.Remove(listener);
       });
     }
 
@@ -137,6 +140,11 @@ namespace Ragon.Client
       _roomListListeners.Add(listener);
     }
     
+    public void Add(IRagonRoomUserDataListener listener)
+    {
+      _roomUserDataListeners.Add(listener);
+    }
+    
     public void Remove(IRagonDataListener listener)
     {
       _delayedActions.Add(() => _dataListeners.Remove(listener));
@@ -197,6 +205,11 @@ namespace Ragon.Client
       _delayedActions.Add(() => _roomListListeners.Remove(listener));
     }
 
+    public void Remove(IRagonRoomUserDataListener listener)
+    {
+      _delayedActions.Add(() => _roomUserDataListeners.Remove(listener));
+    }
+    
     public void OnAuthorizationSuccess(string playerId, string playerName, string payload)
     {
       foreach (var listener in _authorizationListeners)
@@ -279,6 +292,17 @@ namespace Ragon.Client
     {
       foreach (var listListener in _roomListListeners)
         listListener.OnRoomListUpdate(roomInfos);
+    }
+    
+    public void OnRoomUserData()
+    {
+      foreach (var userDataListener in _roomUserDataListeners)
+        userDataListener.OnUserDataUpdated(_client);
+    }
+
+    public void OnPlayerUserData()
+    {
+      
     }
   }
 }

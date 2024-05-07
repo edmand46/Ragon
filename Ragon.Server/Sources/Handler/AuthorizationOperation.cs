@@ -41,6 +41,7 @@ public sealed class AuthorizationOperation: BaseOperation
     _webhook = webhook;
     _observer = observer;
     _writer = writer;
+    _configuration = configuration;
   }
   
   public override void Handle(RagonContext context, NetworkChannel channel)
