@@ -39,6 +39,7 @@ public struct RagonServerConfiguration
   public int LimitPlayersPerRoom;
   public int LimitRooms;
   public int LimitBufferedEvents;
+  public int LimitUserData;
   public Dictionary<string, string> WebHooks;
 
   private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

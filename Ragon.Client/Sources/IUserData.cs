@@ -16,23 +16,12 @@
 
 using Ragon.Protocol;
 
-namespace Ragon.Client
+namespace Ragon.Client;
+
+public interface IUserData
 {
-  internal class RoomUserDataHandler : IHandler
-  {
-    private readonly RagonClient _client;
-    private readonly RagonListenerList _listenerList;
-
-    public RoomUserDataHandler(RagonClient client, RagonListenerList listenerList)
-    {
-      _client = client;
-      _listenerList = listenerList;
-    }
-
-    public void Handle(RagonBuffer reader)
-    {
-      _client.Room?.HandleUserData(reader);
-      _listenerList.OnRoomUserData();
-    }
-  }
+  public byte[] this[string key] { get; set; }
+  bool Dirty { get; }
+  void Read(RagonBuffer buffer);
+  void Write(RagonBuffer buffer);
 }

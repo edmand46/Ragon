@@ -21,12 +21,18 @@ using Ragon.Server.Lobby;
 
 namespace Ragon.Server.Handler;
 
-public sealed class RoomPropertiesOperation : BaseOperation
+public sealed class RoomUserDataOperation : BaseOperation
 {
   private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
-    
-  public RoomPropertiesOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  private readonly int _userDataLimit;
+  
+  public RoomUserDataOperation(
+    RagonBuffer reader,
+    RagonBuffer writer,
+    int userDataLimit
+  ) : base(reader, writer)
   {
+    _userDataLimit = userDataLimit;
   }
 
   public override void Handle(RagonContext context, NetworkChannel channel)
@@ -36,11 +42,16 @@ public sealed class RoomPropertiesOperation : BaseOperation
       _logger.Warn($"Player {context.Connection.Id} not authorized for this request");
       return;
     }
-    
-    var roomData = Reader.ReadBytes(Reader.Capacity);
 
+    var roomUserData = Reader.ReadBytes(Reader.Capacity);
+    if (roomUserData.Length > _userDataLimit)
+    {
+      _logger.Warn("Room user data is too big");
+      return;
+    }
+    
     var room = context.Room;
     if (room != null)
-      room.UserData.Data = roomData;
+      room.UserData.Data = roomUserData;
   }
 }

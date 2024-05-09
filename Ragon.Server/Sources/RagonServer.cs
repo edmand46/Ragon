@@ -74,8 +74,8 @@ public class RagonServer : IRagonServer, INetworkListener
     var contextObserver = new RagonContextObserver(_contextsByPlayerId);
     
     _scheduler.Run(new RagonActionTimer(SendRoomList, 1.0f));
-    _scheduler.Run(new RagonActionTimer(SendPlayerProperties, 1.0f));
-    _scheduler.Run(new RagonActionTimer(SendRoomProperties, 1.0f));
+    _scheduler.Run(new RagonActionTimer(SendPlayerUserData, 0.2f));
+    _scheduler.Run(new RagonActionTimer(SendRoomUserData, 0.2f));
     
     _serverPlugin.OnAttached(this);
 
@@ -96,8 +96,8 @@ public class RagonServer : IRagonServer, INetworkListener
     _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampSyncOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.REPLICATE_ROOM_EVENT] = new RoomEventOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.ROOM_PROPERTIES_UPDATED] = new RoomPropertiesOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.PLAYER_PROPERTIES_UPDATED] = new PlayerPropertiesOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.ROOM_DATA_UPDATED] = new RoomUserDataOperation(_reader, _writer, _configuration.LimitUserData);
+    _handlers[(byte)RagonOperation.PLAYER_DATA_UPDATED] = new PlayerUserDataOperation(_reader, _writer, _configuration.LimitUserData);
 
     _logger.Trace($"Server Tick Rate: {_configuration.ServerTickRate}");
   }
@@ -248,14 +248,14 @@ public class RagonServer : IRagonServer, INetworkListener
     }
   }
 
-  public void SendPlayerProperties()
+  public void SendPlayerUserData()
   {
     foreach (var (_, value) in _contextsByPlayerId)
     {
       if (value.UserData.IsDirty)
       {
         _writer.Clear();
-        _writer.WriteOperation(RagonOperation.PLAYER_PROPERTIES_UPDATED);
+        _writer.WriteOperation(RagonOperation.PLAYER_DATA_UPDATED);
         _writer.WriteUShort(value.Connection.Id);
         _writer.WriteBytes(value.UserData.Data);
         
@@ -267,14 +267,14 @@ public class RagonServer : IRagonServer, INetworkListener
     }
   }
   
-  public void SendRoomProperties()
+  public void SendRoomUserData()
   {
     foreach (var room in _lobby.Rooms)
     {
       if (room.UserData.IsDirty)
       {
         _writer.Clear();
-        _writer.WriteOperation(RagonOperation.ROOM_PROPERTIES_UPDATED);
+        _writer.WriteOperation(RagonOperation.ROOM_DATA_UPDATED);
         _writer.WriteBytes(room.UserData.Data);
         
         var sendData = _writer.ToArray();
