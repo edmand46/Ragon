@@ -26,45 +26,81 @@ namespace Ragon.Client
       set
       {
         _properties[key] = value;
-        
-        _dirty = true;
+
+        if (!_changesCache.ContainsKey(key))
+        {
+          _localChanges.Add(key);
+          _changesCache.Add(key, true);
+        }
       }
     }
-    public bool Dirty => _dirty;
+    
+    public void Remove(string key)
+    {
+      if (_properties.Remove(key))
+      {
+        if (!_changesCache.ContainsKey(key))
+        {
+          _localChanges.Add(key);
+          _changesCache.Add(key, true);
+        }
+      }
+    }
+    
+    public bool Dirty => _localChanges.Count > 0;
 
-    private bool _dirty = false;
+    private readonly List<string> _localChanges = new ();
+    private readonly Dictionary<string, bool> _changesCache = new();
     private readonly Dictionary<string, byte[]> _properties = new();
     
     public RagonUserData()
     {
+     
     }
 
-    public void Read(RagonBuffer buffer)
+    public IReadOnlyList<string> Read(RagonBuffer buffer)
     {
-      _properties.Clear();
-      
       var len = buffer.ReadUShort();
+      var changes = new List<string>(len);
       for (int i = 0; i < len; i++)
       {
         var key = buffer.ReadString();
-        var valueSize = buffer.ReadUShort();
-        var value = buffer.ReadBytes(valueSize);
+        var valueSize = buffer.ReadUShort();  
+        if (valueSize > 0)
+        {
+          var value = buffer.ReadBytes(valueSize);
+          _properties[key] = value;
+          
+        }
+        else
+        {
+          _properties.Remove(key);
+        }
+        
+        changes.Add(key);
+      }
 
-        _properties[key] = value;
-      }  
+      return changes;
     }
 
     public void Write(RagonBuffer buffer)
     {
-      buffer.WriteUShort((ushort)_properties.Count);
-      foreach (var property in _properties)
+      buffer.WriteUShort((ushort)_localChanges.Count);
+      foreach (var propertyChanged in _localChanges)
       {
-        buffer.WriteString(property.Key);
-        buffer.WriteUShort((ushort) property.Value.Length);
-        buffer.WriteBytes(property.Value);
+        buffer.WriteString(propertyChanged);
+        if (_properties.TryGetValue(propertyChanged, out var property))
+        {
+          buffer.WriteUShort((ushort) property.Length);
+          buffer.WriteBytes(property);          
+        }
+        else
+        {
+          buffer.WriteUShort(0);
+        }
       }
       
-      _dirty = false;
+      _localChanges.Clear();
     }
   }
 }

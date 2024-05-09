@@ -18,5 +18,5 @@ namespace Ragon.Client;
 
 public interface IRagonPlayerUserDataListener
 {
-  void OnPlayerUserDataUpdated(RagonClient client, RagonPlayer player);
+  void OnPlayerUserDataUpdated(RagonClient client, RagonPlayer player, IReadOnlyList<string> changes);
 }

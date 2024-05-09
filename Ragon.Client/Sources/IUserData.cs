@@ -22,6 +22,6 @@ public interface IUserData
 {
   public byte[] this[string key] { get; set; }
   bool Dirty { get; }
-  void Read(RagonBuffer buffer);
+  IReadOnlyList<string> Read(RagonBuffer buffer);
   void Write(RagonBuffer buffer);
 }

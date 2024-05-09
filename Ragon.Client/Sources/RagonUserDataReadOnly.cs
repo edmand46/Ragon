@@ -37,29 +37,31 @@ public class RagonUserDataReadOnly : IUserData
 
   public void Write(RagonBuffer buffer)
   {
-    buffer.WriteUShort((ushort)_properties.Count);
-    foreach (var property in _properties)
-    {
-      buffer.WriteString(property.Key);
-      buffer.WriteUShort((ushort)property.Value.Length);
-      buffer.WriteBytes(property.Value);
-    }
-
-    _dirty = false;
+  
   }
 
-  public void Read(RagonBuffer buffer)
+  public IReadOnlyList<string> Read(RagonBuffer buffer)
   {
-    _properties.Clear();
-
     var len = buffer.ReadUShort();
+    var changes = new List<string>(len);
     for (int i = 0; i < len; i++)
     {
       var key = buffer.ReadString();
-      var valueSize = buffer.ReadUShort();
-      var value = buffer.ReadBytes(valueSize);
-
-      _properties[key] = value;
+      var valueSize = buffer.ReadUShort();  
+      if (valueSize > 0)
+      {
+        var value = buffer.ReadBytes(valueSize);
+        _properties[key] = value;
+          
+      }
+      else
+      {
+        _properties.Remove(key);
+      }
+        
+      changes.Add(key);
     }
+
+    return changes;
   }
 }

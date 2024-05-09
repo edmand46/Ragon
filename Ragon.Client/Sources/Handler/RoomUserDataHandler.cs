@@ -31,8 +31,8 @@ namespace Ragon.Client
 
     public void Handle(RagonBuffer reader)
     {
-      _client.Room?.HandleUserData(reader);
-      _listenerList.OnRoomUserData();
+      var changes = _client.Room?.UserData.Read(reader);
+      _listenerList.OnRoomUserData(changes);
     }
   }
 }

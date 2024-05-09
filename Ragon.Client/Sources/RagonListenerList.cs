@@ -307,16 +307,16 @@ namespace Ragon.Client
         listListener.OnRoomListUpdate(roomInfos);
     }
 
-    public void OnRoomUserData()
+    public void OnRoomUserData(IReadOnlyList<string> changes)
     {
       foreach (var userDataListener in _roomUserDataListeners)
-        userDataListener.OnUserDataUpdated(_client);
+        userDataListener.OnUserDataUpdated(_client, changes);
     }
 
-    public void OnPlayerUserData(RagonPlayer player)
+    public void OnPlayerUserData(RagonPlayer player, IReadOnlyList<string> changes)
     {
       foreach(var playerUserDataListener in _playerUserDataListeners)
-        playerUserDataListener.OnPlayerUserDataUpdated(_client, player);
+        playerUserDataListener.OnPlayerUserDataUpdated(_client, player, changes);
     }
   }
 }

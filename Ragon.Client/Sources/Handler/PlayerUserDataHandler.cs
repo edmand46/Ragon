@@ -39,9 +39,9 @@ namespace Ragon.Client
 
       if (player != null)
       {
-        player.UserData.Read(reader);
+        var changes = player.UserData.Read(reader);
         
-        _listenerList.OnPlayerUserData(player);
+        _listenerList.OnPlayerUserData(player, changes);
         
         return;
       }
