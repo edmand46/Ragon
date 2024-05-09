@@ -14,22 +14,9 @@
  * limitations under the License.
  */
 
-namespace Ragon.Client
+namespace Ragon.Client;
+
+public interface IRagonPlayerUserDataListener
 {
-  public interface IRagonListener : 
-    IRagonAuthorizationListener, 
-    IRagonConnectionListener, 
-    IRagonFailedListener,
-    IRagonJoinListener, 
-    IRagonLeftListener, 
-    IRagonSceneListener, 
-    IRagonOwnershipChangedListener,
-    IRagonPlayerJoinListener, 
-    IRagonPlayerLeftListener,
-    IRagonRoomListListener,
-    IRagonRoomUserDataListener,
-    IRagonPlayerUserDataListener
-  {
-    
-  }
+  void OnPlayerUserDataUpdated(RagonClient client, RagonPlayer player);
 }

@@ -50,6 +50,6 @@ public class RoomEventHandler : IHandler
     if (player.IsLocal && executionMode == RagonReplicationMode.LocalAndServer)
       return;
 
-    _client.Room.Event(eventCode, player, buffer);
+    _client.Room.HandleEvent(eventCode, player, buffer);
   }
 }

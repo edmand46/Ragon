@@ -62,7 +62,7 @@ public sealed class SceneLoadedOperation : BaseOperation
           Authority = eventAuthority,
           AttachId = 0,
           StaticId = staticId,
-          BufferedEvents = context.Configuration.LimitBufferedEvents,
+          BufferedEvents = context.LimitBufferedEvents,
         };
 
         var entity = new RagonEntity(entityParameters);

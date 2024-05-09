@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Ragon.Server.Data;
 using Ragon.Server.IO;
 
 namespace Ragon.Server.Lobby;
@@ -36,7 +37,7 @@ public class RagonLobbyPlayer
   {
     Id = id;
     Name = name;
-    Payload = payload;
     Connection = connection;
+    Payload = payload;
   }
 }

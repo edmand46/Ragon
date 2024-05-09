@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using Ragon.Server.Data;
 using Ragon.Server.Entity;
 using Ragon.Server.IO;
 
@@ -26,6 +27,7 @@ public interface IRagonRoom
   public int PlayerMin { get; }
   public int PlayerMax { get; }
   public int PlayerCount { get; }
+  public RagonData UserData { get; }
   
   RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection);
   RagonRoomPlayer GetPlayerById(string id);

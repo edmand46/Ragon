@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
+using Ragon.Protocol;
+
 namespace Ragon.Client
 {
-  public interface IRagonListener : 
-    IRagonAuthorizationListener, 
-    IRagonConnectionListener, 
-    IRagonFailedListener,
-    IRagonJoinListener, 
-    IRagonLeftListener, 
-    IRagonSceneListener, 
-    IRagonOwnershipChangedListener,
-    IRagonPlayerJoinListener, 
-    IRagonPlayerLeftListener,
-    IRagonRoomListListener,
-    IRagonRoomUserDataListener,
-    IRagonPlayerUserDataListener
+  internal class RoomUserDataHandler : IHandler
   {
-    
+    private readonly RagonClient _client;
+    private readonly RagonListenerList _listenerList;
+
+    public RoomUserDataHandler(RagonClient client, RagonListenerList listenerList)
+    {
+      _client = client;
+      _listenerList = listenerList;
+    }
+
+    public void Handle(RagonBuffer reader)
+    {
+      _client.Room?.HandleUserData(reader);
+      _listenerList.OnRoomUserData();
+    }
   }
 }

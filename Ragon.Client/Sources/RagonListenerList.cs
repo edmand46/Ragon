@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ namespace Ragon.Client
     private readonly List<IRagonPlayerLeftListener> _playerLeftListeners = new();
     private readonly List<IRagonDataListener> _dataListeners = new();
     private readonly List<IRagonRoomListListener> _roomListListeners = new();
+    private readonly List<IRagonRoomUserDataListener> _roomUserDataListeners = new();
+    private readonly List<IRagonPlayerUserDataListener> _playerUserDataListeners = new();
     private readonly List<Action> _delayedActions = new();
 
     public RagonListenerList(RagonClient client)
@@ -51,6 +53,8 @@ namespace Ragon.Client
       _ownershipChangedListeners.Add(listener);
       _playerJoinListeners.Add(listener);
       _playerLeftListeners.Add(listener);
+      _roomUserDataListeners.Add(listener);
+      _playerUserDataListeners.Add(listener);
     }
 
     public void Remove(IRagonListener listener)
@@ -66,6 +70,8 @@ namespace Ragon.Client
         _ownershipChangedListeners.Remove(listener);
         _playerJoinListeners.Remove(listener);
         _playerLeftListeners.Remove(listener);
+        _roomUserDataListeners.Remove(listener);
+        _playerUserDataListeners.Remove(listener);
       });
     }
 
@@ -81,7 +87,7 @@ namespace Ragon.Client
     {
       _dataListeners.Add(dataListener);
     }
-    
+
     public void Add(IRagonAuthorizationListener listener)
     {
       _authorizationListeners.Add(listener);
@@ -131,17 +137,27 @@ namespace Ragon.Client
     {
       _playerLeftListeners.Add(listener);
     }
-    
+
     public void Add(IRagonRoomListListener listener)
     {
       _roomListListeners.Add(listener);
     }
+
+    public void Add(IRagonRoomUserDataListener listener)
+    {
+      _roomUserDataListeners.Add(listener);
+    }
     
+    public void Add(IRagonPlayerUserDataListener listener)
+    {
+      _playerUserDataListeners.Add(listener);
+    }
+
     public void Remove(IRagonDataListener listener)
     {
       _delayedActions.Add(() => _dataListeners.Remove(listener));
     }
-    
+
     public void Remove(IRagonSceneRequestListener listener)
     {
       _delayedActions.Add(() => _sceneRequestListeners.Remove(listener));
@@ -191,10 +207,20 @@ namespace Ragon.Client
     {
       _delayedActions.Add(() => _playerLeftListeners.Remove(listener));
     }
-    
+
     public void Remove(IRagonRoomListListener listener)
     {
       _delayedActions.Add(() => _roomListListeners.Remove(listener));
+    }
+
+    public void Remove(IRagonRoomUserDataListener listener)
+    {
+      _delayedActions.Add(() => _roomUserDataListeners.Remove(listener));
+    }
+    
+    public void Remove(IRagonPlayerUserDataListener listener)
+    {
+      _delayedActions.Add(() => _playerUserDataListeners.Remove(listener));
     }
 
     public void OnAuthorizationSuccess(string playerId, string playerName, string payload)
@@ -279,6 +305,18 @@ namespace Ragon.Client
     {
       foreach (var listListener in _roomListListeners)
         listListener.OnRoomListUpdate(roomInfos);
+    }
+
+    public void OnRoomUserData()
+    {
+      foreach (var userDataListener in _roomUserDataListeners)
+        userDataListener.OnUserDataUpdated(_client);
+    }
+
+    public void OnPlayerUserData(RagonPlayer player)
+    {
+      foreach(var playerUserDataListener in _playerUserDataListeners)
+        playerUserDataListener.OnPlayerUserDataUpdated(_client, player);
     }
   }
 }

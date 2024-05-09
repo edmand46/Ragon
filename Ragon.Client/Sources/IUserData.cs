@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-namespace Ragon.Client
+using Ragon.Protocol;
+
+namespace Ragon.Client;
+
+public interface IUserData
 {
-  public interface IRagonListener : 
-    IRagonAuthorizationListener, 
-    IRagonConnectionListener, 
-    IRagonFailedListener,
-    IRagonJoinListener, 
-    IRagonLeftListener, 
-    IRagonSceneListener, 
-    IRagonOwnershipChangedListener,
-    IRagonPlayerJoinListener, 
-    IRagonPlayerLeftListener,
-    IRagonRoomListListener,
-    IRagonRoomUserDataListener,
-    IRagonPlayerUserDataListener
-  {
-    
-  }
+  public byte[] this[string key] { get; set; }
+  bool Dirty { get; }
+  void Read(RagonBuffer buffer);
+  void Write(RagonBuffer buffer);
 }

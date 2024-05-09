@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client
 {
-  public class RagonRoom: IDisposable
+  public class RagonRoom : IDisposable
   {
     private class EventSubscription : IDisposable
     {
@@ -46,14 +46,15 @@ namespace Ragon.Client
         _callback = null!;
       }
     }
-      
+
     private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
 
-    private RagonClient _client;
-    private RagonScene _scene;
-    private RagonEntityCache _entityCache;
-    private RagonPlayerCache _playerCache;
-    private RoomParameters _parameters;
+    private readonly RagonClient _client;
+    private readonly RagonScene _scene;
+    private readonly RagonEntityCache _entityCache;
+    private readonly RagonPlayerCache _playerCache;
+    private readonly RoomParameters _parameters;
+    private readonly RagonUserData _userData;
 
     public string Id => _parameters.RoomId;
     public int MinPlayers => _parameters.Min;
@@ -63,10 +64,15 @@ namespace Ragon.Client
     public IReadOnlyList<RagonPlayer> Players => _playerCache.Players;
     public RagonPlayer Local => _playerCache.Local;
     public RagonPlayer Owner => _playerCache.Owner;
+    public RagonUserData UserData => _userData;
 
     private readonly Dictionary<int, OnEventDelegate> _events = new Dictionary<int, OnEventDelegate>();
-    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _localListeners = new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
-    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _listeners = new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
+
+    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _localListeners =
+      new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
+
+    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _listeners =
+      new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
 
     public RagonRoom(RagonClient client,
       RagonEntityCache entityCache,
@@ -79,6 +85,7 @@ namespace Ragon.Client
       _entityCache = entityCache;
       _playerCache = playerCache;
       _scene = scene;
+      _userData = new RagonUserData();
     }
 
     internal void Cleanup()
@@ -92,7 +99,7 @@ namespace Ragon.Client
       _scene.Update(sceneName);
     }
 
-    internal void Event(ushort eventCode, RagonPlayer caller, RagonBuffer buffer)
+    internal void HandleEvent(ushort eventCode, RagonPlayer caller, RagonBuffer buffer)
     {
       if (_events.TryGetValue(eventCode, out var evnt))
         evnt?.Invoke(caller, buffer);
@@ -100,18 +107,23 @@ namespace Ragon.Client
         RagonLog.Warn($"Handler event on entity {Id} with eventCode {eventCode} not defined");
     }
 
+    internal void HandleUserData(RagonBuffer buffer)
+    {
+      _userData.Read(buffer);
+    }
+    
     public IDisposable OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
     {
       var t = new TEvent();
       var eventCode = _client.Event.GetEventCode(t);
       var action = (RagonPlayer player, IRagonEvent eventData) => callback.Invoke(player, (TEvent)eventData);
-      
+
       if (!_listeners.TryGetValue(eventCode, out var callbacks))
       {
         callbacks = new List<Action<RagonPlayer, IRagonEvent>>();
         _listeners.Add(eventCode, callbacks);
       }
-      
+
       if (!_localListeners.TryGetValue(eventCode, out var localCallbacks))
       {
         localCallbacks = new List<Action<RagonPlayer, IRagonEvent>>();
@@ -138,8 +150,12 @@ namespace Ragon.Client
     public void LoadScene(string sceneName) => _scene.Load(sceneName);
     public void SceneLoaded() => _scene.SceneLoaded();
 
-    public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode mode) where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
-    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode mode) where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode mode)
+      where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
+
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode mode)
+      where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
+
     public void ReplicateData(byte[] data, bool reliable = false) => _scene.ReplicateData(data, reliable);
 
     public void CreateEntity(RagonEntity entity) => CreateEntity(entity, null);

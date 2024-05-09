@@ -29,16 +29,19 @@ public sealed class AuthorizationOperation: BaseOperation
   private readonly RagonWebHookPlugin _webhook;
   private readonly RagonContextObserver _observer;
   private readonly RagonBuffer _writer;
+  private readonly RagonServerConfiguration _configuration;
   
   public AuthorizationOperation(
     RagonBuffer reader,
     RagonBuffer writer,
     RagonWebHookPlugin webhook,
-    RagonContextObserver observer): base(reader, writer)
+    RagonContextObserver observer,
+    RagonServerConfiguration configuration): base(reader, writer)
   {
     _webhook = webhook;
     _observer = observer;
     _writer = writer;
+    _configuration = configuration;
   }
   
   public override void Handle(RagonContext context, NetworkChannel channel)
@@ -55,7 +58,7 @@ public sealed class AuthorizationOperation: BaseOperation
       return;
     }
 
-    var configuration = context.Configuration; 
+    var configuration = _configuration; 
     var key = Reader.ReadString();
     var name = Reader.ReadString();
     var payload = Reader.ReadString();

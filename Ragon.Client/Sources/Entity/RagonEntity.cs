@@ -55,7 +55,6 @@ namespace Ragon.Client
     public ushort Id { get; private set; }
     public ushort Type { get; private set; }
     
-
     public RagonAuthority Authority { get; private set; }
     public RagonPlayer Owner { get; private set; }
     public RagonEntityState State { get; private set; }

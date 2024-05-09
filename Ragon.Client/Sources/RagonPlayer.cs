@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ namespace Ragon.Client
     public ushort PeerId { get; set; }
     public bool IsRoomOwner { get; set; }
     public bool IsLocal { get; set; }
+    public IUserData UserData { get; private set; }
     
     public RagonPlayer(ushort peerId, string playerId, string name, bool isRoomOwner, bool isLocal)
     {
@@ -32,6 +33,7 @@ namespace Ragon.Client
       IsLocal = isLocal;
       Name = name;
       Id = playerId;
-    } 
+      UserData = isLocal ? new RagonUserData() : new RagonUserDataReadOnly();
+    }
   }
 }
