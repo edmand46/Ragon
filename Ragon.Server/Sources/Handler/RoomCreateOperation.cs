@@ -79,9 +79,6 @@ public sealed class RoomCreateOperation : BaseOperation
 
     var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
     var room = new RagonRoom(roomId, information, roomPlugin);
-
-    if (!roomPlugin.OnPlayerJoined(roomPlayer))
-      return;
     
     roomPlayer.OnAttached(room);
 
@@ -94,6 +91,8 @@ public sealed class RoomCreateOperation : BaseOperation
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with scene {information.Scene}");
 
     JoinSuccess(roomPlayer, room, Writer);
+
+    roomPlugin.OnPlayerJoined(roomPlayer);
 
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to room {room.Id}");
   }

@@ -34,9 +34,21 @@ public class RelayRoomPlugin: BaseRoomPlugin
     return true;
   }
 
+  public override bool OnPlayerJoined(RagonRoomPlayer player)
+  {
+    return false;
+  }
+
+  public override bool OnPlayerLeaved(RagonRoomPlayer player)
+  {
+    return false;
+  }
+
   public override bool OnData(RagonRoomPlayer player, byte[] data)
   {
     Console.WriteLine("Data received");
+    
+    
     return true;
   }
 }

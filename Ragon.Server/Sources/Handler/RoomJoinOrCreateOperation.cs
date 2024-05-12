@@ -54,9 +54,6 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
     {
       var player = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
       
-      if (!existsRoom.Plugin.OnPlayerJoined(player))
-        return;
-      
       context.SetRoom(existsRoom, player);
       
       _ragonWebHookPlugin.RoomJoined(context, existsRoom, player);
@@ -64,6 +61,8 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
       JoinSuccess(player, existsRoom, Writer);
       
       existsRoom.RestoreBufferedEvents(player);
+
+      existsRoom.Plugin.OnPlayerJoined(player);
     }
     else
     {
@@ -78,9 +77,6 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
       var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
       var room = new RagonRoom(roomId, information, roomPlugin);
       
-      if (!roomPlugin.OnPlayerJoined(roomPlayer))
-        return;
-      
       _ragonWebHookPlugin.RoomCreated(context, room, roomPlayer);
       
       context.Lobby.Persist(room);
@@ -90,6 +86,8 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with scene {information.Scene}");
 
       JoinSuccess(roomPlayer, room, Writer);
+
+      room.Plugin.OnPlayerJoined(roomPlayer);
     }
   }
 

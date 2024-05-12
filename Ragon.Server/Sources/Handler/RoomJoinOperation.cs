@@ -48,15 +48,14 @@ public sealed class RoomJoinOperation : BaseOperation
 
     var player = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
     context.SetRoom(existsRoom, player);
-
-    if (!existsRoom.Plugin.OnPlayerJoined(player))
-      return;
-
+    
     _webHook.RoomJoined(context, existsRoom, player);
 
     JoinSuccess(context, existsRoom, Writer);
 
     existsRoom.RestoreBufferedEvents(player);
+
+    existsRoom.Plugin.OnPlayerJoined(player);
     
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to {existsRoom.Id}");
   }
