@@ -298,13 +298,13 @@ namespace Ragon.Client
     public void OnData(RagonPlayer player, byte[] data)
     {
       foreach (var listener in _dataListeners)
-        listener.OnData(player, data);
+        listener.OnData(_client, player, data);
     }
 
     public void OnRoomList(RagonRoomInformation[] roomInfos)
     {
       foreach (var listListener in _roomListListeners)
-        listListener.OnRoomListUpdate(roomInfos);
+        listListener.OnRoomListUpdate(_client, roomInfos);
     }
 
     public void OnRoomUserData(IReadOnlyList<string> changes)

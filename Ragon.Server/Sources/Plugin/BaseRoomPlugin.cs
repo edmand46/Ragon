@@ -62,6 +62,12 @@ public class BaseRoomPlugin: IRoomPlugin
     
     return true;
   }
+
+  public virtual bool OnData(RagonRoomPlayer player, byte[] data)
+  {
+    
+    return true;
+  }
   
   #endregion
 }

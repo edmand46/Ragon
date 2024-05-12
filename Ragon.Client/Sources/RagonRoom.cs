@@ -104,7 +104,7 @@ namespace Ragon.Client
       if (_events.TryGetValue(eventCode, out var evnt))
         evnt?.Invoke(caller, buffer);
       else
-        RagonLog.Warn($"Handler event on entity {Id} with eventCode {eventCode} not defined");
+        RagonLog.Warn($"Handler event {Id} with eventCode {eventCode} not defined");
     }
 
     internal void HandleUserData(RagonBuffer buffer)

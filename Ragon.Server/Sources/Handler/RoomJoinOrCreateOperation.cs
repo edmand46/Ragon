@@ -52,7 +52,7 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
 
     if (context.Lobby.FindRoomByScene(_roomPayload.Scene, out var existsRoom))
     {
-      var player = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
+      var player = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
       
       if (!existsRoom.Plugin.OnPlayerJoined(player))
         return;
@@ -62,6 +62,8 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
       _ragonWebHookPlugin.RoomJoined(context, existsRoom, player);
       
       JoinSuccess(player, existsRoom, Writer);
+      
+      existsRoom.RestoreBufferedEvents(player);
     }
     else
     {
@@ -72,7 +74,7 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
         Min = _roomPayload.Min,
       };
 
-      var roomPlayer = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
+      var roomPlayer = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
       var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
       var room = new RagonRoom(roomId, information, roomPlugin);
       
@@ -96,12 +98,24 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
     writer.Clear();
     writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
     writer.WriteString(room.Id);
+    writer.WriteUShort((ushort)room.PlayerMin);
+    writer.WriteUShort((ushort)room.PlayerMax);
+    writer.WriteString(room.Scene);
     writer.WriteString(player.Id);
     writer.WriteString(room.Owner.Id);
-    writer.WriteUShort((ushort) room.PlayerMin);
-    writer.WriteUShort((ushort) room.PlayerMax);
-    writer.WriteString(room.Scene);
-
+    
+    room.UserData.Snapshot(writer);
+      
+    writer.WriteUShort((ushort)room.PlayerList.Count);
+    foreach (var roomPlayer in room.PlayerList)
+    {
+      writer.WriteUShort(roomPlayer.Connection.Id);
+      writer.WriteString(roomPlayer.Id);
+      writer.WriteString(roomPlayer.Name);
+      
+      roomPlayer.Context.UserData.Snapshot(writer);
+    }
+    
     var sendData = writer.ToArray();
     player.Connection.Reliable.Send(sendData);
     

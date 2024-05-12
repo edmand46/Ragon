@@ -30,7 +30,7 @@ public class RagonContext
   public int LimitBufferedEvents { get; private set; }
   public IRagonLobby Lobby { get; private set; }
   public RagonLobbyPlayer? LobbyPlayer { get; private set; }
-  public RagonRoom? Room { get; private set; }
+  public RagonRoom Room { get; private set; }
   public RagonRoomPlayer? RoomPlayer { get; private set; }
   public RagonData UserData { get; private set; }
   public RagonScheduler Scheduler { get; private set; }
@@ -48,7 +48,7 @@ public class RagonContext
     Executor = executor;
     Lobby = lobby;
     Scheduler = scheduler;
-    UserData = new RagonData(Array.Empty<byte>());
+    UserData = new RagonData();
   }
 
   internal void SetPlayer(RagonLobbyPlayer player)

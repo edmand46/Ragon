@@ -54,12 +54,12 @@ namespace Ragon.Client
 
     public ushort Id { get; private set; }
     public ushort Type { get; private set; }
-    
+
     public RagonAuthority Authority { get; private set; }
     public RagonPlayer Owner { get; private set; }
     public RagonEntityState State { get; private set; }
 
-    public bool IsStatic => SceneId > 0;  
+    public bool IsStatic => SceneId > 0;
     public bool IsReplicated { get; private set; }
     public bool IsAttached { get; private set; }
     public bool HasAuthority { get; private set; }
@@ -71,22 +71,22 @@ namespace Ragon.Client
     internal bool PropertiesChanged => _propertiesChanged;
     internal ushort SceneId => _sceneId;
 
-    private ushort _sceneId;
+    private readonly ushort _sceneId;
     private bool _propertiesChanged;
 
     private RagonPayload _spawnPayload;
     private RagonPayload _destroyPayload;
 
-    private readonly Dictionary<int, OnEventDelegate> _events = new Dictionary<int, OnEventDelegate>();
-    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _localListeners = new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
-    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _listeners = new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
+    private readonly Dictionary<int, OnEventDelegate> _events = new();
+    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _localListeners = new();
+    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _listeners = new();
 
     public RagonEntity(ushort type = 0, ushort sceneId = 0, bool replicated = true)
     {
       State = new RagonEntityState(this);
       Type = type;
       IsReplicated = replicated;
-      
+
       _spawnPayload = new RagonPayload(0);
       _destroyPayload = new RagonPayload(0);
       _sceneId = sceneId;
@@ -95,7 +95,7 @@ namespace Ragon.Client
     internal void Attach()
     {
       IsAttached = true;
-     
+
       Attached?.Invoke(this);
     }
 
@@ -107,7 +107,7 @@ namespace Ragon.Client
     internal void Detach(RagonPayload payload)
     {
       _destroyPayload = payload;
-      
+
       Detached?.Invoke();
     }
 
@@ -125,7 +125,14 @@ namespace Ragon.Client
       return payload;
     }
 
-    public void Prepare(RagonClient client, ushort entityId, ushort entityType, bool hasAuthority, RagonPlayer player, RagonPayload payload)
+    public void Prepare(
+      RagonClient client,
+      ushort entityId,
+      ushort entityType,
+      bool hasAuthority,
+      RagonPlayer player,
+      RagonPayload payload
+      )
     {
       Type = entityType;
       Id = entityId;
@@ -133,7 +140,7 @@ namespace Ragon.Client
 
       _client = client;
       _spawnPayload = payload;
-      
+
       Owner = player;
     }
 
@@ -262,7 +269,7 @@ namespace Ragon.Client
 
       _propertiesChanged = false;
     }
-    
+
     internal void Read(RagonBuffer buffer)
     {
       State.ReadState(buffer);
@@ -271,7 +278,7 @@ namespace Ragon.Client
     internal void Event(ushort eventCode, RagonPlayer caller, RagonBuffer buffer)
     {
       if (!IsReplicated) return;
-      
+
       if (_events.TryGetValue(eventCode, out var evnt))
         evnt?.Invoke(caller, buffer);
       else

@@ -18,5 +18,5 @@ namespace Ragon.Client;
 
 public interface IRagonDataListener
 {
-  public void OnData(RagonPlayer player, byte[] data);
+  public void OnData(RagonClient client, RagonPlayer player, byte[] data);
 }

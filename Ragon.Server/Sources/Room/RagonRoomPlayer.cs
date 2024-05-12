@@ -23,6 +23,7 @@ namespace Ragon.Server.Room;
 public class RagonRoomPlayer
 {
   public INetworkConnection Connection { get; }
+  public RagonContext Context { get; }
   public string Id { get; }
   public string Name { get; }
   public bool IsLoaded { get; private set; }
@@ -30,11 +31,12 @@ public class RagonRoomPlayer
   public RagonRoom Room { get; private set; }
   public RagonEntityCache Entities { get; private set; }
   
-  public RagonRoomPlayer(INetworkConnection connection, string id, string name)
+  public RagonRoomPlayer(RagonContext context, string id, string name)
   {
     Id = id;
     Name = name;
-    Connection = connection;
+    Context = context;
+    Connection = context.Connection;
     Entities = new RagonEntityCache();
   }
 

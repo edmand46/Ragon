@@ -1,5 +1,4 @@
 using System;
-using Ragon.Server;
 using Ragon.Server.Entity;
 using Ragon.Server.Plugin;
 using Ragon.Server.Room;
@@ -32,6 +31,12 @@ public class RelayRoomPlugin: BaseRoomPlugin
   public bool OnEntityRemove(RagonRoomPlayer destroyer, RagonEntity entity)
   {
     Console.WriteLine($"Entity destroyed: {entity.Id}");
+    return true;
+  }
+
+  public override bool OnData(RagonRoomPlayer player, byte[] data)
+  {
+    Console.WriteLine("Data received");
     return true;
   }
 }

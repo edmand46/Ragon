@@ -52,10 +52,10 @@ public sealed class RagonPlayerCache
     _localId = localId;
   }
 
-  public void AddPlayer(ushort peerId, string playerId, string playerName)
+  public RagonPlayer AddPlayer(ushort peerId, string playerId, string playerName)
   {
     if (_playersById.ContainsKey(playerId))
-      return;
+      return null;
 
     var isOwner = playerId == _ownerId;
     var isLocal = playerId == _localId;
@@ -73,6 +73,8 @@ public sealed class RagonPlayerCache
     _players.Add(player);
     _playersById.Add(player.Id, player);
     _playersByConnection.Add(player.PeerId, player);
+    
+    return player;
   }
 
   public void RemovePlayer(string playerId)

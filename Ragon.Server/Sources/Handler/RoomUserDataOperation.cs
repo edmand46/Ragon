@@ -42,16 +42,9 @@ public sealed class RoomUserDataOperation : BaseOperation
       _logger.Warn($"Player {context.Connection.Id} not authorized for this request");
       return;
     }
-
-    var roomUserData = Reader.ReadBytes(Reader.Capacity);
-    if (roomUserData.Length > _userDataLimit)
-    {
-      _logger.Warn("Room user data is too big");
-      return;
-    }
     
     var room = context.Room;
     if (room != null)
-      room.UserData.Data = roomUserData;
+      room.UserData.Read(Reader);
   }
 }

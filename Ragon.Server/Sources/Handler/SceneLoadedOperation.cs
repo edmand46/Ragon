@@ -143,13 +143,6 @@ public sealed class SceneLoadedOperation : BaseOperation
   {
     writer.Clear();
     writer.WriteOperation(RagonOperation.SNAPSHOT);
-    writer.WriteUShort((ushort)room.ReadyPlayersList.Count);
-    foreach (var roomPlayer in room.ReadyPlayersList)
-    {
-      writer.WriteUShort(roomPlayer.Connection.Id);
-      writer.WriteString(roomPlayer.Id);
-      writer.WriteString(roomPlayer.Name);
-    }
 
     var dynamicEntities = room.DynamicEntitiesList;
     var dynamicEntitiesCount = (ushort)dynamicEntities.Count;

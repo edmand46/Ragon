@@ -39,8 +39,6 @@ public struct RoomParameters
 
 internal class JoinSuccessHandler : IHandler
 {
-  
-  
   private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
   private readonly RagonEntityCache _entityCache;
@@ -62,19 +60,39 @@ internal class JoinSuccessHandler : IHandler
   public void Handle(RagonBuffer reader)
   {
     var roomId = reader.ReadString();
-    var localId = reader.ReadString();
-    var ownerId = reader.ReadString();
     var min = reader.ReadUShort();
     var max = reader.ReadUShort();
     var sceneName = reader.ReadString();
-
+    var localId = reader.ReadString();
+    var ownerId = reader.ReadString();
+    
+    _playerCache.SetOwnerAndLocal(ownerId, localId);
+    
     var scene = new RagonScene(_client, _playerCache, _entityCache, sceneName);
     var roomInfo = new RoomParameters(roomId, localId, ownerId, min, max);
     var room = new RagonRoom(_client, _entityCache, _playerCache, roomInfo, scene);
 
-    _playerCache.SetOwnerAndLocal(ownerId, localId);
-    _client.AssignRoom(room);
+    room.UserData.Read(reader);
+      
+    var playersCount = reader.ReadUShort();
+    RagonLog.Trace("Players: " + playersCount);
+    for (var i = 0; i < playersCount; i++)
+    {
+      var playerPeerId = reader.ReadUShort();
+      var playerId = reader.ReadString();
+      var playerName = reader.ReadString();
+
+      var player = _playerCache.AddPlayer(playerPeerId, playerId, playerName);
+      
+      player.UserData.Read(reader);
+
+      RagonLog.Trace($"Player {playerPeerId} - {playerId} - {playerName}");
+    }
     
+    _client.AssignRoom(room);
+    _client.SetStatus(RagonStatus.ROOM);
+    
+    _listenerList.OnJoined();
     _listenerList.OnSceneRequest(sceneName);
   }
 }

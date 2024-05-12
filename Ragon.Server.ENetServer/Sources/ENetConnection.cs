@@ -21,6 +21,7 @@ namespace Ragon.Server.ENetServer;
 
 public sealed class ENetConnection: INetworkConnection
 {
+  private static ushort _iterator = 0;
   public ushort Id { get; }
   public INetworkChannel Reliable { get; private set; }
   public INetworkChannel Unreliable { get; private set; }
@@ -30,7 +31,8 @@ public sealed class ENetConnection: INetworkConnection
   {
     _peer = peer;
     
-    Id = (ushort) peer.ID;
+    // Id = (ushort) peer.ID;
+    Id = _iterator++;
     Reliable = new ENetReliableChannel(peer, NetworkChannel.RELIABLE);
     Unreliable = new ENetUnreliableChannel(peer, NetworkChannel.UNRELIABLE);
   }

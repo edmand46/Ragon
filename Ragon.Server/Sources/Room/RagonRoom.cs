@@ -17,6 +17,7 @@
 using Ragon.Protocol;
 using Ragon.Server.Data;
 using Ragon.Server.Entity;
+using Ragon.Server.Event;
 using Ragon.Server.IO;
 using Ragon.Server.Plugin;
 using Ragon.Server.Time;
@@ -47,7 +48,9 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public List<RagonEntity> EntityList { get; private set; }
 
   private readonly HashSet<RagonEntity> _entitiesDirtySet;
-
+  private readonly List<RagonEvent> _bufferedEvents;
+  private readonly int _limitBufferedEvents;
+  
   public RagonRoom(string roomId, RoomInformation info, IRoomPlugin roomPlugin)
   {
     Id = roomId;
@@ -55,7 +58,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
     PlayerMax = info.Max;
     PlayerMin = info.Min;
     Plugin = roomPlugin;
-
+    
     Players = new Dictionary<ushort, RagonRoomPlayer>(info.Max);
     WaitPlayersList = new List<RagonRoomPlayer>(info.Max);
     ReadyPlayersList = new List<RagonRoomPlayer>(info.Max);
@@ -67,8 +70,10 @@ public class RagonRoom : IRagonRoom, IRagonAction
     EntityList = new List<RagonEntity>();
 
     _entitiesDirtySet = new HashSet<RagonEntity>();
+    _bufferedEvents = new List<RagonEvent>();
+    _limitBufferedEvents = 1000;
 
-    UserData = new RagonData(Array.Empty<byte>());
+    UserData = new RagonData();
     Writer = new RagonBuffer();
   }
 
@@ -91,6 +96,101 @@ public class RagonRoom : IRagonRoom, IRagonAction
     DynamicEntitiesList.Remove(entity);
 
     _entitiesDirtySet.Remove(entity);
+  }
+
+  public void RestoreBufferedEvents(RagonRoomPlayer roomPlayer)
+  {
+    foreach (var evnt in _bufferedEvents)
+    {
+      Writer.Clear();
+      Writer.WriteOperation(RagonOperation.REPLICATE_ROOM_EVENT);
+      Writer.WriteUShort(evnt.EventCode);
+      Writer.WriteUShort(evnt.Invoker.Connection.Id);
+      Writer.WriteByte((byte)RagonReplicationMode.Server);
+
+      evnt.Write(Writer);
+
+      var sendData = Writer.ToArray();
+      roomPlayer.Connection.Reliable.Send(sendData);
+    }
+  }
+  
+  public void ReplicateEvent(
+    RagonRoomPlayer invoker,
+    RagonEvent evnt,
+    RagonReplicationMode eventMode,
+    RagonRoomPlayer targetPlayer
+  )
+  {
+    var room = Owner.Room;
+    var buffer = room.Writer;
+    
+    buffer.Clear();
+    buffer.WriteOperation(RagonOperation.REPLICATE_ROOM_EVENT);
+    buffer.WriteUShort(evnt.EventCode);
+    buffer.WriteUShort(invoker.Connection.Id);
+    buffer.WriteByte((byte)eventMode);
+
+    evnt.Write(buffer);
+
+    var sendData = buffer.ToArray();
+    targetPlayer.Connection.Reliable.Send(sendData);
+  }
+
+  public void ReplicateEvent(
+    RagonRoomPlayer invoker,
+    RagonEvent evnt,
+    RagonReplicationMode eventMode,
+    RagonTarget targetMode
+  )
+  {
+    if (eventMode == RagonReplicationMode.Buffered && targetMode != RagonTarget.Owner && _bufferedEvents.Count < _limitBufferedEvents)
+    {
+      _bufferedEvents.Add(evnt);
+    }
+    
+    Writer.Clear();
+    Writer.WriteOperation(RagonOperation.REPLICATE_ROOM_EVENT);
+    Writer.WriteUShort(evnt.EventCode);
+    Writer.WriteUShort(invoker.Connection.Id);
+    Writer.WriteByte((byte)eventMode);
+    
+    evnt.Write(Writer);
+
+    var sendData = Writer.ToArray();
+    switch (targetMode)
+    {
+      case RagonTarget.Owner:
+      {
+        Owner.Connection.Reliable.Send(sendData);
+        break;
+      }
+      case RagonTarget.ExceptOwner:
+      {
+        foreach (var roomPlayer in ReadyPlayersList)
+        {
+          if (roomPlayer.Connection.Id != Owner.Connection.Id)
+            roomPlayer.Connection.Reliable.Send(sendData);
+        }
+
+        break;
+      }
+      case RagonTarget.ExceptInvoker:
+      {
+        foreach (var roomPlayer in ReadyPlayersList)
+        {
+          if (roomPlayer.Connection.Id != invoker.Connection.Id)
+            roomPlayer.Connection.Reliable.Send(sendData);
+        }
+
+        break;
+      }
+      case RagonTarget.All:
+      {
+        Broadcast(sendData);
+        break;
+      }
+    }
   }
 
   public void Tick(float dt)

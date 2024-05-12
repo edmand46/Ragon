@@ -46,7 +46,7 @@ public sealed class RoomJoinOperation : BaseOperation
       return;
     }
 
-    var player = new RagonRoomPlayer(context.Connection, lobbyPlayer.Id, lobbyPlayer.Name);
+    var player = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
     context.SetRoom(existsRoom, player);
 
     if (!existsRoom.Plugin.OnPlayerJoined(player))
@@ -56,6 +56,8 @@ public sealed class RoomJoinOperation : BaseOperation
 
     JoinSuccess(context, existsRoom, Writer);
 
+    existsRoom.RestoreBufferedEvents(player);
+    
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to {existsRoom.Id}");
   }
 
@@ -64,12 +66,24 @@ public sealed class RoomJoinOperation : BaseOperation
     writer.Clear();
     writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
     writer.WriteString(room.Id);
-    writer.WriteString(context.RoomPlayer.Id);
-    writer.WriteString(room.Owner.Id);
     writer.WriteUShort((ushort)room.PlayerMin);
     writer.WriteUShort((ushort)room.PlayerMax);
     writer.WriteString(room.Scene);
-
+    writer.WriteString(context.RoomPlayer.Id);
+    writer.WriteString(room.Owner.Id);
+    
+    room.UserData.Snapshot(writer);
+      
+    writer.WriteUShort((ushort)room.PlayerList.Count);
+    foreach (var roomPlayer in room.PlayerList)
+    {
+      writer.WriteUShort(roomPlayer.Connection.Id);
+      writer.WriteString(roomPlayer.Id);
+      writer.WriteString(roomPlayer.Name);
+      
+      roomPlayer.Context.UserData.Snapshot(writer);
+    }
+    
     var sendData = writer.ToArray();
     context.Connection.Reliable.Send(sendData);
   }

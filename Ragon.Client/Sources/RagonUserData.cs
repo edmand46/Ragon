@@ -18,7 +18,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client
 {
-  public class RagonUserData: IUserData
+  public class RagonUserData : IUserData
   {
     public byte[] this[string key]
     {
@@ -34,7 +34,7 @@ namespace Ragon.Client
         }
       }
     }
-    
+
     public void Remove(string key)
     {
       if (_properties.Remove(key))
@@ -46,16 +46,15 @@ namespace Ragon.Client
         }
       }
     }
-    
+
     public bool Dirty => _localChanges.Count > 0;
 
-    private readonly List<string> _localChanges = new ();
+    private readonly List<string> _localChanges = new();
     private readonly Dictionary<string, bool> _changesCache = new();
     private readonly Dictionary<string, byte[]> _properties = new();
-    
+
     public RagonUserData()
     {
-     
     }
 
     public IReadOnlyList<string> Read(RagonBuffer buffer)
@@ -65,18 +64,17 @@ namespace Ragon.Client
       for (int i = 0; i < len; i++)
       {
         var key = buffer.ReadString();
-        var valueSize = buffer.ReadUShort();  
+        var valueSize = buffer.ReadUShort();
         if (valueSize > 0)
         {
           var value = buffer.ReadBytes(valueSize);
           _properties[key] = value;
-          
         }
         else
         {
           _properties.Remove(key);
         }
-        
+
         changes.Add(key);
       }
 
@@ -91,15 +89,15 @@ namespace Ragon.Client
         buffer.WriteString(propertyChanged);
         if (_properties.TryGetValue(propertyChanged, out var property))
         {
-          buffer.WriteUShort((ushort) property.Length);
-          buffer.WriteBytes(property);          
+          buffer.WriteUShort((ushort)property.Length);
+          buffer.WriteBytes(property);
         }
         else
         {
           buffer.WriteUShort(0);
         }
       }
-      
+
       _localChanges.Clear();
     }
   }

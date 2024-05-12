@@ -73,9 +73,9 @@ public class RagonServer : IRagonServer, INetworkListener
     
     var contextObserver = new RagonContextObserver(_contextsByPlayerId);
     
-    _scheduler.Run(new RagonActionTimer(SendRoomList, 1.0f));
-    _scheduler.Run(new RagonActionTimer(SendPlayerUserData, 0.2f));
-    _scheduler.Run(new RagonActionTimer(SendRoomUserData, 0.2f));
+    _scheduler.Run(new RagonActionTimer(SendRoomList, 2.0f));
+    _scheduler.Run(new RagonActionTimer(SendPlayerUserData, 0.1f));
+    _scheduler.Run(new RagonActionTimer(SendRoomUserData, 0.1f));
     
     _serverPlugin.OnAttached(this);
 
@@ -257,12 +257,11 @@ public class RagonServer : IRagonServer, INetworkListener
         _writer.Clear();
         _writer.WriteOperation(RagonOperation.PLAYER_DATA_UPDATED);
         _writer.WriteUShort(value.Connection.Id);
-        _writer.WriteBytes(value.UserData.Data);
+        
+        value.UserData.Write(_writer);
         
         var sendData = _writer.ToArray();
         _server.Broadcast(sendData, NetworkChannel.RELIABLE);
-        
-        value.UserData.IsDirty = false;
       }
     }
   }
@@ -275,12 +274,11 @@ public class RagonServer : IRagonServer, INetworkListener
       {
         _writer.Clear();
         _writer.WriteOperation(RagonOperation.ROOM_DATA_UPDATED);
-        _writer.WriteBytes(room.UserData.Data);
+        
+        room.UserData.Write(_writer);
         
         var sendData = _writer.ToArray();
         _server.Broadcast(sendData, NetworkChannel.RELIABLE);
-
-        room.UserData.IsDirty = false;
       }
     }
   }

@@ -27,7 +27,7 @@ internal class SnapshotHandler : IHandler
   private readonly RagonListenerList _listenerList;
   private readonly RagonEntityCache _entityCache;
   private readonly RagonPlayerCache _playerCache;
-  
+
   public SnapshotHandler(
     RagonClient ragonClient,
     RagonListenerList listenerList,
@@ -46,19 +46,6 @@ internal class SnapshotHandler : IHandler
   public void Handle(RagonBuffer buffer)
   {
     var entities = new List<RagonEntity>();
-    var playersCount = buffer.ReadUShort();
-    RagonLog.Trace("Players: " + playersCount);
-    for (var i = 0; i < playersCount; i++)
-    {
-      var playerPeerId = buffer.ReadUShort();
-      var playerId = buffer.ReadString();
-      var playerName = buffer.ReadString();
-
-      _playerCache.AddPlayer(playerPeerId, playerId, playerName);
-
-      RagonLog.Trace($"Player {playerPeerId} - {playerId} - {playerName}");
-    }
-
     var dynamicEntities = buffer.ReadUShort();
     RagonLog.Trace("Dynamic Entities: " + dynamicEntities);
     for (var i = 0; i < dynamicEntities; i++)
@@ -67,7 +54,7 @@ internal class SnapshotHandler : IHandler
       var entityId = buffer.ReadUShort();
       var ownerPeerId = buffer.ReadUShort();
       var payloadSize = buffer.ReadUShort();
-      
+
       var player = _playerCache.GetPlayerByPeer(ownerPeerId);
       if (player == null)
       {
@@ -85,13 +72,13 @@ internal class SnapshotHandler : IHandler
         payload = new RagonPayload(payloadSize);
         payload.Read(buffer);
       }
-      
+
       entity.Prepare(_client, entityId, entityType, hasAuthority, player, payload);
-      
+
       _entityListener.OnEntityCreated(entity);
-      
+
       entity.Read(buffer);
-      
+
       entities.Add(entity);
     }
 
@@ -109,26 +96,20 @@ internal class SnapshotHandler : IHandler
       if (player == null)
       {
         RagonLog.Error($"Player not found with peerId: {ownerPeerId}");
-        
+
         _playerCache.Dump();
         return;
       }
 
       var hasAuthority = _playerCache.Local.Id == player.Id;
       var entity = _entityCache.TryGetEntity(0, entityType, staticId, entityId, hasAuthority, out _);
-      
+
       entity.Prepare(_client, entityId, entityType, hasAuthority, player, RagonPayload.Empty);
       entity.Read(buffer);
-      
+
       entities.Add(entity);
     }
-
-    if (_client.Status == RagonStatus.LOBBY)
-    { 
-      _client.SetStatus(RagonStatus.ROOM);
-      _listenerList.OnJoined();
-    }
-
+    
     foreach (var entity in entities)
       entity.Attach();
 

@@ -80,6 +80,8 @@ public class RagonScene
     buffer.WriteByte((byte)replicationMode);
     buffer.WriteByte((byte)target);
     
+    evnt.Serialize(buffer);
+    
     var sendData = buffer.ToArray();
     _client.Reliable.Send(sendData);
   }

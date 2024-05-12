@@ -26,15 +26,8 @@ namespace Ragon.Server.Handler
         _logger.Warn($"Player {context.Connection.Id} not authorized for this request");
         return;
       }
-
-      var playerUserData = Reader.ReadBytes(Reader.Capacity);
-      if (playerUserData.Length > _userDataLimit)
-      {
-        _logger.Warn($"Player {context.Connection.Id} exceeded user data limit");
-        return;
-      }
       
-      context.UserData.Data = playerUserData;
+      context.UserData.Read(Reader);
     }
   }
 }
