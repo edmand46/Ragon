@@ -28,6 +28,9 @@ public interface IRagonRoom
   public int PlayerMax { get; }
   public int PlayerCount { get; }
   public RagonData UserData { get; }
+
+  public void ReplicateData(byte[] data, NetworkChannel channel);
+  public void ReplicateData(byte[] data, List<RagonRoomPlayer> player, NetworkChannel channel);
   
   RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection);
   RagonRoomPlayer GetPlayerById(string id);

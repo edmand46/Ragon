@@ -79,6 +79,8 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
       
       _ragonWebHookPlugin.RoomCreated(context, room, roomPlayer);
       
+      room.Plugin.OnAttached(room);
+      
       context.Lobby.Persist(room);
       context.Scheduler.Run(room);
       context.SetRoom(room, roomPlayer);

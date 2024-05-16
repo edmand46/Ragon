@@ -42,8 +42,11 @@ public sealed class RoomDataOperation : BaseOperation
     sendData[1] = (byte)peerId;
     sendData[2] = (byte)(peerId >> 8);
 
+    var pluginData = new byte[dataSize];
+    Array.Copy(data, 1, pluginData, 0, dataSize);
+    room.Plugin.OnData(player, pluginData);
+    
     Array.Copy(data, 1, sendData, headerSize, dataSize);
-
-    room.Broadcast(sendData, channel);
+    room.Broadcast(sendData, room.ReadyPlayersList, NetworkChannel.RELIABLE);
   }
 }

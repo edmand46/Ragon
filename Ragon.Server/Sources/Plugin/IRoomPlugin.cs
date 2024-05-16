@@ -28,4 +28,5 @@ public interface IRoomPlugin
   bool OnPlayerLeaved(RagonRoomPlayer player);
   bool OnEntityCreate(RagonRoomPlayer player, IRagonEntity entity);
   bool OnEntityRemove(RagonRoomPlayer player, IRagonEntity entity);
+  bool OnData(RagonRoomPlayer player, byte[] data);
 }
