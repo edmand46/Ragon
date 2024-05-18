@@ -215,6 +215,24 @@ public class RagonRoom : IRagonRoom, IRagonAction
 
     Broadcast(sendData, receivers, channel);
   }
+  
+  public void ReplicateData(RagonRoomPlayer invoker, byte[] data, List<RagonRoomPlayer> receivers,
+    NetworkChannel channel = NetworkChannel.RELIABLE)
+  {
+    var dataSize = data.Length;
+    var headerSize = 3;
+    var size = headerSize + dataSize;
+    var sendData = new byte[size];
+    var peerId = invoker.Connection.Id;
+
+    sendData[0] = (byte)RagonOperation.REPLICATE_RAW_DATA;
+    sendData[1] = (byte)peerId;
+    sendData[2] = (byte)(peerId >> 8);
+
+    Array.Copy(data, 0, sendData, headerSize, dataSize);
+
+    Broadcast(sendData, receivers, channel);
+  }
 
   public void Tick(float dt)
   {

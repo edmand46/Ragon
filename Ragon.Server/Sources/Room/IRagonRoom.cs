@@ -31,6 +31,8 @@ public interface IRagonRoom
 
   public void ReplicateData(byte[] data, NetworkChannel channel);
   public void ReplicateData(byte[] data, List<RagonRoomPlayer> player, NetworkChannel channel);
+  public void ReplicateData(RagonRoomPlayer invoker, byte[] data, List<RagonRoomPlayer> receivers,
+    NetworkChannel channel = NetworkChannel.RELIABLE);
   
   RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection);
   RagonRoomPlayer GetPlayerById(string id);
