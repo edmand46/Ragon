@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,12 @@ public class BaseRoomPlugin: IRoomPlugin
   {
     Room = room;
   }
-  
-  public virtual void OnDetached()
+
+  public virtual void OnDetached(IRagonRoom room)
   {
     
   }
-  
+
   #region VIRTUAL
 
   public virtual bool OnPlayerJoined(RagonRoomPlayer player)

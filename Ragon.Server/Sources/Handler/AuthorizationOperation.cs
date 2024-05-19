@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ public sealed class AuthorizationOperation: BaseOperation
     
     if (key == configuration.ServerKey)
     {
-      if (_webhook.RequestAuthorization(context, name, payload)) 
+      if (_webhook.RequestAuthorization(context, payload)) 
         return;
       
       var lobbyPlayer = new RagonLobbyPlayer(context.Connection, Guid.NewGuid().ToString(), name, payload);

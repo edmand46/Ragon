@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public int PlayerMax { get; private set; }
   public int PlayerMin { get; private set; }
   public int PlayerCount => WaitPlayersList.Count;
+  
+  public bool IsDone { get; private set; }
 
   public RagonData UserData { get; set; }
   public RagonRoomPlayer Owner { get; private set; }
@@ -392,5 +394,30 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public IRagonEntity[] GetEntitiesOfPlayer(RagonRoomPlayer player)
   {
     return EntityList.Where(e => e.Owner.Connection.Id == player.Connection.Id).ToArray();
+  }
+
+  public void Attach()
+  {
+    Plugin.OnAttached(this);
+  }
+  
+  public void Detach()
+  {
+    Plugin.OnDetached(this);
+    
+    Players.Clear();
+    WaitPlayersList.Clear();
+    ReadyPlayersList.Clear();
+    PlayerList.Clear();
+    
+    Entities.Clear();
+    DynamicEntitiesList.Clear();
+    StaticEntitiesList.Clear();
+    EntityList.Clear();
+    
+    _entitiesDirtySet.Clear();
+    _bufferedEvents.Clear();
+    
+    IsDone = true;
   }
 }

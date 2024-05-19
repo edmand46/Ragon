@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,11 +39,11 @@ public class RagonWebHookPlugin
     _server = server;
   }
 
-  public bool RequestAuthorization(RagonContext context, string name, string password)
+  public bool RequestAuthorization(RagonContext context, string payload)
   {
     if (_webHooks.TryGetValue("authorization-request", out var value))
     {
-      var httpContent = new StringContent("");
+      var httpContent = new StringContent(payload, Encoding.UTF8, "application/json");
       var executor = context.Executor;
       executor.Run(async () =>
       {

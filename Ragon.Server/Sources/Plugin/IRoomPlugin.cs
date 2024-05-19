@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ public interface IRoomPlugin
 {
   void Tick(float dt);
   void OnAttached(IRagonRoom room);
-  void OnDetached();
+  void OnDetached(IRagonRoom room);
   bool OnPlayerJoined(RagonRoomPlayer player);
   bool OnPlayerLeaved(RagonRoomPlayer player);
   bool OnEntityCreate(RagonRoomPlayer player, IRagonEntity entity);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Eduard Kargin <kargin.eduard@gmail.com>
+ * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,12 @@ namespace Ragon.Server.Time;
 public class RagonScheduler
 {
   private List<IRagonAction> _tasks;
-  
+  private List<IRagonAction> _toDelete;
+
   public RagonScheduler()
   {
     _tasks = new List<IRagonAction>(35);
+    _toDelete = new List<IRagonAction>(35);
   }
 
   public void Run(IRagonAction task)
@@ -38,6 +40,15 @@ public class RagonScheduler
   public void Update(float dt)
   {
     foreach (var task in _tasks)
+    {
       task.Tick(dt);
+      if (task.IsDone)
+        _toDelete.Add(task);
+    }
+
+    foreach (var action in _toDelete)
+      _tasks.Remove(action);
+    
+    _toDelete.Clear();
   }
 }
