@@ -29,10 +29,17 @@ namespace Ragon.Server.Handler
 
     private readonly RagonRoomParameters _roomParameters = new();
     private readonly IServerPlugin _serverPlugin;
+    private readonly RagonServerConfiguration _configuration;
 
-    public RoomCreateOperation(RagonBuffer reader, RagonBuffer writer, IServerPlugin serverPlugin) : base(reader,
+    public RoomCreateOperation(
+      RagonBuffer reader,
+      RagonBuffer writer,
+      IServerPlugin serverPlugin,
+      RagonServerConfiguration configuration 
+    ) : base(reader,
       writer)
     {
+      _configuration = configuration;
       _serverPlugin = serverPlugin;
     }
 
@@ -74,6 +81,9 @@ namespace Ragon.Server.Handler
         Min = _roomParameters.Min,
       };
 
+      if (information.Max > _configuration.LimitPlayersPerRoom)
+        information.Max = _configuration.LimitPlayersPerRoom;
+      
       var lobbyPlayer = context.LobbyPlayer;
       var roomPlayer = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
 

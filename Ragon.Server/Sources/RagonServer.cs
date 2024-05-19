@@ -76,8 +76,8 @@ public class RagonServer : IRagonServer, INetworkListener
 
     _handlers = new BaseOperation[byte.MaxValue];
     _handlers[(byte)RagonOperation.AUTHORIZE] = new AuthorizationOperation(_reader, _writer, _serverPlugin, contextObserver, configuration);
-    _handlers[(byte)RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation(_reader, _writer, plugin);
-    _handlers[(byte)RagonOperation.CREATE_ROOM] = new RoomCreateOperation(_reader, _writer, plugin);
+    _handlers[(byte)RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation(_reader, _writer, plugin, _configuration);
+    _handlers[(byte)RagonOperation.CREATE_ROOM] = new RoomCreateOperation(_reader, _writer, plugin, _configuration);
     _handlers[(byte)RagonOperation.JOIN_ROOM] = new RoomJoinOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadOperation(_reader, _writer);
