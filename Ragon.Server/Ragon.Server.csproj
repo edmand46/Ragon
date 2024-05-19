@@ -5,15 +5,16 @@
         <Nullable>enable</Nullable>
         <RootNamespace>Ragon.Core</RootNamespace>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>1.3.1</Version>
+        <Version>1.4.0</Version>
         <Title>Ragon.Server</Title>
         <Copyright>Eduard Kargin</Copyright>
-        <PackageProjectUrl>https://ragon-server.com</PackageProjectUrl>
+        <Authors>Eduard Kargin</Authors>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageProjectUrl>https://ragon.io</PackageProjectUrl>
         <RepositoryUrl>https://github.com/edmand46/Ragon</RepositoryUrl>
         <RepositoryType>Source</RepositoryType>
-        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <LangVersion>10</LangVersion>
-        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+        <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

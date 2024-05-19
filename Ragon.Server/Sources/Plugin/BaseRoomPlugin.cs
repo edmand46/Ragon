@@ -65,7 +65,6 @@ public class BaseRoomPlugin: IRoomPlugin
 
   public virtual bool OnData(RagonRoomPlayer player, byte[] data)
   {
-    
     return true;
   }
   

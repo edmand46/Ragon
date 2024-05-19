@@ -8,7 +8,9 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>Ragon.Protocol</Title>
         <Copyright>Eduard Kargin</Copyright>
-        <PackageProjectUrl>https://ragon-server.com</PackageProjectUrl>
+        <Version>1.4.0</Version>
+        <Authors>Eduard Kargin</Authors>
+        <PackageProjectUrl>https://ragon.io</PackageProjectUrl>
         <RepositoryUrl>https://github.com/edmand46/Ragon</RepositoryUrl>
         <RepositoryType>Source</RepositoryType>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

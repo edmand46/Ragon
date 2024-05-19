@@ -4,7 +4,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>Ragon.ENet</RootNamespace>
-        <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+        <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Copyright>Eduard Kargin</Copyright>
+        <Authors>Eduard Kargin</Authors>
+        <Version>1.4.0</Version>
+        <Title>Ragon Server ENet</Title>
+        <Description>Ragon Server ENet transport</Description>
+        <PackageProjectUrl>https://ragon.io</PackageProjectUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/edmand46/Ragon</RepositoryUrl>
+        <RepositoryType>Source</RepositoryType>
     </PropertyGroup>
 
     <ItemGroup>

@@ -4,7 +4,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>Ragon.WebSockets</RootNamespace>
-        <TargetFrameworks>net7.0;net6.0</TargetFrameworks>
+        <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+        <Copyright>Eduard Kargin</Copyright>
+        <Authors>Eduard Kargin</Authors>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Version>1.4.0</Version>
+        <Title>Ragon Server WebSocket</Title>
+        <Description>Ragon Server WebSocket transport</Description>
+        <PackageProjectUrl>https://ragon.io</PackageProjectUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/edmand46/Ragon</RepositoryUrl>
+        <RepositoryType>Source</RepositoryType>
     </PropertyGroup>
 
     <ItemGroup>

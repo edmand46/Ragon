@@ -12,8 +12,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.ENetServer", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Client", "Ragon.Client\Ragon.Client.csproj", "{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Simulation", "Ragon.Simulation\Ragon.Simulation.csproj", "{0384848D-3B63-4B3A-B15F-A836EBB3E95D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Client.Property", "Ragon.Client.Property\Ragon.Client.Property.csproj", "{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}"
 EndProject
 Global
@@ -46,10 +44,6 @@ Global
 		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0384848D-3B63-4B3A-B15F-A836EBB3E95D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0384848D-3B63-4B3A-B15F-A836EBB3E95D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0384848D-3B63-4B3A-B15F-A836EBB3E95D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0384848D-3B63-4B3A-B15F-A836EBB3E95D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46A60DAB-F854-4BB6-A119-BD4C5B2B0D29}.Release|Any CPU.ActiveCfg = Release|Any CPU

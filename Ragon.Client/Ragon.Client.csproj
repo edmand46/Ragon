@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>10</LangVersion>
         <RootNamespace>Ragon.Client.Simulation</RootNamespace>
-        <Authors>Eduard Kargin (Edmand46)</Authors>
+        <Authors>Eduard Kargin</Authors>
         <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
 
