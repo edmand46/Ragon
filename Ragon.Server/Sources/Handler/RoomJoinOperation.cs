@@ -49,7 +49,6 @@ public sealed class RoomJoinOperation : BaseOperation
     JoinSuccess(context, existsRoom, Writer);
 
     existsRoom.RestoreBufferedEvents(player);
-
     existsRoom.Plugin.OnPlayerJoined(player);
     
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to {existsRoom.Id}");

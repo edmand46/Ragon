@@ -42,6 +42,7 @@ namespace Ragon.Relay
 
       INetworkServer networkServer = new ENetServer();
       IServerPlugin plugin = new RelayServerPlugin();
+      
       switch (serverType)
       {
         case ServerType.ENET:
@@ -63,6 +64,7 @@ namespace Ragon.Relay
         ServerKey = configuration.ServerKey,
         ServerTickRate = configuration.ServerTickRate,
       };
+      
       var relay = new RagonServer(networkServer, plugin, serverConfiguration);
       relay.Start();
       while (relay.IsRunning)

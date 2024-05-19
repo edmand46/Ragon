@@ -41,7 +41,7 @@ public class WebSocketServer : INetworkServer
     _activeConnections = new List<WebSocketConnection>();
     _executor = new Executor();
   }
-
+  
   public async void StartAccept(CancellationToken cancellationToken)
   {
     while (!cancellationToken.IsCancellationRequested)

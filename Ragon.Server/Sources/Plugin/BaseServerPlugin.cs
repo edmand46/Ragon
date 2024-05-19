@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using Ragon.Protocol;
+using Ragon.Server.Handler;
 using Ragon.Server.IO;
 using Ragon.Server.Lobby;
 using Ragon.Server.Room;
@@ -22,16 +24,57 @@ namespace Ragon.Server.Plugin
 {
   public class ConnectionRequest
   {
-    public int PeerID { get; set; }
-
-    public void Approve()
+    public ConnectionRequest(
+      IRagonServer server,
+      ushort connectionId,
+      string payload
+    )
     {
+      _server = server;
+      PeerID = connectionId;
+      Payload = payload;
+    }
+
+    public ushort PeerID { get; private set; }
+    public string Payload { get; private set; }
+
+    private readonly IRagonServer _server;
+
+    public void Approve(string id, string name, string payload)
+    {
+      var ctx = _server.GetContextByConnectionId(PeerID);
+      if (ctx == null)
+        return;
+
+      var operation = (AuthorizationOperation)_server.ResolveHandler(RagonOperation.AUTHORIZE);
+      operation.Approve(ctx, new ConnectionResponse(id, name, payload));
     }
 
     public void Reject()
     {
+      var ctx = _server.GetContextByConnectionId(PeerID);
+      if (ctx == null)
+        return;
+
+      var operation = (AuthorizationOperation)_server.ResolveHandler(RagonOperation.AUTHORIZE);
+      operation.Reject(ctx);
     }
   }
+
+  public class ConnectionResponse
+  {
+    public string Id { get; }
+    public string Name { get; }
+    public string Payload { get; }
+
+    public ConnectionResponse(string id, string name, string payload)
+    {
+      Id = id;
+      Name = name;
+      Payload = payload;
+    }
+  }
+
 
   public class BaseServerPlugin : IServerPlugin
   {
@@ -44,7 +87,6 @@ namespace Ragon.Server.Plugin
 
     public virtual void OnDetached()
     {
-
     }
 
     public virtual bool OnAuthorize(ConnectionRequest request)

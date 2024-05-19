@@ -34,7 +34,6 @@ public class RagonServer : IRagonServer, INetworkListener
   private readonly BaseOperation[] _handlers;
   private readonly IRagonLobby _lobby;
   private readonly IServerPlugin _serverPlugin;
-  private readonly Thread _dedicatedThread;
   private readonly RagonServerConfiguration _configuration;
   private readonly RagonBuffer _reader;
   private readonly RagonBuffer _writer;
@@ -75,7 +74,7 @@ public class RagonServer : IRagonServer, INetworkListener
     _serverPlugin.OnAttached(this);
 
     _handlers = new BaseOperation[byte.MaxValue];
-    _handlers[(byte)RagonOperation.AUTHORIZE] = new AuthorizationOperation(_reader, _writer, _serverPlugin, contextObserver, configuration);
+    _handlers[(byte)RagonOperation.AUTHORIZE] = new AuthorizationOperation(_reader, _writer, this, _serverPlugin, contextObserver, configuration);
     _handlers[(byte)RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation(_reader, _writer, plugin, _configuration);
     _handlers[(byte)RagonOperation.CREATE_ROOM] = new RoomCreateOperation(_reader, _writer, plugin, _configuration);
     _handlers[(byte)RagonOperation.JOIN_ROOM] = new RoomJoinOperation(_reader, _writer);
@@ -136,7 +135,6 @@ public class RagonServer : IRagonServer, INetworkListener
   {
     _serverPlugin.OnDetached();
     _server.Stop();
-    _dedicatedThread.Interrupt();
   }
 
   public void OnConnected(INetworkConnection connection)
@@ -158,6 +156,7 @@ public class RagonServer : IRagonServer, INetworkListener
         
         _lobby.RemoveIfEmpty(room);
       }
+      _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
 
       _logger.Trace($"Disconnected: {connection.Id}");
     }
@@ -177,7 +176,8 @@ public class RagonServer : IRagonServer, INetworkListener
         room.DetachPlayer(context.RoomPlayer);
         _lobby.RemoveIfEmpty(room);
       }
-
+      _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
+      
       _logger.Trace($"Timeout: {connection.Id}|{context.LobbyPlayer.Name}|{context.LobbyPlayer.Id}");
     }
     else
@@ -274,15 +274,15 @@ public class RagonServer : IRagonServer, INetworkListener
   {
     return _handlers[(byte)operation];
   }
-
-  public RagonLobbyPlayer? GetPlayerByConnection(INetworkConnection connection)
+  
+  public RagonContext? GetContextByConnectionId(ushort peerId)
   {
-    return _contextsByConnection.TryGetValue(connection.Id, out var context) ? context.LobbyPlayer : null;
+    return _contextsByConnection.TryGetValue(peerId, out var context) ? context : null;
   }
 
-  public RagonLobbyPlayer? GetPlayerById(string playerId)
+  public RagonContext? GetContextById(string playerId)
   {
-    return _contextsByPlayerId.TryGetValue(playerId, out var context) ? context.LobbyPlayer : null;
+    return _contextsByPlayerId.TryGetValue(playerId, out var context) ? context : null;
   }
   
   private void CopyrightInfo()

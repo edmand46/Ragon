@@ -15,6 +15,5 @@ namespace Ragon.Relay
     public int LimitRooms;
     public int LimitBufferedEvents;
     public int LimitUserData;
-    
   }
 }

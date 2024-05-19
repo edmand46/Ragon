@@ -24,6 +24,6 @@ namespace Ragon.Server;
 public interface IRagonServer
 {
   BaseOperation ResolveHandler(RagonOperation operation);
-  RagonLobbyPlayer? GetPlayerByConnection(INetworkConnection connection);
-  RagonLobbyPlayer? GetPlayerById(string id);
+  public RagonContext? GetContextByConnectionId(ushort peerId);
+  public RagonContext? GetContextById(string playerId);
 }

@@ -26,12 +26,14 @@ namespace Ragon.Server.Handler
   {
     private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(AuthorizationOperation));
     private readonly IServerPlugin _serverPlugin;
+    private readonly IRagonServer _server;
     private readonly RagonContextObserver _observer;
     private readonly RagonServerConfiguration _configuration;
     private readonly RagonBuffer _writer;
 
     public AuthorizationOperation(RagonBuffer reader,
       RagonBuffer writer,
+      IRagonServer server,
       IServerPlugin serverPlugin,
       RagonContextObserver observer,
       RagonServerConfiguration configuration) : base(reader, writer)
@@ -40,6 +42,7 @@ namespace Ragon.Server.Handler
       _configuration = configuration;
       _observer = observer;
       _writer = writer;
+      _server = server;
     }
 
     public override void Handle(RagonContext context, NetworkChannel channel)
@@ -63,14 +66,12 @@ namespace Ragon.Server.Handler
 
       if (key == configuration.ServerKey)
       {
-        var authorizeViaWebHook = _serverPlugin.OnAuthorize(new ConnectionRequest() { PeerID = context.Connection.Id });
-        if (authorizeViaWebHook)
+        var authorizeViaPlugin = _serverPlugin.OnAuthorize(new ConnectionRequest(_server, context.Connection.Id, payload));
+        if (authorizeViaPlugin)
           return;
 
-        var lobbyPlayer = new RagonLobbyPlayer(context.Connection, Guid.NewGuid().ToString(), name, payload);
-        context.SetPlayer(lobbyPlayer);
-
-        Approve(context);
+        var id = Guid.NewGuid().ToString();
+        Approve(context, new ConnectionResponse(id, name, payload));
       }
       else
       {
@@ -78,8 +79,10 @@ namespace Ragon.Server.Handler
       }
     }
 
-    public void Approve(RagonContext context)
+    public void Approve(RagonContext context, ConnectionResponse result)
     {
+      var lobbyPlayer = new RagonLobbyPlayer(context.Connection, result.Id, result.Name, result.Payload);
+      context.SetPlayer(lobbyPlayer);
       context.ConnectionStatus = ConnectionStatus.Authorized;
 
       _observer.OnAuthorized(context);
