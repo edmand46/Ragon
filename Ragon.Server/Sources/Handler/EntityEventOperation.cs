@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.Event;
 using Ragon.Server.IO;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.Handler;
 
 public sealed class EntityEventOperation : BaseOperation
 {
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(EntityEventOperation));
   
   public EntityEventOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {
@@ -37,7 +37,7 @@ public sealed class EntityEventOperation : BaseOperation
 
     if (!room.Entities.TryGetValue(entityId, out var ent))
     {
-      _logger.Warn($"Entity not found for event with Id {entityId}");
+      _logger.Warning($"Entity not found for event with Id {entityId}");
       return;
     }
 

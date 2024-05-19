@@ -16,17 +16,16 @@
 
 using System.Net;
 using System.Net.WebSockets;
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.WebSocketServer;
 
 public class WebSocketServer : INetworkServer
 {
-  public Executor Executor => _executor;
-
-  private ILogger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(WebSocketServer));
+  
   private INetworkListener _networkListener;
   private Stack<ushort> _sequencer;
   private Executor _executor;
@@ -67,7 +66,7 @@ public class WebSocketServer : INetworkServer
       }
       catch (Exception ex)
       {
-          _logger.Warn(ex);
+          _logger.Error(ex);
           continue;
       }
       
@@ -113,6 +112,8 @@ public class WebSocketServer : INetworkServer
 
   public void Update()
   {
+    _executor.Update();
+    
     Flush();
   }
 
@@ -128,7 +129,7 @@ public class WebSocketServer : INetworkServer
       await conn.Flush();
   }
 
-  public void Start(
+  public void Listen(
     INetworkListener listener,
     NetworkConfiguration configuration
   )

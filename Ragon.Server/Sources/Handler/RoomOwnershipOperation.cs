@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.Handler;
 
 public sealed class RoomOwnershipOperation : BaseOperation
 {
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomOwnershipOperation));
   
   public RoomOwnershipOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {

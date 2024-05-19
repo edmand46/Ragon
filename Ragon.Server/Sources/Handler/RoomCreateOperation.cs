@@ -14,114 +14,114 @@
  * limitations under the License.
  */
 
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
 using Ragon.Server.Lobby;
+using Ragon.Server.Logging;
 using Ragon.Server.Plugin;
-using Ragon.Server.Plugin.Web;
 using Ragon.Server.Room;
 
-namespace Ragon.Server.Handler;
-
-public sealed class RoomCreateOperation : BaseOperation
+namespace Ragon.Server.Handler
 {
-  private readonly RagonRoomPayload _roomPayload = new();
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-  private readonly IServerPlugin _serverPlugin;
-  private readonly RagonWebHookPlugin _ragonWebHookPlugin;
-
-  public RoomCreateOperation(RagonBuffer reader, RagonBuffer writer, IServerPlugin serverPlugin, RagonWebHookPlugin ragonWebHook) : base(reader, writer)
+  public sealed class RoomCreateOperation : BaseOperation
   {
-    _serverPlugin = serverPlugin;
-    _ragonWebHookPlugin = ragonWebHook;
-  }
+    private IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomCreateOperation));
 
-  public override void Handle(RagonContext context, NetworkChannel channel)
-  {
-    if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
+    private readonly RagonRoomParameters _roomParameters = new();
+    private readonly IServerPlugin _serverPlugin;
+
+    public RoomCreateOperation(RagonBuffer reader, RagonBuffer writer, IServerPlugin serverPlugin) : base(reader,
+      writer)
     {
-      _logger.Warn($"Player {context.Connection.Id} not authorized for this request");
-      return;
+      _serverPlugin = serverPlugin;
     }
 
-    var custom = Reader.ReadBool();
-    var roomId = Guid.NewGuid().ToString();
-
-    if (custom)
+    public override void Handle(RagonContext context, NetworkChannel channel)
     {
-      roomId = Reader.ReadString();
-      if (context.Lobby.FindRoomById(roomId, out _))
+      if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
       {
-        Writer.Clear();
-        Writer.WriteOperation(RagonOperation.JOIN_FAILED);
-        Writer.WriteString($"Room with id {roomId} already exists");
-
-        var sendData = Writer.ToArray();
-        context.Connection.Reliable.Send(sendData);
-
-        _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} join failed to room {roomId}, room already exist");
+        _logger.Warning($"Player {context.Connection.Id} not authorized for this request");
         return;
       }
+
+      var custom = Reader.ReadBool();
+      var roomId = Guid.NewGuid().ToString();
+
+      if (custom)
+      {
+        roomId = Reader.ReadString();
+        if (context.Lobby.FindRoomById(roomId, out _))
+        {
+          Writer.Clear();
+          Writer.WriteOperation(RagonOperation.JOIN_FAILED);
+          Writer.WriteString($"Room with id {roomId} already exists");
+
+          var sendData = Writer.ToArray();
+          context.Connection.Reliable.Send(sendData);
+
+          _logger.Trace(
+            $"Player {context.Connection.Id}|{context.LobbyPlayer.Name} join failed to room {roomId}, room already exist");
+          return;
+        }
+      }
+
+      _roomParameters.Deserialize(Reader);
+
+      var information = new RoomInformation()
+      {
+        Scene = _roomParameters.Scene,
+        Max = _roomParameters.Max,
+        Min = _roomParameters.Min,
+      };
+
+      var lobbyPlayer = context.LobbyPlayer;
+      var roomPlayer = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
+
+      var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
+      var room = new RagonRoom(roomId, information, roomPlugin);
+
+      room.Plugin.OnAttached(room);
+      roomPlayer.OnAttached(room);
+
+      context.Scheduler.Run(room);
+      context.Lobby.Persist(room);
+      context.SetRoom(room, roomPlayer);
+
+      _logger.Trace(
+        $"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with scene {information.Scene}");
+
+      JoinSuccess(roomPlayer, room, Writer);
+
+      roomPlugin.OnPlayerJoined(roomPlayer);
+
+      _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to room {room.Id}");
     }
 
-    _roomPayload.Deserialize(Reader);
-
-    var information = new RoomInformation()
+    private void JoinSuccess(RagonRoomPlayer player, RagonRoom room, RagonBuffer writer)
     {
-      Scene = _roomPayload.Scene,
-      Max = _roomPayload.Max,
-      Min = _roomPayload.Min,
-    };
+      writer.Clear();
+      writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
+      writer.WriteString(room.Id);
+      writer.WriteUShort((ushort)room.PlayerMin);
+      writer.WriteUShort((ushort)room.PlayerMax);
+      writer.WriteString(room.Scene);
+      writer.WriteString(player.Id);
+      writer.WriteString(room.Owner.Id);
 
-    var lobbyPlayer = context.LobbyPlayer;
-    var roomPlayer = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
+      room.UserData.Snapshot(writer);
 
-    var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
-    var room = new RagonRoom(roomId, information, roomPlugin);
-    
-    room.Plugin.OnAttached(room);
-    roomPlayer.OnAttached(room);
+      writer.WriteUShort((ushort)room.PlayerList.Count);
+      foreach (var roomPlayer in room.PlayerList)
+      {
+        writer.WriteUShort(roomPlayer.Connection.Id);
+        writer.WriteString(roomPlayer.Id);
+        writer.WriteString(roomPlayer.Name);
 
-    context.Scheduler.Run(room);
-    context.Lobby.Persist(room);
-    context.SetRoom(room, roomPlayer);
+        roomPlayer.Context.UserData.Snapshot(writer);
+      }
 
-    _ragonWebHookPlugin.RoomCreated(context, room, roomPlayer);
-
-    _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with scene {information.Scene}");
-
-    JoinSuccess(roomPlayer, room, Writer);
-
-    roomPlugin.OnPlayerJoined(roomPlayer);
-
-    _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to room {room.Id}");
-  }
-
-  private void JoinSuccess(RagonRoomPlayer player, RagonRoom room, RagonBuffer writer)
-  {
-    writer.Clear();
-    writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
-    writer.WriteString(room.Id);
-    writer.WriteUShort((ushort)room.PlayerMin);
-    writer.WriteUShort((ushort)room.PlayerMax);
-    writer.WriteString(room.Scene);
-    writer.WriteString(player.Id);
-    writer.WriteString(room.Owner.Id);
-    
-    room.UserData.Snapshot(writer);
-      
-    writer.WriteUShort((ushort)room.PlayerList.Count);
-    foreach (var roomPlayer in room.PlayerList)
-    {
-      writer.WriteUShort(roomPlayer.Connection.Id);
-      writer.WriteString(roomPlayer.Id);
-      writer.WriteString(roomPlayer.Name);
-      
-      roomPlayer.Context.UserData.Snapshot(writer);
+      var sendData = writer.ToArray();
+      player.Connection.Reliable.Send(sendData);
     }
-
-    var sendData = writer.ToArray();
-    player.Connection.Reliable.Send(sendData);
   }
 }

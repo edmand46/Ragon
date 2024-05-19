@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.Handler;
 
 public class SceneLoadOperation: BaseOperation
 {
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(SceneLoadOperation));
 
   public SceneLoadOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer) {}
 
@@ -35,7 +35,7 @@ public class SceneLoadOperation: BaseOperation
     
     if (roomOwner.Connection.Id != currentPlayer.Connection.Id)
     { 
-      _logger.Warn("Only owner can change scene!");
+      _logger.Warning("Only owner can change scene!");
       return;
     }
     

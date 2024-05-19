@@ -2,20 +2,11 @@
   "serverKey": "defaultkey",
   "serverType": "enet",
   "serverTickRate": 30,
-  "gameProtocol": "1.0.0",
+  "protocol": "1.0.0",
   "port": 5000,
-  "httpPort": 5001,
-  "httpKey": "defaultkey",
   "limitConnections": 4095,
   "limitPlayersPerRoom": 20,
   "limitRooms": 200,
   "limitBufferedEvents": 50,
-  "limitUserData": 1024,
-  "webHooks":
-  {
-    "room-created": "http://127.0.0.1:3000/service/create-room",
-    "room-removed": "http://127.0.0.1:3000/service/remove-room",
-    "room-joined": "http://127.0.0.1:3000/service/join-room",
-    "room-leaved": "http://127.0.0.1:3000/service/leave-room"
-  }
+  "limitUserData": 1024
 }

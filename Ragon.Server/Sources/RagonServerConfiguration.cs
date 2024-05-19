@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-using Newtonsoft.Json;
-using NLog;
-
 namespace Ragon.Server;
 
 public enum ServerType
@@ -29,50 +26,20 @@ public enum ServerType
 public struct RagonServerConfiguration
 {
   public string ServerKey;
-  public string ServerType;
   public ushort ServerTickRate;
-  public string GameProtocol;
+  public string Protocol;
   public ushort Port;
-  public ushort HttpPort;
-  public string HttpKey;
   public int LimitConnections;
   public int LimitPlayersPerRoom;
   public int LimitRooms;
   public int LimitBufferedEvents;
   public int LimitUserData;
-  public Dictionary<string, string> WebHooks;
 
-  private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-  private static readonly string ServerVersion = "1.3.2";
   private static Dictionary<string, ServerType> _serverTypes = new Dictionary<string, ServerType>()
   {
-    {"enet", Server.ServerType.ENET},
-    {"websocket", Server.ServerType.WEBSOCKET}
+    { "enet", Server.ServerType.ENET },
+    { "websocket", Server.ServerType.WEBSOCKET }
   };
-
-  public static RagonServerConfiguration Load(string filePath)
-  {
-    CopyrightInfo();
-      
-    var data = File.ReadAllText(filePath);
-    var configuration = JsonConvert.DeserializeObject<RagonServerConfiguration>(data);
-    return configuration;
-  }
-
-  private static void CopyrightInfo()
-  {
-    Logger.Info($"Server Version: {ServerVersion}");
-    Logger.Info($"Machine Name: {Environment.MachineName}");
-    Logger.Info($"OS: {Environment.OSVersion}");
-    Logger.Info($"Processors: {Environment.ProcessorCount}");
-    Logger.Info($"Runtime Version: {Environment.Version}");
-    Logger.Info("==================================");
-    Logger.Info(@"   ___    _   ___  ___  _  _ ");
-    Logger.Info(@"  | _ \  /_\ / __|/ _ \| \| |");
-    Logger.Info(@"  |   / / _ \ (_ | (_) | .` |");
-    Logger.Info(@"  |_|_\/_/ \_\___|\___/|_|\_|");
-    Logger.Info("==================================");
-  }
-
+  
   public static ServerType GetServerType(string type) => _serverTypes[type];
 }

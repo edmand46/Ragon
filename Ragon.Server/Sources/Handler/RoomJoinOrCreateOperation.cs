@@ -14,49 +14,45 @@
  * limitations under the License.
  */
 
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
 using Ragon.Server.Lobby;
+using Ragon.Server.Logging;
 using Ragon.Server.Plugin;
-using Ragon.Server.Plugin.Web;
 using Ragon.Server.Room;
 
 namespace Ragon.Server.Handler;
 
 public sealed class RoomJoinOrCreateOperation : BaseOperation
 {
-  private readonly RagonRoomPayload _roomPayload = new();
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomJoinOrCreateOperation));
+    
+  private readonly RagonRoomParameters _roomParameters = new();
   private readonly IServerPlugin _serverPlugin;
-  private readonly RagonWebHookPlugin _ragonWebHookPlugin;
   
-  public RoomJoinOrCreateOperation(RagonBuffer reader, RagonBuffer writer, IServerPlugin serverPlugin, RagonWebHookPlugin plugin): base(reader, writer)
+  public RoomJoinOrCreateOperation(RagonBuffer reader, RagonBuffer writer, IServerPlugin serverPlugin): base(reader, writer)
   {
     _serverPlugin = serverPlugin;
-    _ragonWebHookPlugin = plugin;
   }
   
   public override void Handle(RagonContext context, NetworkChannel channel)
   {
     if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
     {
-      _logger.Warn("Player not authorized for this request");
+      _logger.Warning("Player not authorized for this request");
       return;
     }
 
     var roomId = Guid.NewGuid().ToString();
     var lobbyPlayer = context.LobbyPlayer;
     
-    _roomPayload.Deserialize(Reader);
+    _roomParameters.Deserialize(Reader);
 
-    if (context.Lobby.FindRoomByScene(_roomPayload.Scene, out var existsRoom))
+    if (context.Lobby.FindRoomByScene(_roomParameters.Scene, out var existsRoom))
     {
       var player = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
       
       context.SetRoom(existsRoom, player);
-      
-      _ragonWebHookPlugin.RoomJoined(context, existsRoom, player);
       
       JoinSuccess(player, existsRoom, Writer);
       
@@ -68,16 +64,16 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
     {
       var information = new RoomInformation()
       {
-        Scene = _roomPayload.Scene,
-        Max = _roomPayload.Max,
-        Min = _roomPayload.Min,
+        Scene = _roomParameters.Scene,
+        Max = _roomParameters.Max,
+        Min = _roomParameters.Min,
       };
 
       var roomPlayer = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
       var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
       var room = new RagonRoom(roomId, information, roomPlugin);
       
-      _ragonWebHookPlugin.RoomCreated(context, room, roomPlayer);
+      _serverPlugin.OnRoomCreate(lobbyPlayer, room);
       
       room.Plugin.OnAttached(room);
       

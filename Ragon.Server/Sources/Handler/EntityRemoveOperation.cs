@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.Entity;
 using Ragon.Server.IO;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.Handler;
 
 public sealed class EntityDestroyOperation: BaseOperation
 {
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(EntityDestroyOperation));
   
   public EntityDestroyOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-using NLog;
 using System.Net.WebSockets;
 using Ragon.Server.IO;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.WebSocketServer;
 
 public sealed class WebSocketConnection : INetworkConnection
 {
-    private Logger _logger = LogManager.GetCurrentClassLogger();
+    private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(WebSocketConnection));
     public ushort Id { get; }
     public INetworkChannel Reliable { get; private set; }
     public INetworkChannel Unreliable { get; private set; }

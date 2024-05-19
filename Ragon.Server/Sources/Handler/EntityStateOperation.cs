@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.Handler;
 
 public sealed class EntityStateOperation: BaseOperation
 {
-  private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(EntityStateOperation));
 
   public EntityStateOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {

@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-using NLog;
+
 using Ragon.Protocol;
 using Ragon.Server.IO;
-using Ragon.Server.Plugin.Web;
+using Ragon.Server.Logging;
 using Ragon.Server.Room;
 
 namespace Ragon.Server.Handler;
 
 public sealed class RoomJoinOperation : BaseOperation
 {
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-  private readonly RagonWebHookPlugin _webHook;
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomJoinOperation));
 
-  public RoomJoinOperation(RagonBuffer reader, RagonBuffer writer, RagonWebHookPlugin plugin) : base(reader, writer)
+  public RoomJoinOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {
-    _webHook = plugin;
   }
-
   
   public override void Handle(RagonContext context, NetworkChannel channel)
   {
@@ -49,8 +46,6 @@ public sealed class RoomJoinOperation : BaseOperation
     var player = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
     context.SetRoom(existsRoom, player);
     
-    _webHook.RoomJoined(context, existsRoom, player);
-
     JoinSuccess(context, existsRoom, Writer);
 
     existsRoom.RestoreBufferedEvents(player);

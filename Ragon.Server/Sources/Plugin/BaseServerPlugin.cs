@@ -18,39 +18,68 @@ using Ragon.Server.IO;
 using Ragon.Server.Lobby;
 using Ragon.Server.Room;
 
-namespace Ragon.Server.Plugin;
-
-public class BaseServerPlugin: IServerPlugin
+namespace Ragon.Server.Plugin
 {
-  public IRagonServer Server { get; protected set; }
-  
-  public virtual void OnAttached(IRagonServer server)
+  public class ConnectionRequest
   {
-    Server  = server;
+    public int PeerID { get; set; }
+
+    public void Approve()
+    {
+    }
+
+    public void Reject()
+    {
+    }
   }
 
-  public virtual void OnDetached()
+  public class BaseServerPlugin : IServerPlugin
   {
-    
-  }
+    public IRagonServer Server { get; protected set; }
 
-  public virtual bool OnRoomCreate(RagonLobbyPlayer player, RagonRoom room)
-  {
-    return true;
-  }
+    public virtual void OnAttached(IRagonServer server)
+    {
+      Server = server;
+    }
 
-  public virtual bool OnRoomRemove(RagonLobbyPlayer player, RagonRoom room)
-  {
-    return true;
-  }
+    public virtual void OnDetached()
+    {
 
-  public virtual bool OnCommand(string command, string payload)
-  {
-    return true;
-  }
+    }
 
-  public virtual IRoomPlugin CreateRoomPlugin(RoomInformation information)
-  {
-    return new BaseRoomPlugin();
+    public virtual bool OnAuthorize(ConnectionRequest request)
+    {
+      return false;
+    }
+
+    public virtual bool OnRoomCreate(RagonLobbyPlayer player, RagonRoom room)
+    {
+      return true;
+    }
+
+    public virtual bool OnRoomRemove(RagonLobbyPlayer player, RagonRoom room)
+    {
+      return true;
+    }
+
+    public bool OnRoomJoined(RagonRoomPlayer player, RagonRoom room)
+    {
+      return true;
+    }
+
+    public bool OnRoomLeaved(RagonRoomPlayer player, RagonRoom room)
+    {
+      return true;
+    }
+
+    public virtual bool OnCommand(string command, string payload)
+    {
+      return true;
+    }
+
+    public virtual IRoomPlugin CreateRoomPlugin(RoomInformation information)
+    {
+      return new BaseRoomPlugin();
+    }
   }
 }

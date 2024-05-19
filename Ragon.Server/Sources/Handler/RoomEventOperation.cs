@@ -1,14 +1,15 @@
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.Event;
 using Ragon.Server.IO;
 using Ragon.Server.Lobby;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.Handler;
 
 public class RoomEventOperation : BaseOperation
 {
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomEventOperation));
+  
   public RoomEventOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
   {
   }
@@ -17,7 +18,7 @@ public class RoomEventOperation : BaseOperation
   {
     if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
     {
-      _logger.Warn($"Player {context.Connection.Id} not authorized for this request");
+      _logger.Warning($"Player {context.Connection.Id} not authorized for this request");
       return;
     }
 

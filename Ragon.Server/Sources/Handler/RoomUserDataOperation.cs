@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
 using Ragon.Server.Lobby;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.Handler;
 
 public sealed class RoomUserDataOperation : BaseOperation
 {
-  private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomUserDataOperation));
   private readonly int _userDataLimit;
   
   public RoomUserDataOperation(
@@ -39,7 +39,7 @@ public sealed class RoomUserDataOperation : BaseOperation
   {
     if (context.ConnectionStatus == ConnectionStatus.Unauthorized)
     {
-      _logger.Warn($"Player {context.Connection.Id} not authorized for this request");
+      _logger.Warning($"Player {context.Connection.Id} not authorized for this request");
       return;
     }
     

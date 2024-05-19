@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
-using Ragon.Server.Plugin;
-using Ragon.Server.Plugin.Web;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.Handler;
 
 public sealed class RoomLeaveOperation: BaseOperation
 {
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-  private readonly RagonWebHookPlugin _webHook;
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomLeaveOperation));
   
-  public RoomLeaveOperation(RagonBuffer reader, RagonBuffer writer, RagonWebHookPlugin plugin): base(reader, writer)
+  public RoomLeaveOperation(RagonBuffer reader, RagonBuffer writer): base(reader, writer)
   {
-    _webHook = plugin;
   }
 
   public override void Handle(RagonContext context, NetworkChannel channel)
@@ -43,8 +39,6 @@ public sealed class RoomLeaveOperation: BaseOperation
       
       plugin.OnPlayerLeaved(roomPlayer);
       room.DetachPlayer(roomPlayer);
-      
-      _webHook.RoomLeaved(context, room, roomPlayer);
       
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} leaved from {room.Id}");
     }

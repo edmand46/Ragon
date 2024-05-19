@@ -15,26 +15,24 @@
  */
 
 using ENet;
-using NLog;
 using Ragon.Protocol;
 using Ragon.Server.IO;
+using Ragon.Server.Logging;
 
 namespace Ragon.Server.ENetServer
 {
   public sealed class ENetServer : INetworkServer
   {
-    public Executor Executor => _executor;
 
     private readonly Host _host = new();
-    private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
+    private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(ENetServer));
 
     private ENetConnection[] _connections = Array.Empty<ENetConnection>();
     private INetworkListener _listener;
     private uint _protocol;
     private ENet.Event _event;
-    private Executor _executor = new();
 
-    public void Start(INetworkListener listener, NetworkConfiguration configuration)
+    public void Listen(INetworkListener listener, NetworkConfiguration configuration)
     {
       Library.Initialize();
 
@@ -79,7 +77,7 @@ namespace Ragon.Server.ENetServer
           {
             if (!IsValidProtocol(_event.Data))
             {
-              _logger.Warn($"Mismatched protocol Server: {RagonVersion.Parse(_protocol)} Client: {RagonVersion.Parse(_event.Data)}, close connection");
+              _logger.Warning($"Mismatched protocol Server: {RagonVersion.Parse(_protocol)} Client: {RagonVersion.Parse(_event.Data)}, close connection");
               _event.Peer.DisconnectNow(0);
               break;
             }

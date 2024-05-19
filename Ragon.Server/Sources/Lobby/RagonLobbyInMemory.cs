@@ -15,7 +15,7 @@
  */
 
 using System.Diagnostics.CodeAnalysis;
-using NLog;
+using Ragon.Server.Logging;
 using Ragon.Server.Room;
 
 namespace Ragon.Server.Lobby;
@@ -23,7 +23,7 @@ namespace Ragon.Server.Lobby;
 public class LobbyInMemory : IRagonLobby
 {
   private readonly List<RagonRoom> _rooms = new();
-  private readonly Logger _logger = LogManager.GetCurrentClassLogger();
+  private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(LobbyInMemory));
 
   public IReadOnlyList<IRagonRoom> Rooms => _rooms.AsReadOnly();
 
@@ -35,7 +35,7 @@ public class LobbyInMemory : IRagonLobby
       {
         if (existRagonRoom.PlayerCount >= existRagonRoom.PlayerMax)
         {
-          _logger.Warn($"Room with id {roomId} fulfilled");
+          _logger.Warning($"Room with id {roomId} fulfilled");
           
           room = default;
           return false;
@@ -58,7 +58,7 @@ public class LobbyInMemory : IRagonLobby
       {
         if (existsRoom.PlayerCount >= existsRoom.PlayerMax)
         {
-          _logger.Warn($"Room with scene {sceneName} fulfilled");
+          _logger.Warning($"Room with scene {sceneName} fulfilled");
           
           room = default;
           return false;          

@@ -14,39 +14,64 @@
  * limitations under the License.
  */
 
-using NLog;
+using System;
+using System.IO;
+using System.Threading;
+using Newtonsoft.Json;
 using Ragon.Server;
 using Ragon.Server.ENetServer;
-using Ragon.Server.WebSocketServer;
 using Ragon.Server.IO;
+using Ragon.Server.Logging;
 using Ragon.Server.Plugin;
+using Ragon.Server.WebSocketServer;
 
-namespace Ragon.Relay;
-
-public class Relay
+namespace Ragon.Relay
 {
-  public void Start()
+  public class Relay
   {
-    var logger = LogManager.GetLogger("Ragon.Relay");
-    logger.Info("Relay Application");
-
-    var configuration = RagonServerConfiguration.Load("relay.config.json");
-    var serverType = RagonServerConfiguration.GetServerType(configuration.ServerType);
-
-    INetworkServer networkServer = new ENetServer();
-    IServerPlugin plugin = new RelayServerPlugin();
-    switch (serverType)
+    public void Start()
     {
-      case ServerType.ENET:
-        networkServer = new ENetServer();
-        break;
-      case ServerType.WEBSOCKET:
-        networkServer = new WebSocketServer();
-        break;
-    }
+      LoggerManager.SetLoggerFactory(new RelayLoggerFactory());
 
-    var relay = new RagonServer(networkServer, plugin, configuration);
-    logger.Info("Started");
-    relay.Start();
+      var logger = LoggerManager.GetLogger("Relay");
+      logger.Info("Relay Application");
+
+      var data = File.ReadAllText("relay.config.json");
+      var configuration = JsonConvert.DeserializeObject<RelayConfiguration>(data);
+      var serverType = RagonServerConfiguration.GetServerType(configuration.ServerType);
+
+      INetworkServer networkServer = new ENetServer();
+      IServerPlugin plugin = new RelayServerPlugin();
+      switch (serverType)
+      {
+        case ServerType.ENET:
+          networkServer = new ENetServer();
+          break;
+        case ServerType.WEBSOCKET:
+          networkServer = new WebSocketServer();
+          break;
+      }
+
+      var serverConfiguration = new RagonServerConfiguration()
+      {
+        LimitConnections = configuration.LimitConnections,
+        LimitRooms = configuration.LimitConnections,
+        LimitBufferedEvents = configuration.LimitConnections,
+        LimitPlayersPerRoom = configuration.LimitConnections,
+        Port = configuration.Port,
+        Protocol = configuration.Protocol,
+        ServerKey = configuration.ServerKey,
+        ServerTickRate = configuration.ServerTickRate,
+      };
+      var relay = new RagonServer(networkServer, plugin, serverConfiguration);
+      relay.Start();
+      while (relay.IsRunning)
+      {
+        relay.Tick();
+        Thread.Sleep(1);
+      }
+
+      relay.Dispose();
+    }
   }
 }
