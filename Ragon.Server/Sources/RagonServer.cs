@@ -66,7 +66,6 @@ public class RagonServer : IRagonServer, INetworkListener
     _timer = new Stopwatch();
     
     var contextObserver = new RagonContextObserver(_contextsByPlayerId);
-    
     _scheduler.Run(new RagonActionTimer(SendRoomList, 2.0f));
     _scheduler.Run(new RagonActionTimer(SendPlayerUserData, 0.1f));
     _scheduler.Run(new RagonActionTimer(SendRoomUserData, 0.1f));
@@ -156,7 +155,9 @@ public class RagonServer : IRagonServer, INetworkListener
         
         _lobby.RemoveIfEmpty(room);
       }
-      _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
+      
+      if (context.ConnectionStatus == ConnectionStatus.Authorized)
+        _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
 
       _logger.Trace($"Disconnected: {connection.Id}");
     }
@@ -176,7 +177,9 @@ public class RagonServer : IRagonServer, INetworkListener
         room.DetachPlayer(context.RoomPlayer);
         _lobby.RemoveIfEmpty(room);
       }
-      _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
+      
+      if (context.ConnectionStatus == ConnectionStatus.Authorized)
+        _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
       
       _logger.Trace($"Timeout: {connection.Id}|{context.LobbyPlayer.Name}|{context.LobbyPlayer.Id}");
     }

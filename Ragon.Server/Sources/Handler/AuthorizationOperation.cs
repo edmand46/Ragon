@@ -75,6 +75,8 @@ namespace Ragon.Server.Handler
       }
       else
       {
+        _logger.Warning($"Invalid key for connection {context.Connection.Id}");
+        
         Reject(context);
       }
     }
@@ -100,7 +102,7 @@ namespace Ragon.Server.Handler
       var sendData = _writer.ToArray();
       context.Connection.Reliable.Send(sendData);
 
-      _logger.Trace($"Connection {context.Connection.Id} as {playerId}|{context.LobbyPlayer.Name} authorized");
+      _logger.Trace($"Approved {context.Connection.Id} as {playerId}|{context.LobbyPlayer.Name}");
     }
 
     public void Reject(RagonContext context)
@@ -113,7 +115,7 @@ namespace Ragon.Server.Handler
       context.Connection.Reliable.Send(sendData);
       context.Connection.Close();
 
-      _logger.Trace($"Connection {context.Connection.Id}");
+      _logger.Trace($"Rejected  Connectin:{context.Connection.Id}");
     }
   }
 }
