@@ -63,6 +63,7 @@ namespace Ragon.Relay
         Protocol = configuration.Protocol,
         ServerKey = configuration.ServerKey,
         ServerTickRate = configuration.ServerTickRate,
+        ServerAddress = configuration.ServerAddress,
       };
       
       var relay = new RagonServer(networkServer, plugin, serverConfiguration);

@@ -118,7 +118,7 @@ public class RagonServer : IRagonServer, INetworkListener
     {
       LimitConnections = _configuration.LimitConnections,
       Protocol = RagonVersion.Parse(_configuration.Protocol),
-      Address = "0.0.0.0",
+      Address = _configuration.ServerAddress,
       Port = _configuration.Port,
     };
 
@@ -290,7 +290,7 @@ public class RagonServer : IRagonServer, INetworkListener
   
   private void CopyrightInfo()
   {
-    _logger.Info($"Ragon Server Version: {ServerVersion}");
+    _logger.Info($"Server Version: {ServerVersion}");
     _logger.Info($"Machine Name: {Environment.MachineName}");
     _logger.Info($"OS: {Environment.OSVersion}");
     _logger.Info($"Processors: {Environment.ProcessorCount}");

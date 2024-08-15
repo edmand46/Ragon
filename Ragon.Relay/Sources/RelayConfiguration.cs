@@ -7,6 +7,7 @@ namespace Ragon.Relay
   {
     public string ServerKey;
     public string ServerType;
+    public string ServerAddress;
     public ushort ServerTickRate;
     public string Protocol;
     public ushort Port;

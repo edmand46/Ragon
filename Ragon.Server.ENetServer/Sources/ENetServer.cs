@@ -49,7 +49,7 @@ namespace Ragon.Server.ENetServer
       _host.Create(address, _connections.Length, 2, 0, 0, 1024 * 1024);
 
       var protocolDecoded = RagonVersion.Parse(_protocol);
-      _logger.Info($"Listen at 127.0.0.1:{configuration.Port}");
+      _logger.Info($"Listen at {configuration.Address}:{configuration.Port}");
       _logger.Info($"Protocol: {protocolDecoded}");
     }
 

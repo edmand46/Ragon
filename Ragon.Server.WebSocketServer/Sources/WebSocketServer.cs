@@ -146,13 +146,13 @@ public class WebSocketServer : INetworkServer
     _connections = new WebSocketConnection[configuration.LimitConnections];
 
     _httpListener = new HttpListener();
-    _httpListener.Prefixes.Add($"http://+:{configuration.Port}/");
+    _httpListener.Prefixes.Add($"http://{configuration.Address}:{configuration.Port}/");
     _httpListener.Start();
 
     _executor.Run(() => StartAccept(_cancellationTokenSource.Token));
 
     var protocolDecoded = RagonVersion.Parse(configuration.Protocol);
-    _logger.Info($"Listen at http://0.0.0.0:{configuration.Port}/");
+    _logger.Info($"Listen at http://{configuration.Address}:{configuration.Port}/");
     _logger.Info($"Protocol: {protocolDecoded}");
   }
 

@@ -26,6 +26,7 @@ public enum ServerType
 public struct RagonServerConfiguration
 {
   public string ServerKey;
+  public string ServerAddress;
   public ushort ServerTickRate;
   public string Protocol;
   public ushort Port;

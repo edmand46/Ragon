@@ -1,6 +1,7 @@
 {
   "serverKey": "defaultkey",
   "serverType": "enet",
+  "serverAddress": "*",
   "serverTickRate": 30,
   "protocol": "1.0.0",
   "port": 5000,
