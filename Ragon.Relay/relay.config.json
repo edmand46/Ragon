@@ -4,10 +4,11 @@
   "serverAddress": "*",
   "serverTickRate": 30,
   "protocol": "1.0.0",
-  "port": 5000,
+  "port": 8000,
   "limitConnections": 4095,
   "limitPlayersPerRoom": 20,
   "limitRooms": 200,
   "limitBufferedEvents": 50,
-  "limitUserData": 1024
+  "limitUserDataSize": 1024,
+  "limitPropertySize": 512
 }

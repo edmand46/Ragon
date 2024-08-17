@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Buffers;
 using System.Net;
 using System.Net.WebSockets;
 using Ragon.Protocol;
@@ -82,20 +83,30 @@ public class WebSocketServer : INetworkServer
     _networkListener.OnConnected(connection);
 
     var webSocket = connection.Socket;
-    var bytes = new byte[2048];
-    var buffer = new Memory<byte>(bytes);
+    var rawData = new byte[2048];
+    var rawDataBuffer = new Memory<byte>(rawData);
+    var data = new ArrayBufferWriter<byte>();
     
-    while (
-      webSocket.State == WebSocketState.Open ||
-      !cancellationToken.IsCancellationRequested)
+    while (webSocket.State == WebSocketState.Open || !cancellationToken.IsCancellationRequested)
     {
       try
       {
-        var result = await webSocket.ReceiveAsync(buffer, cancellationToken);
-        if (result.Count > 0)
+        while (true)
         {
-          var payload = buffer.Slice(0, result.Count);
-          _networkListener.OnData(connection, NetworkChannel.RELIABLE, payload.ToArray());
+          var result = await webSocket.ReceiveAsync(rawDataBuffer, cancellationToken);
+          var payload = rawDataBuffer.Slice(0, result.Count);
+          
+          data.Write(payload.Span);
+          
+          if (result.EndOfMessage)
+            break;
+        }
+        
+        if (data.WrittenCount > 0)
+        {
+          _networkListener.OnData(connection, NetworkChannel.RELIABLE, data.WrittenMemory.ToArray());
+          
+          data.Clear();
         }
       }
       catch (Exception ex)

@@ -79,8 +79,8 @@ public class RagonServer : IRagonServer, INetworkListener
     _handlers[(byte)RagonOperation.JOIN_ROOM] = new RoomJoinOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.SCENE_LOADED] = new SceneLoadedOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.CREATE_ENTITY] = new EntityCreateOperation(_reader, _writer);
+    _handlers[(byte)RagonOperation.SCENE_LOADED] = new SceneLoadedOperation(_reader, _writer, _configuration);
+    _handlers[(byte)RagonOperation.CREATE_ENTITY] = new EntityCreateOperation(_reader, _writer, _configuration);
     _handlers[(byte)RagonOperation.REMOVE_ENTITY] = new EntityDestroyOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.REPLICATE_ENTITY_STATE] = new EntityStateOperation(_reader, _writer);
@@ -89,8 +89,8 @@ public class RagonServer : IRagonServer, INetworkListener
     _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampSyncOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.REPLICATE_ROOM_EVENT] = new RoomEventOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.ROOM_DATA_UPDATED] = new RoomUserDataOperation(_reader, _writer, _configuration.LimitUserData);
-    _handlers[(byte)RagonOperation.PLAYER_DATA_UPDATED] = new PlayerUserDataOperation(_reader, _writer, _configuration.LimitUserData);
+    _handlers[(byte)RagonOperation.ROOM_DATA_UPDATED] = new RoomUserDataOperation(_reader, _writer, _configuration.LimitUserDataSize);
+    _handlers[(byte)RagonOperation.PLAYER_DATA_UPDATED] = new PlayerUserDataOperation(_reader, _writer, _configuration.LimitUserDataSize);
   }
   public void Tick()
   {

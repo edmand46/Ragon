@@ -56,9 +56,11 @@ namespace Ragon.Relay
       var serverConfiguration = new RagonServerConfiguration()
       {
         LimitConnections = configuration.LimitConnections,
-        LimitRooms = configuration.LimitConnections,
-        LimitBufferedEvents = configuration.LimitConnections,
-        LimitPlayersPerRoom = configuration.LimitConnections,
+        LimitRooms = configuration.LimitRooms,
+        LimitBufferedEvents = configuration.LimitBufferedEvents,
+        LimitPlayersPerRoom = configuration.LimitPlayersPerRoom,
+        LimitUserDataSize = configuration.LimitUserDataSize,
+        LimitPropertySize = configuration.LimitPropertySize,
         Port = configuration.Port,
         Protocol = configuration.Protocol,
         ServerKey = configuration.ServerKey,

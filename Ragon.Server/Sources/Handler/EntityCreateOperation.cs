@@ -24,11 +24,14 @@ namespace Ragon.Server.Handler;
 public sealed class EntityCreateOperation : BaseOperation
 {
   private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(EntityCreateOperation));
-  
-  public EntityCreateOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  private RagonServerConfiguration _configuration;
+
+  public EntityCreateOperation(RagonBuffer reader, RagonBuffer writer, RagonServerConfiguration configuration) :
+    base(reader, writer)
   {
+    _configuration = configuration;
   }
-    
+
   public override void Handle(RagonContext context, NetworkChannel channel)
   {
     var player = context.RoomPlayer;
@@ -53,7 +56,7 @@ public sealed class EntityCreateOperation : BaseOperation
       var propertyType = Reader.ReadBool();
       var propertySize = Reader.ReadUShort();
 
-      entity.AddProperty(new RagonProperty(propertySize, propertyType));
+      entity.AddProperty(new RagonProperty(propertySize, propertyType, _configuration.LimitPropertySize));
     }
     
     if (Reader.Capacity > 0)

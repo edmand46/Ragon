@@ -27,9 +27,11 @@ namespace Ragon.Server.Handler
   public sealed class SceneLoadedOperation : BaseOperation
   {
     private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(SceneLoadedOperation));
-
-    public SceneLoadedOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+    private RagonServerConfiguration _configuration;
+    
+    public SceneLoadedOperation(RagonBuffer reader, RagonBuffer writer, RagonServerConfiguration serverConfiguration) : base(reader, writer)
     {
+      _configuration = serverConfiguration;
     }
 
     public override void Handle(RagonContext context, NetworkChannel channel)
@@ -40,6 +42,7 @@ namespace Ragon.Server.Handler
       var owner = context.Room.Owner;
       var player = context.RoomPlayer;
       var room = context.Room;
+     
       if (player.IsLoaded)
       {
         _logger.Warning($"Player {player.Name}:{player.Connection.Id} already ready");
@@ -70,10 +73,11 @@ namespace Ragon.Server.Handler
           {
             var propertyType = Reader.ReadBool();
             var propertySize = Reader.ReadUShort();
-            entity.AddProperty(new RagonProperty(propertySize, propertyType));
+            entity.AddProperty(new RagonProperty(propertySize, propertyType, _configuration.LimitPropertySize));
           }
 
           var roomPlugin = room.Plugin;
+          
           if (!roomPlugin.OnEntityCreate(player, entity)) continue;
 
           var playerInfo = $"Player {context.Connection.Id}|{context.LobbyPlayer.Name}";

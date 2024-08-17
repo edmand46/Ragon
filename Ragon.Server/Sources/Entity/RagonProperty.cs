@@ -27,13 +27,13 @@ public class RagonProperty : RagonPayload
 
   private uint[] _data;
 
-  public RagonProperty(int size, bool isFixed)
+  public RagonProperty(int size, bool isFixed, int limit)
   {
     Size = size;
     IsFixed = isFixed;
     IsDirty = false;
-
-    _data = new uint[128];
+    
+    _data = new uint[limit / 4 + 1]; 
   }
 
   public void Read(RagonBuffer buffer)

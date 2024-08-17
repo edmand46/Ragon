@@ -15,6 +15,7 @@ namespace Ragon.Relay
     public int LimitPlayersPerRoom;
     public int LimitRooms;
     public int LimitBufferedEvents;
-    public int LimitUserData;
+    public int LimitUserDataSize;
+    public int LimitPropertySize;
   }
 }

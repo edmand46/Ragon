@@ -331,6 +331,9 @@ namespace Ragon.Protocol
       var limit = (size + 32 - 1) / 32;
       var capacity = size;
 
+      if (index + limit >= _buckets.Length)
+        Resize(size);
+      
       for (int i = 0; i < limit; i++)
       {
         var dataSize = capacity > 32 ? 32 : capacity;
