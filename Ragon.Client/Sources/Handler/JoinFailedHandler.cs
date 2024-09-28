@@ -28,7 +28,7 @@ internal  class JoinFailedHandler: IHandler
     _listenerList = listenerList;
   }
   
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonStream reader)
   {
     var message = reader.ReadString();
     _listenerList.OnFailed(message);

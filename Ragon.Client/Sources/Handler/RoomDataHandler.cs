@@ -32,9 +32,9 @@ internal class RoomDataHandler: IHandler
     _listeners = listeners;
   }
 
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonStream reader)
   {
-    var rawData = reader.RawData;
+    var rawData = reader.ReadBinary(reader.Lenght);
     var peerId = (ushort)(rawData[1] + (rawData[2] << 8));
     
     RagonPlayer player = null;

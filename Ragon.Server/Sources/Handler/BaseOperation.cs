@@ -21,10 +21,10 @@ namespace Ragon.Server.Handler;
 
 public abstract class BaseOperation
 {
-  protected readonly RagonBuffer Reader;
-  protected readonly RagonBuffer Writer;
+  protected readonly RagonStream Reader;
+  protected readonly RagonStream Writer;
   
-  public BaseOperation(RagonBuffer reader, RagonBuffer writer)
+  public BaseOperation(RagonStream reader, RagonStream writer)
   {
     Reader = reader;
     Writer = writer;

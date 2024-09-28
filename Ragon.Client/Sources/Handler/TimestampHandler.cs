@@ -10,10 +10,10 @@ public class TimestampHandler: IHandler
     _client = client;
   }
   
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonStream buffer)
   {
-    var timestamp0 = buffer.Read(32); 
-    var timestamp1 = buffer.Read(32);
+    var timestamp0 = (uint)buffer.ReadInt(); 
+    var timestamp1 = (uint)buffer.ReadInt();
     var value = new DoubleToUInt { Int0 = timestamp0, Int1 = timestamp1 };
     
     _client.SetTimestamp(value.Double);

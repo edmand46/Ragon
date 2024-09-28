@@ -17,24 +17,24 @@
 
 namespace Ragon.Protocol
 {
-  public class RagonRoomParameters: IRagonSerializable
+  public class RagonRoomParameters
   {
     public string Scene { get; set; }
     public int Min { get; set; } 
     public int Max { get; set; } 
     
-    public void Serialize(RagonBuffer buffer)
+    public void Serialize(RagonStream buffer)
     {
       buffer.WriteString(Scene);
-      buffer.WriteInt(Min, 1, 32);
-      buffer.WriteInt(Max, 1, 32);
+      buffer.WriteInt(Min);
+      buffer.WriteInt(Max);
     }
 
-    public void Deserialize(RagonBuffer buffer)
+    public void Deserialize(RagonStream buffer)
     {
       Scene = buffer.ReadString();
-      Min = buffer.ReadInt(1, 32);
-      Max = buffer.ReadInt(1, 32);
+      Min = buffer.ReadInt();
+      Max = buffer.ReadInt();
     }
   }
 }

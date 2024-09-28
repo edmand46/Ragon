@@ -19,7 +19,7 @@ namespace Ragon.Protocol
 {
   public interface IRagonSerializable
   {
-    public void Serialize(RagonBuffer buffer);
-    public void Deserialize(RagonBuffer buffer);
+    public void Serialize(RagonStream buffer);
+    public void Deserialize(RagonStream buffer);
   }
 }

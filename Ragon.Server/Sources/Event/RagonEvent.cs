@@ -37,15 +37,15 @@ public class RagonEvent
     EventCode = eventCode;
   }
   
-  public void Read(RagonBuffer buffer)
+  public void Read(RagonStream buffer)
   {
-    _size = buffer.Capacity;
-    buffer.ReadArray(_data, _size);
+    // _size = buffer.Capacity;
+    // buffer.ReadArray(_data, _size);
   }
 
-  public void Write(RagonBuffer buffer)
+  public void Write(RagonStream buffer)
   {
-    if (_size <= 0) return;
-    buffer.WriteArray(_data, _size);
+    // if (_size <= 0) return;
+    // buffer.WriteArray(_data, _size);
   }
 }

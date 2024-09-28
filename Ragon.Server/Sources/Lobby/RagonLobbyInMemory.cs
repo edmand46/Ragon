@@ -81,7 +81,7 @@ public class LobbyInMemory : IRagonLobby
     _logger.Trace($"New room: {room.Id}");
     
     foreach (var r in _rooms)
-      _logger.Trace($"Room: {r.Id} Scene: {r.Scene} Players: {r.Players.Count} Entities: {r.Entities.Count}");
+      _logger.Trace($"Room: {r.Id} Scene: {r.Scene} Players: {r.Players.Count}");
   }
 
   public bool RemoveIfEmpty(RagonRoom room)
@@ -98,7 +98,7 @@ public class LobbyInMemory : IRagonLobby
     }
 
     foreach (var r in _rooms)
-      _logger.Trace($"Room: {r.Id} Scene: {r.Scene} Players: {r.Players.Count} Entities: {r.Entities.Count}");
+      _logger.Trace($"Room: {r.Id} Scene: {r.Scene} Players: {r.Players.Count}");
 
     return result;
   }

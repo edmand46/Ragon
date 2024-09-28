@@ -41,23 +41,20 @@ internal class JoinSuccessHandler : IHandler
 {
   private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
-  private readonly RagonEntityCache _entityCache;
   private readonly RagonClient _client;
 
   public JoinSuccessHandler(
     RagonClient client,
     RagonListenerList listenerList,
-    RagonPlayerCache playerCache,
-    RagonEntityCache entityCache
+    RagonPlayerCache playerCache
   )
   {
     _client = client;
     _listenerList = listenerList;
-    _entityCache = entityCache;
     _playerCache = playerCache;
   }
 
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonStream reader)
   {
     var roomId = reader.ReadString();
     var min = reader.ReadUShort();
@@ -68,9 +65,8 @@ internal class JoinSuccessHandler : IHandler
     
     _playerCache.SetOwnerAndLocal(ownerId, localId);
     
-    var scene = new RagonScene(_client, _playerCache, _entityCache, sceneName);
     var roomInfo = new RoomParameters(roomId, localId, ownerId, min, max);
-    var room = new RagonRoom(_client, _entityCache, _playerCache, roomInfo, scene);
+    var room = new RagonRoom(_client, _playerCache, roomInfo);
 
     room.UserData.Read(reader);
       
@@ -93,6 +89,5 @@ internal class JoinSuccessHandler : IHandler
     _client.SetStatus(RagonStatus.ROOM);
     
     _listenerList.OnJoined();
-    _listenerList.OnSceneRequest(sceneName);
   }
 }

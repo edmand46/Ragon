@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-using Ragon.Server.Entity;
-using Ragon.Server.IO;
 using Ragon.Server.Room;
 
 namespace Ragon.Server.Plugin;
@@ -49,18 +47,6 @@ public class BaseRoomPlugin: IRoomPlugin
   public virtual void Tick(float dt)
   {
     
-  }
-  
-  public virtual bool OnEntityCreate(RagonRoomPlayer creator, IRagonEntity entity)
-  {
-    
-    return true;
-  }
-
-  public virtual bool OnEntityRemove(RagonRoomPlayer remover, IRagonEntity entity)
-  {
-    
-    return true;
   }
 
   public virtual bool OnData(RagonRoomPlayer player, byte[] data)

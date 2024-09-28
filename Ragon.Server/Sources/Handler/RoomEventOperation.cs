@@ -10,7 +10,7 @@ public class RoomEventOperation : BaseOperation
 {
   private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomEventOperation));
   
-  public RoomEventOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  public RoomEventOperation(RagonStream reader, RagonStream writer) : base(reader, writer)
   {
   }
 

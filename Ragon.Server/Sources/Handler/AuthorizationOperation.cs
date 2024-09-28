@@ -29,10 +29,10 @@ namespace Ragon.Server.Handler
     private readonly IRagonServer _server;
     private readonly RagonContextObserver _observer;
     private readonly RagonServerConfiguration _configuration;
-    private readonly RagonBuffer _writer;
+    private readonly RagonStream _writer;
 
-    public AuthorizationOperation(RagonBuffer reader,
-      RagonBuffer writer,
+    public AuthorizationOperation(RagonStream reader,
+      RagonStream writer,
       IRagonServer server,
       IServerPlugin serverPlugin,
       RagonContextObserver observer,

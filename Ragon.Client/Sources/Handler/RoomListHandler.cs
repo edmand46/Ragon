@@ -13,7 +13,7 @@ internal class RoomListHandler: IHandler
     _listenerList = list;
   }
   
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonStream reader)
   {
     var roomCount = reader.ReadUShort();
     var roomList = new RagonRoomInformation[roomCount];

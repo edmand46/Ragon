@@ -35,12 +35,12 @@ public class RagonUserDataReadOnly : IUserData
   {
   }
 
-  public void Write(RagonBuffer buffer)
+  public void Write(RagonStream buffer)
   {
   
   }
 
-  public IReadOnlyList<string> Read(RagonBuffer buffer)
+  public IReadOnlyList<string> Read(RagonStream buffer)
   {
     var len = buffer.ReadUShort();
     var changes = new List<string>(len);
@@ -50,7 +50,7 @@ public class RagonUserDataReadOnly : IUserData
       var valueSize = buffer.ReadUShort();  
       if (valueSize > 0)
       {
-        var value = buffer.ReadBytes(valueSize);
+        var value = buffer.ReadBinary(valueSize);
         _properties[key] = value;
           
       }

@@ -27,7 +27,7 @@ internal class AuthorizeFailedHandler: IHandler
     _listenerList = list;
   }
   
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonStream reader)
   {
     var message = reader.ReadString();
     _listenerList.OnAuthorizationFailed(message);

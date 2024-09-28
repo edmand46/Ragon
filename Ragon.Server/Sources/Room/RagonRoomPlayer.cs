@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-using Ragon.Server.Data;
-using Ragon.Server.Entity;
 using Ragon.Server.IO;
 
 namespace Ragon.Server.Room;
@@ -29,7 +27,6 @@ public class RagonRoomPlayer
   public bool IsLoaded { get; private set; }
   public double Timestamp { get; private set; }
   public RagonRoom Room { get; private set; }
-  public RagonEntityCache Entities { get; private set; }
   
   public RagonRoomPlayer(RagonContext context, string id, string name)
   {
@@ -37,19 +34,8 @@ public class RagonRoomPlayer
     Name = name;
     Context = context;
     Connection = context.Connection;
-    Entities = new RagonEntityCache();
   }
 
-  public void AttachEntity(RagonEntity entity)
-  {
-    Entities.Add(entity);
-  }
-
-  public void DetachEntity(RagonEntity entity)
-  {
-    Entities.Remove(entity);
-  }
-  
   internal void OnAttached(RagonRoom room)
   {
     Room = room;

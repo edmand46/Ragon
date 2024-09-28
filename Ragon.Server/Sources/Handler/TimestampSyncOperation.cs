@@ -19,18 +19,18 @@ using Ragon.Server.IO;
 
 namespace Ragon.Server.Handler;
 
-public class TimestampSyncOperation: BaseOperation
+public class TimestampSyncOperation : BaseOperation
 {
-  public TimestampSyncOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  public TimestampSyncOperation(RagonStream reader, RagonStream writer) : base(reader, writer)
   {
   }
 
   public override void Handle(RagonContext context, NetworkChannel channel)
   {
-    var timestamp0 = Reader.Read(32);
-    var timestamp1 = Reader.Read(32);
+    var timestamp0 = (uint)Reader.ReadInt();
+    var timestamp1 = (uint)Reader.ReadInt();
     var value = new DoubleToUInt() { Int0 = timestamp0, Int1 = timestamp1 };
-    
+
     context.RoomPlayer?.SetTimestamp(value.Double);
   }
 }

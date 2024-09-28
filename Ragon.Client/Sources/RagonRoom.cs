@@ -47,11 +47,9 @@ namespace Ragon.Client
       }
     }
 
-    private delegate void OnEventDelegate(RagonPlayer player, RagonBuffer serializer);
+    private delegate void OnEventDelegate(RagonPlayer player, RagonStream serializer);
 
     private readonly RagonClient _client;
-    private readonly RagonScene _scene;
-    private readonly RagonEntityCache _entityCache;
     private readonly RagonPlayerCache _playerCache;
     private readonly RoomParameters _parameters;
     private readonly RagonUserData _userData;
@@ -59,47 +57,40 @@ namespace Ragon.Client
     public string Id => _parameters.RoomId;
     public int MinPlayers => _parameters.Min;
     public int MaxPlayers => _parameters.Max;
-    public string Scene => _scene.Name;
+    public string Scene => "none";
 
     public IReadOnlyList<RagonPlayer> Players => _playerCache.Players;
     public RagonPlayer Local => _playerCache.Local;
     public RagonPlayer Owner => _playerCache.Owner;
     public RagonUserData UserData => _userData;
 
-    private readonly Dictionary<int, OnEventDelegate> _events = new Dictionary<int, OnEventDelegate>();
+    private readonly Dictionary<int, OnEventDelegate> _events = new();
 
-    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _localListeners =
-      new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
+    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _localListeners = new();
 
-    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _listeners =
-      new Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>>();
+    private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _listeners = new();
 
     public RagonRoom(RagonClient client,
-      RagonEntityCache entityCache,
       RagonPlayerCache playerCache,
-      RoomParameters parameters,
-      RagonScene scene)
+      RoomParameters parameters)
     {
       _client = client;
       _parameters = parameters;
-      _entityCache = entityCache;
       _playerCache = playerCache;
-      _scene = scene;
       _userData = new RagonUserData();
     }
 
     internal void Cleanup()
     {
-      _entityCache.Cleanup();
       _playerCache.Cleanup();
     }
 
     internal void Update(string sceneName)
     {
-      _scene.Update(sceneName);
+      // _scene.Update(sceneName);
     }
 
-    internal void HandleEvent(ushort eventCode, RagonPlayer caller, RagonBuffer buffer)
+    internal void HandleEvent(ushort eventCode, RagonPlayer caller, RagonStream buffer)
     {
       if (_events.TryGetValue(eventCode, out var evnt))
         evnt?.Invoke(caller, buffer);
@@ -107,11 +98,11 @@ namespace Ragon.Client
         RagonLog.Warn($"Handler event {Id} with eventCode {eventCode} not defined");
     }
 
-    internal void HandleUserData(RagonBuffer buffer)
+    internal void HandleUserData(RagonStream buffer)
     {
       _userData.Read(buffer);
     }
-    
+
     public IDisposable OnEvent<TEvent>(Action<RagonPlayer, TEvent> callback) where TEvent : IRagonEvent, new()
     {
       var t = new TEvent();
@@ -147,23 +138,73 @@ namespace Ragon.Client
       return new EventSubscription(callbacks, localCallbacks, action);
     }
 
-    public void LoadScene(string sceneName) => _scene.Load(sceneName);
-    public void SceneLoaded() => _scene.SceneLoaded();
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode replicationMode)
+      where TEvent : IRagonEvent, new()
+    {
+      var evntId = _client.Event.GetEventCode(evnt);
+      var buffer = _client.Buffer;
 
-    public void ReplicateEvent<TEvent>(TEvent evnt, RagonTarget target, RagonReplicationMode mode)
-      where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
+      {
+        if (replicationMode == RagonReplicationMode.Local &&
+            _localListeners.TryGetValue(evntId, out var localListeners))
+        {
+          foreach (var listener in localListeners)
+            listener.Invoke(_client.Room.Local, evnt);
+          return;
+        }
+      }
 
-    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode mode)
-      where TEvent : IRagonEvent, new() => _scene.ReplicateEvent(evnt, target, mode);
+      {
+        if (replicationMode == RagonReplicationMode.LocalAndServer &&
+            _localListeners.TryGetValue(evntId, out var localListeners))
+        {
+          foreach (var listener in localListeners)
+            listener.Invoke(_client.Room.Local, evnt);
+        }
+      }
 
-    public void ReplicateData(byte[] data, bool reliable = false) => _scene.ReplicateData(data, reliable);
+      buffer.Clear();
+      buffer.WriteOperation(RagonOperation.REPLICATE_ROOM_EVENT);
+      buffer.WriteUShort(evntId);
+      buffer.WriteByte((byte)replicationMode);
+      buffer.WriteByte((byte)target);
 
-    public void CreateEntity(RagonEntity entity) => CreateEntity(entity, null);
-    public void CreateEntity(RagonEntity entity, RagonPayload payload) => _entityCache.Create(entity, payload);
-    public void TransferEntity(RagonEntity entity, RagonPlayer player) => _entityCache.Transfer(entity, player);
+      evnt.Serialize(buffer);
 
-    public void DestroyEntity(RagonEntity entityId) => DestroyEntity(entityId, null);
-    public void DestroyEntity(RagonEntity entityId, RagonPayload payload) => _entityCache.Destroy(entityId, payload);
+      var sendData = buffer.ToArray();
+      _client.Reliable.Send(sendData);
+    }
+
+    public void ReplicateEvent<TEvent>(TEvent evnt, RagonPlayer target, RagonReplicationMode replicationMode)
+      where TEvent : IRagonEvent, new()
+    {
+      var evntId = _client.Event.GetEventCode(evnt);
+      var buffer = _client.Buffer;
+
+      buffer.Clear();
+      buffer.WriteOperation(RagonOperation.REPLICATE_ROOM_EVENT);
+      buffer.WriteUShort(evntId);
+      buffer.WriteByte((byte)replicationMode);
+      buffer.WriteByte((byte)RagonTarget.Player);
+      buffer.WriteUShort(target.PeerId);
+
+      evnt.Serialize(buffer);
+
+      var sendData = buffer.ToArray();
+      _client.Reliable.Send(sendData);
+    }
+
+    public void ReplicateData(byte[] data, bool reliable)
+    {
+      var sendData = new byte[data.Length + 1];
+      sendData[0] = (byte)RagonOperation.REPLICATE_RAW_DATA;
+      Array.Copy(data, 0, sendData, 1, data.Length);
+
+      if (reliable)
+        _client.Reliable.Send(sendData);
+      else
+        _client.Unreliable.Send(sendData);
+    }
 
     public void Dispose()
     {

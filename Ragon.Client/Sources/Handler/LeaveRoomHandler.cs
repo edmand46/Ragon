@@ -23,22 +23,18 @@ internal class LeaveRoomHandler : IHandler
 {
   private readonly RagonClient _client;
   private readonly RagonListenerList _listenerList;
-  private readonly RagonEntityCache _entityCache;
   
   public LeaveRoomHandler(
     RagonClient client,
-    RagonListenerList listenerList,
-    RagonEntityCache entityCache)
+    RagonListenerList listenerList)
   {
     _client = client;
     _listenerList = listenerList;
-    _entityCache = entityCache;
   }
 
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonStream reader)
   {    
     _listenerList.OnLeft();
-    _entityCache.Cleanup();
     _client.Room.Cleanup();
   }
 }

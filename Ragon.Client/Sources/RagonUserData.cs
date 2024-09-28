@@ -57,7 +57,7 @@ namespace Ragon.Client
     {
     }
 
-    public IReadOnlyList<string> Read(RagonBuffer buffer)
+    public IReadOnlyList<string> Read(RagonStream buffer)
     {
       var len = buffer.ReadUShort();
       var changes = new List<string>(len);
@@ -67,7 +67,7 @@ namespace Ragon.Client
         var valueSize = buffer.ReadUShort();
         if (valueSize > 0)
         {
-          var value = buffer.ReadBytes(valueSize);
+          var value = buffer.ReadBinary(valueSize);
           _properties[key] = value;
         }
         else
@@ -81,7 +81,7 @@ namespace Ragon.Client
       return changes;
     }
 
-    public void Write(RagonBuffer buffer)
+    public void Write(RagonStream buffer)
     {
       buffer.WriteUShort((ushort)_localChanges.Count);
       foreach (var propertyChanged in _localChanges)
@@ -90,7 +90,7 @@ namespace Ragon.Client
         if (_properties.TryGetValue(propertyChanged, out var property))
         {
           buffer.WriteUShort((ushort)property.Length);
-          buffer.WriteBytes(property);
+          buffer.WriteBinary(property);
         }
         else
         {

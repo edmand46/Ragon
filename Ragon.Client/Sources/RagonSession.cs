@@ -21,9 +21,9 @@ namespace Ragon.Client
   public class RagonSession
   {
     private readonly RagonClient _client;
-    private readonly RagonBuffer _buffer;
+    private readonly RagonStream _buffer;
     
-    public RagonSession(RagonClient client, RagonBuffer buffer)
+    public RagonSession(RagonClient client, RagonStream buffer)
     {
       _client = client;
       _buffer = buffer;

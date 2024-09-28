@@ -32,7 +32,7 @@ public class RoomEventHandler : IHandler
     _playerCache = playerCache;
   }
 
-  public void Handle(RagonBuffer buffer)
+  public void Handle(RagonStream buffer)
   {
     var eventCode = buffer.ReadUShort();
     var peerId = buffer.ReadUShort();

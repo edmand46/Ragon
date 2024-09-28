@@ -23,7 +23,7 @@ public sealed class RoomOwnershipOperation : BaseOperation
 {
   private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomOwnershipOperation));
   
-  public RoomOwnershipOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  public RoomOwnershipOperation(RagonStream reader, RagonStream writer) : base(reader, writer)
   {
   }
 

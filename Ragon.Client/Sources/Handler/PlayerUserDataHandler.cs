@@ -32,7 +32,7 @@ namespace Ragon.Client
       _playerCache = playerCache;
       _listenerList = listenerList;
     }
-    public void Handle(RagonBuffer reader)
+    public void Handle(RagonStream reader)
     {
       var playerPeerId = reader.ReadUShort();
       var player = _playerCache.GetPlayerByPeer(playerPeerId);

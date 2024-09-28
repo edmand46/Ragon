@@ -26,7 +26,7 @@ public sealed class RoomJoinOperation : BaseOperation
 {
   private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomJoinOperation));
 
-  public RoomJoinOperation(RagonBuffer reader, RagonBuffer writer) : base(reader, writer)
+  public RoomJoinOperation(RagonStream reader, RagonStream writer) : base(reader, writer)
   {
   }
   
@@ -54,7 +54,7 @@ public sealed class RoomJoinOperation : BaseOperation
     _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to {existsRoom.Id}");
   }
 
-  private void JoinSuccess(RagonContext context, RagonRoom room, RagonBuffer writer)
+  private void JoinSuccess(RagonContext context, RagonRoom room, RagonStream writer)
   {
     writer.Clear();
     writer.WriteOperation(RagonOperation.JOIN_SUCCESS);
@@ -81,7 +81,7 @@ public sealed class RoomJoinOperation : BaseOperation
     context.Connection.Reliable.Send(sendData);
   }
 
-  private void JoinFailed(RagonContext context, RagonBuffer writer)
+  private void JoinFailed(RagonContext context, RagonStream writer)
   {
     writer.Clear();
     writer.WriteOperation(RagonOperation.JOIN_FAILED);

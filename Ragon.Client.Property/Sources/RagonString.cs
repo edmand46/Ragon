@@ -16,6 +16,7 @@
 
 
 using System.Text;
+using Ragon.Client.Replication;
 using Ragon.Protocol;
 
 namespace Ragon.Client.Property

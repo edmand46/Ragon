@@ -12,7 +12,7 @@ public class RagonLobbyDispatcher
     _lobby = lobby;
   }
 
-  public void Write(RagonBuffer writer)
+  public void Write(RagonStream writer)
   {
     writer.Clear();
     writer.WriteOperation(RagonOperation.ROOM_LIST_UPDATED);

@@ -15,7 +15,6 @@
  */
 
 using Ragon.Server.Data;
-using Ragon.Server.Entity;
 using Ragon.Server.IO;
 
 namespace Ragon.Server.Room;
@@ -36,6 +35,4 @@ public interface IRagonRoom
   
   RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection);
   RagonRoomPlayer GetPlayerById(string id);
-  IRagonEntity GetEntityById(ushort id);
-  IRagonEntity[] GetEntitiesOfPlayer(RagonRoomPlayer id);
 }

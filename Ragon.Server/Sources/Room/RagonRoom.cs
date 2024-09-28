@@ -16,7 +16,6 @@
 
 using Ragon.Protocol;
 using Ragon.Server.Data;
-using Ragon.Server.Entity;
 using Ragon.Server.Event;
 using Ragon.Server.IO;
 using Ragon.Server.Plugin;
@@ -36,7 +35,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
 
   public RagonData UserData { get; set; }
   public RagonRoomPlayer Owner { get; private set; }
-  public RagonBuffer Writer { get; }
+  public RagonStream Writer { get; }
   public IRoomPlugin Plugin { get; private set; }
 
   public Dictionary<ushort, RagonRoomPlayer> Players { get; private set; }
@@ -44,12 +43,6 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public List<RagonRoomPlayer> ReadyPlayersList { get; private set; }
   public List<RagonRoomPlayer> PlayerList { get; private set; }
 
-  public Dictionary<ushort, RagonEntity> Entities { get; private set; }
-  public List<RagonEntity> DynamicEntitiesList { get; private set; }
-  public List<RagonEntity> StaticEntitiesList { get; private set; }
-  public List<RagonEntity> EntityList { get; private set; }
-
-  private readonly HashSet<RagonEntity> _entitiesDirtySet;
   private readonly List<RagonEvent> _bufferedEvents;
   private readonly int _limitBufferedEvents;
 
@@ -66,39 +59,14 @@ public class RagonRoom : IRagonRoom, IRagonAction
     ReadyPlayersList = new List<RagonRoomPlayer>(info.Max);
     PlayerList = new List<RagonRoomPlayer>(info.Max);
 
-    Entities = new Dictionary<ushort, RagonEntity>();
-    DynamicEntitiesList = new List<RagonEntity>();
-    StaticEntitiesList = new List<RagonEntity>();
-    EntityList = new List<RagonEntity>();
-
-    _entitiesDirtySet = new HashSet<RagonEntity>();
     _bufferedEvents = new List<RagonEvent>();
     _limitBufferedEvents = 1000;
 
     UserData = new RagonData();
-    Writer = new RagonBuffer();
+    Writer = new RagonStream();
   }
 
-  public void AttachEntity(RagonEntity entity)
-  {
-    Entities.Add(entity.Id, entity);
-    EntityList.Add(entity);
-
-    if (entity.StaticId == 0)
-      DynamicEntitiesList.Add(entity);
-    else
-      StaticEntitiesList.Add(entity);
-  }
-
-  public void DetachEntity(RagonEntity entity)
-  {
-    Entities.Remove(entity.Id);
-    EntityList.Remove(entity);
-    StaticEntitiesList.Remove(entity);
-    DynamicEntitiesList.Remove(entity);
-
-    _entitiesDirtySet.Remove(entity);
-  }
+  
 
   public void RestoreBufferedEvents(RagonRoomPlayer roomPlayer)
   {
@@ -238,22 +206,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
 
   public void Tick(float dt)
   {
-    var entities = (ushort)_entitiesDirtySet.Count;
-    if (entities > 0)
-    {
-      Writer.Clear();
-      Writer.WriteOperation(RagonOperation.REPLICATE_ENTITY_STATE);
-      Writer.WriteUShort(entities);
-
-      foreach (var entity in _entitiesDirtySet)
-        entity.WriteState(Writer);
-
-      _entitiesDirtySet.Clear();
-
-      var sendData = Writer.ToArray();
-      foreach (var roomPlayer in ReadyPlayersList)
-        roomPlayer.Connection.Unreliable.Send(sendData);
-    }
+   
   }
 
   public void AttachPlayer(RagonRoomPlayer player)
@@ -277,43 +230,9 @@ public class RagonRoom : IRagonRoom, IRagonAction
         Writer.Clear();
         Writer.WriteOperation(RagonOperation.PLAYER_LEAVED);
         Writer.WriteString(player.Id);
-
-        var entitiesToDelete = player.Entities.DynamicList;
-        Writer.WriteUShort((ushort)entitiesToDelete.Count);
-        foreach (var entity in entitiesToDelete)
-        {
-          Writer.WriteUShort(entity.Id);
-          DetachEntity(entity);
-        }
-
-        var sendData = Writer.ToArray();
-        Broadcast(sendData);
       }
 
-      if (roomPlayer.Connection.Id == Owner.Connection.Id && PlayerList.Count > 0)
-      {
-        var nextOwner = PlayerList[0];
-
-        Owner = nextOwner;
-
-        var entitiesToUpdate = roomPlayer.Entities.StaticList;
-
-        Writer.Clear();
-        Writer.WriteOperation(RagonOperation.OWNERSHIP_ENTITY_CHANGED);
-        Writer.WriteUShort(Owner.Connection.Id);
-        Writer.WriteUShort((ushort)entitiesToUpdate.Count);
-
-        foreach (var entity in entitiesToUpdate)
-        {
-          Writer.WriteUShort(entity.Id);
-
-          entity.Attach(nextOwner);
-          nextOwner.Entities.Add(entity);
-        }
-
-        var sendData = Writer.ToArray();
-        Broadcast(sendData);
-      }
+     
 
       player.OnDetached();
 
@@ -331,21 +250,11 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public void UpdateMap(string sceneName)
   {
     Scene = sceneName;
-
-    DynamicEntitiesList.Clear();
-    StaticEntitiesList.Clear();
-    Entities.Clear();
-    EntityList.Clear();
-
+    
     foreach (var player in PlayerList)
       player.UnsetReady();
 
     UpdateReadyPlayerList();
-  }
-
-  public void Track(RagonEntity entity)
-  {
-    _entitiesDirtySet.Add(entity);
   }
 
   public void Broadcast(byte[] data, NetworkChannel channel = NetworkChannel.RELIABLE)
@@ -386,16 +295,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
     return PlayerList.FirstOrDefault(p => p.Id == id);
   }
 
-  public IRagonEntity? GetEntityById(ushort id)
-  {
-    return Entities.TryGetValue(id, out var entity) ? entity : null;
-  }
-
-  public IRagonEntity[] GetEntitiesOfPlayer(RagonRoomPlayer player)
-  {
-    return EntityList.Where(e => e.Owner.Connection.Id == player.Connection.Id).ToArray();
-  }
-
+  
   public void Attach()
   {
     Plugin.OnAttached(this);
@@ -410,12 +310,6 @@ public class RagonRoom : IRagonRoom, IRagonAction
     ReadyPlayersList.Clear();
     PlayerList.Clear();
     
-    Entities.Clear();
-    DynamicEntitiesList.Clear();
-    StaticEntitiesList.Clear();
-    EntityList.Clear();
-    
-    _entitiesDirtySet.Clear();
     _bufferedEvents.Clear();
     
     IsDone = true;

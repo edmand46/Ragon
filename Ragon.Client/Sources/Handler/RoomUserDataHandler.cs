@@ -29,7 +29,7 @@ namespace Ragon.Client
       _listenerList = listenerList;
     }
 
-    public void Handle(RagonBuffer reader)
+    public void Handle(RagonStream reader)
     {
       var changes = _client.Room?.UserData.Read(reader);
       _listenerList.OnRoomUserData(changes);

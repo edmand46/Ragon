@@ -11,8 +11,8 @@ namespace Ragon.Server.Handler
     private readonly int _userDataLimit;
 
     public PlayerUserDataOperation(
-      RagonBuffer reader,
-      RagonBuffer writer,
+      RagonStream reader,
+      RagonStream writer,
       int userDataLimit
     ) : base(reader, writer)
     {

@@ -24,7 +24,7 @@ public sealed class RoomLeaveOperation: BaseOperation
 {
   private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RoomLeaveOperation));
   
-  public RoomLeaveOperation(RagonBuffer reader, RagonBuffer writer): base(reader, writer)
+  public RoomLeaveOperation(RagonStream reader, RagonStream writer): base(reader, writer)
   {
   }
 

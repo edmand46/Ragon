@@ -27,8 +27,8 @@ public sealed class RoomUserDataOperation : BaseOperation
   private readonly int _userDataLimit;
   
   public RoomUserDataOperation(
-    RagonBuffer reader,
-    RagonBuffer writer,
+    RagonStream reader,
+    RagonStream writer,
     int userDataLimit
   ) : base(reader, writer)
   {

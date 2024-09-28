@@ -32,8 +32,8 @@ namespace Ragon.Server.Handler
     private readonly RagonServerConfiguration _configuration;
 
     public RoomCreateOperation(
-      RagonBuffer reader,
-      RagonBuffer writer,
+      RagonStream reader,
+      RagonStream writer,
       IServerPlugin serverPlugin,
       RagonServerConfiguration configuration 
     ) : base(reader,
@@ -107,7 +107,7 @@ namespace Ragon.Server.Handler
       _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} joined to room {room.Id}");
     }
 
-    private void JoinSuccess(RagonRoomPlayer player, RagonRoom room, RagonBuffer writer)
+    private void JoinSuccess(RagonRoomPlayer player, RagonRoom room, RagonStream writer)
     {
       writer.Clear();
       writer.WriteOperation(RagonOperation.JOIN_SUCCESS);

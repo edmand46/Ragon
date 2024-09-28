@@ -21,5 +21,5 @@ namespace Ragon.Client;
 
 public interface IHandler
 {
-  public void Handle(RagonBuffer reader);
+  public void Handle(RagonStream reader);
 }

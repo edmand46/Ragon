@@ -35,8 +35,8 @@ public class RagonServer : IRagonServer, INetworkListener
   private readonly IRagonLobby _lobby;
   private readonly IServerPlugin _serverPlugin;
   private readonly RagonServerConfiguration _configuration;
-  private readonly RagonBuffer _reader;
-  private readonly RagonBuffer _writer;
+  private readonly RagonStream _reader;
+  private readonly RagonStream _writer;
   private readonly RagonScheduler _scheduler;
   private readonly Dictionary<ushort, RagonContext> _contextsByConnection;
   private readonly Dictionary<string, RagonContext> _contextsByPlayerId;
@@ -60,8 +60,8 @@ public class RagonServer : IRagonServer, INetworkListener
     _lobby = new LobbyInMemory();
     _lobbySerializer = new RagonLobbyDispatcher(_lobby);
     _scheduler = new RagonScheduler();
-    _reader = new RagonBuffer();
-    _writer = new RagonBuffer();
+    _reader = new RagonStream();
+    _writer = new RagonStream();
     _tickRate = 1000 / _configuration.ServerTickRate;
     _timer = new Stopwatch();
     
@@ -78,14 +78,6 @@ public class RagonServer : IRagonServer, INetworkListener
     _handlers[(byte)RagonOperation.CREATE_ROOM] = new RoomCreateOperation(_reader, _writer, plugin, _configuration);
     _handlers[(byte)RagonOperation.JOIN_ROOM] = new RoomJoinOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.LOAD_SCENE] = new SceneLoadOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.SCENE_LOADED] = new SceneLoadedOperation(_reader, _writer, _configuration);
-    _handlers[(byte)RagonOperation.CREATE_ENTITY] = new EntityCreateOperation(_reader, _writer, _configuration);
-    _handlers[(byte)RagonOperation.REMOVE_ENTITY] = new EntityDestroyOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.REPLICATE_ENTITY_EVENT] = new EntityEventOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.REPLICATE_ENTITY_STATE] = new EntityStateOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.TRANSFER_ROOM_OWNERSHIP] = new EntityOwnershipOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.TRANSFER_ENTITY_OWNERSHIP] = new EntityOwnershipOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampSyncOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.REPLICATE_ROOM_EVENT] = new RoomEventOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataOperation(_reader, _writer);
@@ -101,11 +93,13 @@ public class RagonServer : IRagonServer, INetworkListener
 
     if (_timer.ElapsedMilliseconds > _tickRate)
     {
+      
+      
+      _scheduler.Update(_timer.ElapsedMilliseconds);
       _timer.Restart();
-      _scheduler.Update(_timer.ElapsedMilliseconds / 1000.0f);
-
-      SendTimestamp();
     }
+    
+    SendTimestamp();
 
     _server.Update();
   }
@@ -219,8 +213,8 @@ public class RagonServer : IRagonServer, INetworkListener
 
     _writer.Clear();
     _writer.WriteOperation(RagonOperation.TIMESTAMP_SYNCHRONIZATION);
-    _writer.Write(value.Int0, 32);
-    _writer.Write(value.Int1, 32);
+    _writer.WriteInt((int)value.Int0);
+    _writer.WriteInt((int)value.Int1);
 
     var sendData = _writer.ToArray();
     _server.Broadcast(sendData, NetworkChannel.UNRELIABLE);

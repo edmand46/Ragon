@@ -32,7 +32,7 @@ internal class AuthorizeSuccessHandler: IHandler
     _listenerList = listenerList;
   }
   
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonStream reader)
   {
     var playerId = reader.ReadString();
     var playerName = reader.ReadString();

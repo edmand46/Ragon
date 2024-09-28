@@ -22,21 +22,18 @@ namespace Ragon.Client;
 internal class PlayerLeftHandler : IHandler
 {
   private RagonPlayerCache _playerCache;
-  private RagonEntityCache _entityCache;
   private RagonListenerList _listenerList;
 
   public PlayerLeftHandler(
-    RagonEntityCache entityCache,
     RagonPlayerCache playerCache,
     RagonListenerList listenerList
   )
   {
-    _entityCache = entityCache;
     _playerCache = playerCache;
     _listenerList = listenerList;
   }
 
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonStream reader)
   {
     var playerId = reader.ReadString();
     var player = _playerCache.GetPlayerById(playerId);
@@ -53,9 +50,9 @@ internal class PlayerLeftHandler : IHandler
         toDeleteIds[i] = entityId;
       }
 
-      var emptyPayload = new RagonPayload(0);
-      foreach (var id in toDeleteIds)
-        _entityCache.OnDestroy(id, emptyPayload);
+      // var emptyPayload = new RagonPayload(0);
+      // foreach (var id in toDeleteIds)
+        // _entityCache.OnDestroy(id, emptyPayload);
     }
     else
     {

@@ -23,19 +23,16 @@ internal class OwnershipRoomHandler : IHandler
 {
   private readonly RagonListenerList _listenerList;
   private readonly RagonPlayerCache _playerCache;
-  private readonly RagonEntityCache _entityCache;
 
   public OwnershipRoomHandler(
     RagonListenerList listenerList,
-    RagonPlayerCache playerCache,
-    RagonEntityCache entityCache)
+    RagonPlayerCache playerCache)
   {
     _listenerList = listenerList;
     _playerCache = playerCache;
-    _entityCache = entityCache;
   }
 
-  public void Handle(RagonBuffer reader)
+  public void Handle(RagonStream reader)
   {
     var newOwnerId = reader.ReadUShort();
     var player = _playerCache.GetPlayerByPeer(newOwnerId);

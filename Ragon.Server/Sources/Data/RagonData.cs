@@ -12,7 +12,7 @@ public class RagonData
   {
   }
 
-  public void Read(RagonBuffer buffer)
+  public void Read(RagonStream buffer)
   {
     var len = buffer.ReadUShort();
     for (int i = 0; i < len; i++)
@@ -21,7 +21,7 @@ public class RagonData
       var valueSize = buffer.ReadUShort();
       if (valueSize > 0)
       {
-        var value = buffer.ReadBytes(valueSize);
+        var value = buffer.ReadBinary(valueSize);
         _data[key] = value;
       }
       else
@@ -31,14 +31,14 @@ public class RagonData
     }
   }
 
-  public void Write(RagonBuffer buffer)
+  public void Write(RagonStream buffer)
   {
     buffer.WriteUShort((ushort)_data.Count);
     foreach (var prop in _data)
     {
       buffer.WriteString(prop.Key);
       buffer.WriteUShort((ushort)prop.Value.Length);
-      buffer.WriteBytes(prop.Value);
+      buffer.WriteBinary(prop.Value);
     }
 
     var toDelete = _data
@@ -51,14 +51,14 @@ public class RagonData
     IsDirty = false;
   }
 
-  public void Snapshot(RagonBuffer buffer)
+  public void Snapshot(RagonStream buffer)
   {
     buffer.WriteUShort((ushort)_data.Count);
     foreach (var prop in _data)
     {
       buffer.WriteString(prop.Key);
       buffer.WriteUShort((ushort)prop.Value.Length);
-      buffer.WriteBytes(prop.Value);
+      buffer.WriteBinary(prop.Value);
       
       Console.WriteLine($"Key: {prop.Key} Value: {prop.Value.Length}");
     }

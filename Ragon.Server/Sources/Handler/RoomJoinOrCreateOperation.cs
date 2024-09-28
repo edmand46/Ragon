@@ -32,8 +32,8 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
   private readonly RagonServerConfiguration _configuration;
   
   public RoomJoinOrCreateOperation(
-    RagonBuffer reader,
-    RagonBuffer writer,
+    RagonStream reader,
+    RagonStream writer,
     IServerPlugin serverPlugin, 
     RagonServerConfiguration configuration
   ) : base(reader, writer)
@@ -100,7 +100,7 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
     }
   }
 
-  private void JoinSuccess(RagonRoomPlayer player, RagonRoom room, RagonBuffer writer)
+  private void JoinSuccess(RagonRoomPlayer player, RagonRoom room, RagonStream writer)
   {
     writer.Clear();
     writer.WriteOperation(RagonOperation.JOIN_SUCCESS);

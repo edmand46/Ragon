@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using Ragon.Server.Entity;
 using Ragon.Server.Room;
 
 namespace Ragon.Server.Plugin;
@@ -26,7 +25,5 @@ public interface IRoomPlugin
   void OnDetached(IRagonRoom room);
   bool OnPlayerJoined(RagonRoomPlayer player);
   bool OnPlayerLeaved(RagonRoomPlayer player);
-  bool OnEntityCreate(RagonRoomPlayer player, IRagonEntity entity);
-  bool OnEntityRemove(RagonRoomPlayer player, IRagonEntity entity);
   bool OnData(RagonRoomPlayer player, byte[] data);
 }

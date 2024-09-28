@@ -17,6 +17,7 @@
 using System;
 using System.Numerics;
 using Ragon.Client.Compressor;
+using Ragon.Client.Replication;
 using Ragon.Protocol;
 
 namespace Ragon.Client.Property
