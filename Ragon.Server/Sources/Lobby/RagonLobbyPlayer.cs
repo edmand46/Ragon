@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using Ragon.Server.Data;
 using Ragon.Server.IO;
 
 namespace Ragon.Server.Lobby;

@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using System.Threading;
 using Newtonsoft.Json;
 using Ragon.Server;
-using Ragon.Server.ENetServer;
 using Ragon.Server.IO;
 using Ragon.Server.Logging;
 using Ragon.Server.Plugin;
 using Ragon.Server.WebSocketServer;
+using Ragon.Transport;
 
 namespace Ragon.Relay
 {
@@ -69,7 +68,7 @@ namespace Ragon.Relay
       };
       
       var relay = new RagonServer(networkServer, plugin, serverConfiguration);
-      relay.Start();
+      relay.Listen();
       while (relay.IsRunning)
       {
         relay.Tick();

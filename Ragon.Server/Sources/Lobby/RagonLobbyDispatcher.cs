@@ -22,7 +22,7 @@ public class RagonLobbyDispatcher
     for (int i = 0; i < rooms.Count; i++)
     {
       var room = rooms[i];
-
+      
       writer.WriteString(room.Id);
       writer.WriteString(room.Scene);
       writer.WriteUShort((ushort)room.PlayerMax);

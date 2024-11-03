@@ -14,31 +14,41 @@
  * limitations under the License.
  */
 
+
 using ENet;
+using Ragon.Protocol;
 using Ragon.Server.IO;
 
-namespace Ragon.Server.ENetServer;
+namespace Ragon.Transport;
 
-public sealed class ENetConnection: INetworkConnection
+public sealed class ENetReliableChannel: INetworkChannel
 {
-  private static ushort _iterator = 0;
-  public ushort Id { get; }
-  public INetworkChannel Reliable { get; private set; }
-  public INetworkChannel Unreliable { get; private set; }
   private Peer _peer;
+  private byte _channelId;
+  private byte[] _data;
   
-  public ENetConnection(Peer peer)
+  public ENetReliableChannel(Peer peer, NetworkChannel channel)
   {
     _peer = peer;
-    
-    // Id = (ushort) peer.ID;
-    Id = _iterator++;
-    Reliable = new ENetReliableChannel(peer, NetworkChannel.RELIABLE);
-    Unreliable = new ENetUnreliableChannel(peer, NetworkChannel.UNRELIABLE);
+    _data = new byte[1500];
+    _channelId = (byte) channel;
   }
   
-  public void Close()
+  public void Send(byte[] data)
   {
-    _peer.Disconnect(0);
+    var newPacket = new Packet();
+    newPacket.Create(data, data.Length, PacketFlags.Reliable);
+    
+    _peer.Send(_channelId, ref newPacket);
+  }
+
+  public void Send(RagonStream buffer)
+  {
+    _data = buffer.ToArray();
+    
+    var newPacket = new Packet();
+    newPacket.Create(_data, _data.Length, PacketFlags.Reliable);
+    
+    _peer.Send(_channelId, ref newPacket);
   }
 }

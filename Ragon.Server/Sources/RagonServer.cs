@@ -69,7 +69,7 @@ public class RagonServer : IRagonServer, INetworkListener
     _scheduler.Run(new RagonActionTimer(SendRoomList, 2.0f));
     _scheduler.Run(new RagonActionTimer(SendPlayerUserData, 0.1f));
     _scheduler.Run(new RagonActionTimer(SendRoomUserData, 0.1f));
-    
+
     _serverPlugin.OnAttached(this);
 
     _handlers = new BaseOperation[byte.MaxValue];
@@ -93,18 +93,16 @@ public class RagonServer : IRagonServer, INetworkListener
 
     if (_timer.ElapsedMilliseconds > _tickRate)
     {
-      
+      SendTimestamp();
       
       _scheduler.Update(_timer.ElapsedMilliseconds);
       _timer.Restart();
     }
     
-    SendTimestamp();
-
     _server.Update();
   }
 
-  public void Start(bool executeInDedicatedThread = false)
+  public void Listen()
   {
     CopyrightInfo();
 

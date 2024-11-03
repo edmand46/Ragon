@@ -26,11 +26,13 @@ public class RagonEventCache
   public ushort GetEventCode<TEvent>(TEvent _) where TEvent : IRagonEvent
   {
     var type = typeof(TEvent);
+   
     if (!_eventsRegistryByType.TryGetValue(type, out var eventCode))
     {
       RagonLog.Error($"Event with type {type} not registered");
       return 0;
     }
+    
     return eventCode;
   }
 

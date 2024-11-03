@@ -56,7 +56,7 @@ public class RagonContext
 
   internal void SetRoom(RagonRoom room, RagonRoomPlayer player)
   {
-    Room?.DetachPlayer(RoomPlayer);
+    Room?.DetachPlayer(player);
 
     Room = room;
     RoomPlayer = player;

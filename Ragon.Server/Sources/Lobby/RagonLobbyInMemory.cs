@@ -73,6 +73,11 @@ public class LobbyInMemory : IRagonLobby
     return false;
   }
 
+  public bool FindRoomByProperties(Dictionary<string, object> props)
+  {
+    return true;
+  }
+
   public void Persist(RagonRoom room)
   {
     room.Attach();

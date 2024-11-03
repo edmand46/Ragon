@@ -22,7 +22,7 @@ namespace Ragon.Client
   {
     private readonly INetworkConnection _connection;
     private readonly NetworkStatistics _stats;
-    
+
     private IHandler[] _handlers;
     private RagonStream _readBuffer;
     private RagonStream _writeBuffer;
@@ -99,7 +99,7 @@ namespace Ragon.Client
     public void Disconnect()
     {
       _status = RagonStatus.DISCONNECTED;
-      _room.Cleanup();
+      _room?.Cleanup();
       _connection.Disconnect();
 
       OnDisconnected(RagonDisconnect.MANUAL);

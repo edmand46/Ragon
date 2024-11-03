@@ -6,7 +6,8 @@ public class FakeNetwork
 {
   public FakeClientNetwork ClientNetwork;
   public FakeServerNetwork ServerNetwork;
-
+  public FakeSocket Socket;
+  
   public FakeNetwork()
   {
     ClientNetwork = new FakeClientNetwork();

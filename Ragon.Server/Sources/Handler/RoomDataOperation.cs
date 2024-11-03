@@ -29,7 +29,8 @@ public sealed class RoomDataOperation : BaseOperation
   {
     var player = context.RoomPlayer;
     var room = context.Room;
-    
+
+        
     var data = Reader.ReadBinary(Reader.Lenght);
     var dataSize = data.Length - 1;
     var headerSize = 3;

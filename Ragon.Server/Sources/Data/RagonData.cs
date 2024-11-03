@@ -44,7 +44,7 @@ public class RagonData
     var toDelete = _data
       .Where(p => p.Value.Length == 0)
       .Select(p => p.Key);
-
+    
     foreach (var prop in toDelete)
       _data.Remove(prop);
 

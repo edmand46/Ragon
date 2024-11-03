@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
+using System.Threading;
 using Ragon.Protocol;
 using Ragon.Server.IO;
 using Ragon.Server.Logging;
@@ -160,7 +163,7 @@ public class WebSocketServer : INetworkServer
     _httpListener.Prefixes.Add($"http://{configuration.Address}:{configuration.Port}/");
     _httpListener.Start();
 
-    _executor.Run(() => StartAccept(_cancellationTokenSource.Token));
+    // _executor.Run(() => StartAccept(_cancellationTokenSource.Token));
 
     var protocolDecoded = RagonVersion.Parse(configuration.Protocol);
     _logger.Info($"Listen at http://{configuration.Address}:{configuration.Port}/");

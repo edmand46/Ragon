@@ -23,8 +23,8 @@ public class RagonEvent
 {
   public RagonRoomPlayer Invoker { get; private set; }
   public ushort EventCode { get; private set; }
-  public ushort Size => (ushort) _size;
-  
+  public ushort Size => (ushort)_size;
+
   private uint[] _data = new uint[128];
   private int _size = 0;
 
@@ -36,7 +36,7 @@ public class RagonEvent
     Invoker = invoker;
     EventCode = eventCode;
   }
-  
+
   public void Read(RagonStream buffer)
   {
     // _size = buffer.Capacity;

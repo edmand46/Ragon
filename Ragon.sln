@@ -6,10 +6,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Protocol", "Ragon.Pro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server", "Ragon.Server\Ragon.Server.csproj", "{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.WebSocketServer", "Ragon.Server.WebSocketServer\Ragon.Server.WebSocketServer.csproj", "{81050343-A9B8-487B-86C8-7A5B7DD9C39B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Server.ENetServer", "Ragon.Server.ENetServer\Ragon.Server.ENetServer.csproj", "{DD79AC4F-9E5C-4938-850E-805D537E68D0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Client", "Ragon.Client\Ragon.Client.csproj", "{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ragon.Tests", "Ragon.Tests\Ragon.Tests.csproj", "{5833194D-CAD0-4517-BBC6-4DB0D7F1BEF1}"
@@ -32,14 +28,6 @@ Global
 		{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4AA86B9-2486-4B53-BA77-43D958A2FDC3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{81050343-A9B8-487B-86C8-7A5B7DD9C39B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{81050343-A9B8-487B-86C8-7A5B7DD9C39B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{81050343-A9B8-487B-86C8-7A5B7DD9C39B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{81050343-A9B8-487B-86C8-7A5B7DD9C39B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DD79AC4F-9E5C-4938-850E-805D537E68D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DD79AC4F-9E5C-4938-850E-805D537E68D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DD79AC4F-9E5C-4938-850E-805D537E68D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DD79AC4F-9E5C-4938-850E-805D537E68D0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C82D65BF-6D80-4263-ADFE-CB9ED990B6C3}.Release|Any CPU.ActiveCfg = Release|Any CPU

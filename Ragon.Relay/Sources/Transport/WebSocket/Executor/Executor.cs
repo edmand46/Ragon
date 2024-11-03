@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace Ragon.Server.IO;
 
-public class Executor : TaskScheduler, IExecutor
+public class Executor : TaskScheduler
 {
   private readonly ChannelReader<Task> _reader;
   private readonly ChannelWriter<Task> _writer;
   private readonly Queue<Task> _pendingTasks;
   private readonly TaskFactory _taskFactory;
 
-  public Task Run(Action action, TaskCreationOptions task = TaskCreationOptions.None)
+  public Task Run(Action action, TaskCreationOptions task)
   {
     return _taskFactory.StartNew(action, task);
   }

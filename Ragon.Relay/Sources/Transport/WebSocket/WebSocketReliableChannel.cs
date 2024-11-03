@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Threading;
+using System.Threading.Tasks;
 using Ragon.Protocol;
 using Ragon.Server.IO;
 
@@ -36,7 +39,7 @@ public class WebSocketReliableChannel : INetworkChannel
         _queue.Enqueue(data);
     }
 
-    public void Send(RagonBuffer buffer)
+    public void Send(RagonStream buffer)
     {
         var sendData = buffer.ToArray();
         _queue.Enqueue(sendData);

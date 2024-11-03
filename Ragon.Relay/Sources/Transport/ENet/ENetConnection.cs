@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,32 +14,31 @@
  * limitations under the License.
  */
 
-using Ragon.Protocol;
+using ENet;
+using Ragon.Server.IO;
 
-namespace  Ragon.Client.Replication;
+namespace Ragon.Transport;
 
-internal class SceneLoadHandler
+public sealed class ENetConnection: INetworkConnection
 {
-  private readonly RagonClient _client;
-  private readonly RagonListenerList _listenerList;
+  private static ushort _iterator = 0;
+  public ushort Id { get; }
+  public INetworkChannel Reliable { get; private set; }
+  public INetworkChannel Unreliable { get; private set; }
+  private Peer _peer;
   
-  public SceneLoadHandler(
-    RagonClient ragonClient,
-    RagonListenerList listenerList
-    )
+  public ENetConnection(Peer peer)
   {
-    _client = ragonClient;
-    _listenerList = listenerList;
+    _peer = peer;
+    
+    // Id = (ushort) peer.ID;
+    Id = _iterator++;
+    Reliable = new ENetReliableChannel(peer, NetworkChannel.RELIABLE);
+    Unreliable = new ENetUnreliableChannel(peer, NetworkChannel.UNRELIABLE);
   }
   
-  public void Handle(RagonBuffer reader)
+  public void Close()
   {
-    var sceneName = reader.ReadString();
-    var room = _client.Room;
-    
-    room.Cleanup();
-    room.Update(sceneName);
-    
-    // _listenerList.OnSceneRequest(sceneName);
+    _peer.Disconnect(0);
   }
 }

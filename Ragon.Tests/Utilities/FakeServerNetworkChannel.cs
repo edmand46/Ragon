@@ -10,7 +10,7 @@ public class FakeServerNetworkChannel: INetworkChannel
     
   }
 
-  public void Send(RagonBuffer buffer)
+  public void Send(RagonStream buffer)
   {
     
   }
