@@ -26,7 +26,7 @@ public sealed class RoomLeaveOperation: BaseOperation
   
   public RoomLeaveOperation(RagonStream reader, RagonStream writer): base(reader, writer)
   {
-
+    
   }
 
   public override void Handle(RagonContext context, NetworkChannel channel)

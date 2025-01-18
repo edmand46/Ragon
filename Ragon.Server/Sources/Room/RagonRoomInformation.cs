@@ -18,7 +18,6 @@ namespace Ragon.Server;
 
 public ref struct RoomInformation
 {
-  public string Scene;
   public int Min;
   public int Max;
   public int BufferedEventsLimit;

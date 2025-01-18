@@ -39,8 +39,8 @@ public class RagonEvent
 
   public void Read(RagonStream buffer)
   {
-    // _size = buffer.Capacity;
-    // buffer.ReadArray(_data, _size);
+                // _size = buffer.Capacity;
+                // buffer.ReadArray(_data, _size);
   }
 
   public void Write(RagonStream buffer)

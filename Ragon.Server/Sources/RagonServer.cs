@@ -38,8 +38,7 @@ public class RagonServer : IRagonServer, INetworkListener
   private readonly RagonStream _reader;
   private readonly RagonStream _writer;
   private readonly RagonScheduler _scheduler;
-  private readonly Dictionary<ushort, RagonContext> _contextsByConnection;
-  private readonly Dictionary<string, RagonContext> _contextsByPlayerId;
+  private readonly RagonConnectionRegistry _connectionRegistry;
   private readonly Stopwatch _timer;
   private readonly RagonLobbyDispatcher _lobbySerializer;
   private readonly long _tickRate = 0;
@@ -55,8 +54,7 @@ public class RagonServer : IRagonServer, INetworkListener
     _server = server;
     _configuration = configuration;
     _serverPlugin = plugin;
-    _contextsByConnection = new Dictionary<ushort, RagonContext>();
-    _contextsByPlayerId = new Dictionary<string, RagonContext>();
+    _connectionRegistry = new RagonConnectionRegistry();
     _lobby = new LobbyInMemory();
     _lobbySerializer = new RagonLobbyDispatcher(_lobby);
     _scheduler = new RagonScheduler();
@@ -65,12 +63,10 @@ public class RagonServer : IRagonServer, INetworkListener
     _tickRate = 1000 / _configuration.ServerTickRate;
     _timer = new Stopwatch();
     
-    var contextObserver = new RagonContextObserver(_contextsByPlayerId);
+    var contextObserver = new RagonContextObserver(_connectionRegistry);
     _scheduler.Run(new RagonActionTimer(SendRoomList, 2.0f));
     _scheduler.Run(new RagonActionTimer(SendPlayerUserData, 0.1f));
     _scheduler.Run(new RagonActionTimer(SendRoomUserData, 0.1f));
-
-    _serverPlugin.OnAttached(this);
 
     _handlers = new BaseOperation[byte.MaxValue];
     _handlers[(byte)RagonOperation.AUTHORIZE] = new AuthorizationOperation(_reader, _writer, this, _serverPlugin, contextObserver, configuration);
@@ -80,7 +76,6 @@ public class RagonServer : IRagonServer, INetworkListener
     _handlers[(byte)RagonOperation.LEAVE_ROOM] = new RoomLeaveOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampSyncOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.REPLICATE_ROOM_EVENT] = new RoomEventOperation(_reader, _writer);
-    _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataOperation(_reader, _writer);
     _handlers[(byte)RagonOperation.ROOM_DATA_UPDATED] = new RoomUserDataOperation(_reader, _writer, _configuration.LimitUserDataSize);
     _handlers[(byte)RagonOperation.PLAYER_DATA_UPDATED] = new PlayerUserDataOperation(_reader, _writer, _configuration.LimitUserDataSize);
   }
@@ -133,12 +128,12 @@ public class RagonServer : IRagonServer, INetworkListener
     var context = new RagonContext(connection, _lobby, _scheduler, _configuration.LimitBufferedEvents);
 
     _logger.Trace($"Connected: {connection.Id}");
-    _contextsByConnection.Add(connection.Id, context);
+    _connectionRegistry.Add(connection.Id, context);
   }
 
   public void OnDisconnected(INetworkConnection connection)
   {
-    if (_contextsByConnection.Remove(connection.Id, out var context))
+    if (_connectionRegistry.Remove(connection.Id, out var context))
     {
       var room = context.Room;
       if (room != null)
@@ -149,7 +144,7 @@ public class RagonServer : IRagonServer, INetworkListener
       }
       
       if (context.ConnectionStatus == ConnectionStatus.Authorized)
-        _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
+        _connectionRegistry.Remove(context.LobbyPlayer.Id);
 
       _logger.Trace($"Disconnected: {connection.Id}");
     }
@@ -161,7 +156,7 @@ public class RagonServer : IRagonServer, INetworkListener
 
   public void OnTimeout(INetworkConnection connection)
   {
-    if (_contextsByConnection.Remove(connection.Id, out var context) && context.ConnectionStatus == ConnectionStatus.Authorized)
+    if (_connectionRegistry.Remove(connection.Id, out var context) && context.ConnectionStatus == ConnectionStatus.Authorized)
     {
       var room = context.Room;
       if (room != null)
@@ -171,7 +166,7 @@ public class RagonServer : IRagonServer, INetworkListener
       }
       
       if (context.ConnectionStatus == ConnectionStatus.Authorized)
-        _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
+        _connectionRegistry.Remove(context.LobbyPlayer.Id);
       
       _logger.Trace($"Timeout: {connection.Id}|{context.LobbyPlayer.Name}|{context.LobbyPlayer.Id}");
     }
@@ -185,7 +180,7 @@ public class RagonServer : IRagonServer, INetworkListener
   {
     try
     {
-      if (_contextsByConnection.TryGetValue(connection.Id, out var context))
+      if (_connectionRegistry.TryGetValue(connection.Id, out var context))
       {
         _writer.Clear();
         _reader.Clear();
@@ -223,24 +218,24 @@ public class RagonServer : IRagonServer, INetworkListener
     _lobbySerializer.Write(_writer);
 
     var sendData = _writer.ToArray();
-    foreach (var (_, value) in _contextsByPlayerId)
+    foreach (var ctx in _connectionRegistry.Contexts)
     {
-      if (value.Room == null) // If only in lobby, then send room list data
-        value.Connection.Reliable.Send(sendData);
+      if (ctx.Room == null) // If only in lobby, then send room list data
+        ctx.Connection.Reliable.Send(sendData);
     }
   }
 
   public void SendPlayerUserData()
   {
-    foreach (var (_, value) in _contextsByPlayerId)
+    foreach (var playerContext in _connectionRegistry.PlayerContexts)
     {
-      if (value.UserData.IsDirty)
+      if (playerContext.UserData.IsDirty)
       {
         _writer.Clear();
         _writer.WriteOperation(RagonOperation.PLAYER_DATA_UPDATED);
-        _writer.WriteUShort(value.Connection.Id);
+        _writer.WriteUShort(playerContext.Connection.Id);
         
-        value.UserData.Write(_writer);
+        playerContext.UserData.Write(_writer);
         
         var sendData = _writer.ToArray();
         _server.Broadcast(sendData, NetworkChannel.RELIABLE);
@@ -264,22 +259,18 @@ public class RagonServer : IRagonServer, INetworkListener
       }
     }
   }
-
+  
   public BaseOperation ResolveHandler(RagonOperation operation)
   {
     return _handlers[(byte)operation];
   }
-  
-  public RagonContext? GetContextByConnectionId(ushort peerId)
-  {
-    return _contextsByConnection.TryGetValue(peerId, out var context) ? context : null;
-  }
 
-  public RagonContext? GetContextById(string playerId)
-  {
-    return _contextsByPlayerId.TryGetValue(playerId, out var context) ? context : null;
-  }
+  public RagonConnectionRegistry ConnectionRegistry => _connectionRegistry;
   
+  public RagonScheduler Scheduler => _scheduler;
+  
+  public IRagonLobby Lobby => _lobby;
+
   private void CopyrightInfo()
   {
     _logger.Info($"Server Version: {ServerVersion}");

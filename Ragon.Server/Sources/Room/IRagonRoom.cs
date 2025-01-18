@@ -22,17 +22,12 @@ namespace Ragon.Server.Room;
 public interface IRagonRoom
 {
   public string Id { get; }
-  public string Scene { get; }
   public int PlayerMin { get; }
   public int PlayerMax { get; }
   public int PlayerCount { get; }
   public RagonData UserData { get; }
-
-  public void ReplicateData(byte[] data, NetworkChannel channel);
-  public void ReplicateData(byte[] data, List<RagonRoomPlayer> player, NetworkChannel channel);
-  public void ReplicateData(RagonRoomPlayer invoker, byte[] data, List<RagonRoomPlayer> receivers,
-    NetworkChannel channel = NetworkChannel.RELIABLE);
   
   RagonRoomPlayer GetPlayerByConnection(INetworkConnection connection);
   RagonRoomPlayer GetPlayerById(string id);
+  IReadOnlyList<RagonRoomPlayer> GetPlayers();
 }

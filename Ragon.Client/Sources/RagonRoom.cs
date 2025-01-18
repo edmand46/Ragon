@@ -18,7 +18,7 @@ using Ragon.Protocol;
 
 namespace Ragon.Client
 {
-  public class RagonRoom : IDisposable
+  public class RagonRoom
   {
     private class EventSubscription : IDisposable
     {
@@ -51,13 +51,12 @@ namespace Ragon.Client
 
     private readonly RagonClient _client;
     private readonly RagonPlayerCache _playerCache;
-    private readonly RoomParameters _parameters;
-    private readonly RagonUserData _userData;
+    private RoomParameters _parameters;
+    private RagonUserData _userData;
 
     public string Id => _parameters.RoomId;
     public int MinPlayers => _parameters.Min;
     public int MaxPlayers => _parameters.Max;
-    public string Scene => "none";
 
     public IReadOnlyList<RagonPlayer> Players => _playerCache.Players;
     public RagonPlayer Local => _playerCache.Local;
@@ -69,27 +68,23 @@ namespace Ragon.Client
     private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _localListeners = new();
 
     private readonly Dictionary<int, List<Action<RagonPlayer, IRagonEvent>>> _listeners = new();
-
-    public RagonRoom(RagonClient client,
-      RagonPlayerCache playerCache,
-      RoomParameters parameters)
+    
+    public RagonRoom(RagonClient client, RagonPlayerCache playerCache)
     {
       _client = client;
-      _parameters = parameters;
       _playerCache = playerCache;
-      _userData = new RagonUserData();
+      
     }
 
-    internal void Cleanup()
+    public void Reset(RoomParameters parameters)
     {
+      Clear();
+    
+      _userData = new RagonUserData();
+      _parameters = parameters;
       _playerCache.Cleanup();
     }
-
-    internal void Update(string sceneName)
-    {
-      // _scene.Update(sceneName);
-    }
-
+    
     internal void HandleEvent(ushort eventCode, RagonPlayer caller, RagonStream buffer)
     {
       if (_events.TryGetValue(eventCode, out var evnt))
@@ -108,7 +103,7 @@ namespace Ragon.Client
       var t = new TEvent();
       var eventCode = _client.Event.GetEventCode(t);
       var action = (RagonPlayer player, IRagonEvent eventData) => callback.Invoke(player, (TEvent)eventData);
-
+      
       if (!_listeners.TryGetValue(eventCode, out var callbacks))
       {
         callbacks = new List<Action<RagonPlayer, IRagonEvent>>();
@@ -194,22 +189,8 @@ namespace Ragon.Client
       _client.Reliable.Send(sendData);
     }
 
-    public void ReplicateData(byte[] data, bool reliable)
+    public void Clear()
     {
-      var sendData = new byte[data.Length + 1];
-      sendData[0] = (byte)RagonOperation.REPLICATE_RAW_DATA;
-      Array.Copy(data, 0, sendData, 1, data.Length);
-
-      if (reliable)
-        _client.Reliable.Send(sendData);
-      else
-        _client.Unreliable.Send(sendData);
-    }
-
-    public void Dispose()
-    {
-      Cleanup();
-
       _events.Clear();
       _listeners.Clear();
       _localListeners.Clear();

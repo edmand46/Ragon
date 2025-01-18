@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2023-2024 Eduard Kargin <kargin.eduard@gmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-namespace Ragon.Client;
-
-public interface IRagonSceneListener
+namespace Ragon.Client
 {
-  void OnSceneLoaded(RagonClient client);
+  public enum RagonState
+  {
+    DISCONNECTED,
+    CONNECTED,
+    ROOM,
+    LOBBY,
+  }
 }

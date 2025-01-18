@@ -24,7 +24,6 @@ public class RagonLobbyDispatcher
       var room = rooms[i];
       
       writer.WriteString(room.Id);
-      writer.WriteString(room.Scene);
       writer.WriteUShort((ushort)room.PlayerMax);
       writer.WriteUShort((ushort)room.PlayerMin);
       writer.WriteUShort((ushort)room.PlayerCount);

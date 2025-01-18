@@ -26,10 +26,10 @@ namespace Ragon.Server.Room;
 public class RagonRoom : IRagonRoom, IRagonAction
 {
   public string Id { get; private set; }
-  public string Scene { get; private set; }
   public int PlayerMax { get; private set; }
   public int PlayerMin { get; private set; }
   public int PlayerCount => WaitPlayersList.Count;
+  public IReadOnlyList<RagonRoomPlayer> GetPlayers() => PlayerList;
   
   public bool IsDone { get; private set; }
 
@@ -49,7 +49,6 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public RagonRoom(string roomId, RoomInformation info, IRoomPlugin roomPlugin)
   {
     Id = roomId;
-    Scene = info.Scene;
     PlayerMax = info.Max;
     PlayerMin = info.Min;
     Plugin = roomPlugin;
@@ -65,8 +64,6 @@ public class RagonRoom : IRagonRoom, IRagonAction
     UserData = new RagonData();
     Writer = new RagonStream();
   }
-
-  
 
   public void RestoreBufferedEvents(RagonRoomPlayer roomPlayer)
   {
@@ -163,47 +160,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
       }
     }
   }
-  public void ReplicateData(byte[] data, NetworkChannel channel)
-  {
-    ReplicateData(data, ReadyPlayersList, channel);
-  }
-
-  public void ReplicateData(byte[] data, List<RagonRoomPlayer> receivers,
-    NetworkChannel channel = NetworkChannel.RELIABLE)
-  {
-    var dataSize = data.Length;
-    var headerSize = 3;
-    var size = headerSize + dataSize;
-    var sendData = new byte[size];
-    var peerId = 10000; // Server Peer
-
-    sendData[0] = (byte)RagonOperation.REPLICATE_RAW_DATA;
-    sendData[1] = (byte)peerId;
-    sendData[2] = (byte)(peerId >> 8);
-
-    Array.Copy(data, 0, sendData, headerSize, dataSize);
-
-    Broadcast(sendData, receivers, channel);
-  }
   
-  public void ReplicateData(RagonRoomPlayer invoker, byte[] data, List<RagonRoomPlayer> receivers,
-    NetworkChannel channel = NetworkChannel.RELIABLE)
-  {
-    var dataSize = data.Length;
-    var headerSize = 3;
-    var size = headerSize + dataSize;
-    var sendData = new byte[size];
-    var peerId = invoker.Connection.Id;
-
-    sendData[0] = (byte)RagonOperation.REPLICATE_RAW_DATA;
-    sendData[1] = (byte)peerId;
-    sendData[2] = (byte)(peerId >> 8);
-
-    Array.Copy(data, 0, sendData, headerSize, dataSize);
-
-    Broadcast(sendData, receivers, channel);
-  }
-
   public void Tick(float dt)
   {
    
@@ -245,16 +202,6 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public void UpdateReadyPlayerList()
   {
     ReadyPlayersList = PlayerList.Where(p => p.IsLoaded).ToList();
-  }
-
-  public void UpdateMap(string sceneName)
-  {
-    Scene = sceneName;
-    
-    foreach (var player in PlayerList)
-      player.UnsetReady();
-
-    UpdateReadyPlayerList();
   }
 
   public void Broadcast(byte[] data, NetworkChannel channel = NetworkChannel.RELIABLE)

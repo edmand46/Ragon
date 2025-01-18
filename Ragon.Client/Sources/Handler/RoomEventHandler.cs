@@ -36,13 +36,13 @@ public class RoomEventHandler : IHandler
   {
     var eventCode = buffer.ReadUShort();
     var peerId = buffer.ReadUShort();
-    var executionMode = (RagonReplicationMode)buffer.ReadByte();
+    var executionMode = (RagonReplicationMode) buffer.ReadByte();
 
     var player = _playerCache.GetPlayerByPeer(peerId);
     if (player == null)
     {
       RagonLog.Error($"Player with peerId:{peerId} not found as owner of event with code:{eventCode}");
-      
+
       _playerCache.Dump();
       return;
     }

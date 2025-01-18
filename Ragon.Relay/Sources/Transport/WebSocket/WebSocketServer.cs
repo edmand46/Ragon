@@ -158,12 +158,10 @@ public class WebSocketServer : INetworkServer
     _sequencer.Push(0);
 
     _connections = new WebSocketConnection[configuration.LimitConnections];
-
+    
     _httpListener = new HttpListener();
     _httpListener.Prefixes.Add($"http://{configuration.Address}:{configuration.Port}/");
     _httpListener.Start();
-
-    // _executor.Run(() => StartAccept(_cancellationTokenSource.Token));
 
     var protocolDecoded = RagonVersion.Parse(configuration.Protocol);
     _logger.Info($"Listen at http://{configuration.Address}:{configuration.Port}/");

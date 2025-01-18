@@ -16,14 +16,15 @@
 
 using Ragon.Protocol;
 using Ragon.Server.Handler;
-using Ragon.Server.IO;
 using Ragon.Server.Lobby;
+using Ragon.Server.Time;
 
 namespace Ragon.Server;
 
 public interface IRagonServer
 {
   BaseOperation ResolveHandler(RagonOperation operation);
-  public RagonContext? GetContextByConnectionId(ushort peerId);
-  public RagonContext? GetContextById(string playerId);
+  public RagonConnectionRegistry ConnectionRegistry { get; }
+  public RagonScheduler Scheduler { get; }
+  public IRagonLobby Lobby { get; }
 }

@@ -38,7 +38,7 @@ internal class AuthorizeSuccessHandler: IHandler
     var playerName = reader.ReadString();
     var playerPayload = reader.ReadString();
 
-    _client.SetStatus(RagonStatus.LOBBY);
+    _client.UpdateState(RagonState.LOBBY);
     _listenerList.OnAuthorizationSuccess(playerId, playerName, playerPayload);
   }
 }

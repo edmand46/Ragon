@@ -61,7 +61,6 @@ public sealed class RoomJoinOperation : BaseOperation
     writer.WriteString(room.Id);
     writer.WriteUShort((ushort)room.PlayerMin);
     writer.WriteUShort((ushort)room.PlayerMax);
-    writer.WriteString(room.Scene);
     writer.WriteString(context.RoomPlayer.Id);
     writer.WriteString(room.Owner.Id);
     

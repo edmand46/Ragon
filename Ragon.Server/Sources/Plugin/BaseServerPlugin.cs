@@ -16,7 +16,6 @@
 
 using Ragon.Protocol;
 using Ragon.Server.Handler;
-using Ragon.Server.IO;
 using Ragon.Server.Lobby;
 using Ragon.Server.Room;
 
@@ -42,7 +41,7 @@ namespace Ragon.Server.Plugin
 
     public void Approve(string id, string name, string payload)
     {
-      var ctx = _server.GetContextByConnectionId(PeerID);
+      var ctx = _server.ConnectionRegistry.GetContextByConnectionId(PeerID);
       if (ctx == null)
         return;
 
@@ -52,7 +51,7 @@ namespace Ragon.Server.Plugin
 
     public void Reject()
     {
-      var ctx = _server.GetContextByConnectionId(PeerID);
+      var ctx = _server.ConnectionRegistry.GetContextByConnectionId(PeerID);
       if (ctx == null)
         return;
 
@@ -80,7 +79,9 @@ namespace Ragon.Server.Plugin
   {
     public IRagonServer Server { get; protected set; }
 
-    public virtual void OnAttached(IRagonServer server)
+    public virtual void OnAttached(
+      IRagonServer server
+    )
     {
       Server = server;
     }

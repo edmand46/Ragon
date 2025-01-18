@@ -31,7 +31,7 @@ namespace Ragon.Client
     private RagonListenerList _listeners;
     private RagonPlayerCache _playerCache;
     private RagonEventCache _eventCache;
-    private RagonStatus _status;
+    private RagonState _state;
 
     private double _serverTimestamp;
     private float _replicationRate = 0;
@@ -39,7 +39,7 @@ namespace Ragon.Client
 
     public double ServerTimestamp => _serverTimestamp;
     public IRagonConnection Connection => _connection;
-    public RagonStatus Status => _status;
+    public RagonState State => _state;
     public RagonSession Session => _session;
     public RagonEventCache Event => _eventCache;
     public NetworkStatistics Statistics => _stats;
@@ -64,22 +64,18 @@ namespace Ragon.Client
       _replicationTime = 0;
 
       _eventCache = new RagonEventCache();
-      _stats = new NetworkStatistics();
-      _status = RagonStatus.DISCONNECTED;
-    }
-
-
-    public void Connect(string address, ushort port, string protocol)
-    {
       _writeBuffer = new RagonStream();
       _readBuffer = new RagonStream();
       _playerCache = new RagonPlayerCache();
       _session = new RagonSession(this, _writeBuffer);
-
+      _room = new RagonRoom(this, _playerCache);
+      _stats = new NetworkStatistics();
+      _state = RagonState.DISCONNECTED;
+      
       _handlers = new IHandler[byte.MaxValue];
       _handlers[(byte)RagonOperation.AUTHORIZED_SUCCESS] = new AuthorizeSuccessHandler(this, _listeners);
       _handlers[(byte)RagonOperation.AUTHORIZED_FAILED] = new AuthorizeFailedHandler(_listeners);
-      _handlers[(byte)RagonOperation.JOIN_SUCCESS] = new JoinSuccessHandler(this, _listeners, _playerCache);
+      _handlers[(byte)RagonOperation.JOIN_SUCCESS] = new JoinSuccessHandler(this, _room);
       _handlers[(byte)RagonOperation.JOIN_FAILED] = new JoinFailedHandler(_listeners);
       _handlers[(byte)RagonOperation.LEAVE_ROOM] = new LeaveRoomHandler(this, _listeners);
       _handlers[(byte)RagonOperation.OWNERSHIP_ROOM_CHANGED] = new OwnershipRoomHandler(_listeners, _playerCache);
@@ -87,19 +83,22 @@ namespace Ragon.Client
       _handlers[(byte)RagonOperation.PLAYER_LEAVED] = new PlayerLeftHandler(_playerCache, _listeners);
       _handlers[(byte)RagonOperation.REPLICATE_ROOM_EVENT] = new RoomEventHandler(this, _playerCache);
       _handlers[(byte)RagonOperation.TIMESTAMP_SYNCHRONIZATION] = new TimestampHandler(this);
-      _handlers[(byte)RagonOperation.REPLICATE_RAW_DATA] = new RoomDataHandler(_playerCache, _listeners);
       _handlers[(byte)RagonOperation.ROOM_LIST_UPDATED] = new RoomListHandler(_session, _listeners);
       _handlers[(byte)RagonOperation.ROOM_DATA_UPDATED] = new RoomUserDataHandler(this, _listeners);
       _handlers[(byte)RagonOperation.PLAYER_DATA_UPDATED] = new PlayerUserDataHandler(_playerCache, _listeners);
-
+    }
+    
+    public void Connect(string address, ushort port, string protocol)
+    {
       var protocolRaw = RagonVersion.Parse(protocol);
       _connection.Connect(address, port, protocolRaw);
     }
 
     public void Disconnect()
     {
-      _status = RagonStatus.DISCONNECTED;
-      _room?.Cleanup();
+      _state = RagonState.DISCONNECTED;
+      _room.Clear();
+      
       _connection.Disconnect();
 
       OnDisconnected(RagonDisconnect.MANUAL);
@@ -107,14 +106,13 @@ namespace Ragon.Client
 
     public void Update(float dt)
     {
-      if (_status != RagonStatus.DISCONNECTED)
+      if (_state != RagonState.DISCONNECTED)
       {
         _replicationTime += dt;
         if (_replicationTime >= _replicationRate)
         {
           _replicationTime = 0;
-          // _entityCache.WriteState(_writeBuffer);
-
+        
           SendTimestamp();
           SendRoomUserData();
           SendPlayerUserData();
@@ -129,9 +127,9 @@ namespace Ragon.Client
 
     public void Dispose()
     {
-      if (_status != RagonStatus.DISCONNECTED)
+      if (_state != RagonState.DISCONNECTED)
       {
-        _status = RagonStatus.DISCONNECTED;
+        _state = RagonState.DISCONNECTED;
         _connection.Disconnect();
       }
 
@@ -147,7 +145,6 @@ namespace Ragon.Client
     public void AddListener(IRagonOwnershipChangedListener listener) => _listeners.Add(listener);
     public void AddListener(IRagonPlayerJoinListener listener) => _listeners.Add(listener);
     public void AddListener(IRagonPlayerLeftListener listener) => _listeners.Add(listener);
-    public void AddListener(IRagonDataListener listener) => _listeners.Add(listener);
     public void AddListener(IRagonRoomListListener listener) => _listeners.Add(listener);
     public void AddListener(IRagonPlayerUserDataListener listener) => _listeners.Add(listener);
     public void AddListener(IRagonRoomUserDataListener listener) => _listeners.Add(listener);
@@ -160,7 +157,6 @@ namespace Ragon.Client
     public void RemoveListener(IRagonOwnershipChangedListener listener) => _listeners.Remove(listener);
     public void RemoveListener(IRagonPlayerJoinListener listener) => _listeners.Remove(listener);
     public void RemoveListener(IRagonPlayerLeftListener listener) => _listeners.Remove(listener);
-    public void RemoveListener(IRagonDataListener listener) => _listeners.Remove(listener);
     public void RemoveListener(IRagonRoomListListener listener) => _listeners.Remove(listener);
     public void RemoveListener(IRagonRoomUserDataListener listener) => _listeners.Remove(listener);
     public void RemoveListener(IRagonPlayerUserDataListener listener) => _listeners.Remove(listener);
@@ -168,19 +164,13 @@ namespace Ragon.Client
     #endregion
 
     #region INTERNAL
-
-    internal void AssignRoom(RagonRoom room)
+    
+    internal void UpdateState(RagonState state)
     {
-      _room?.Dispose();
-      _room = room;
+      _state = state;
     }
 
-    internal void SetStatus(RagonStatus status)
-    {
-      _status = status;
-    }
-
-    internal void SetTimestamp(double time)
+    internal void UpdateTimestamp(double time)
     {
       _serverTimestamp = time;
     }
@@ -240,7 +230,7 @@ namespace Ragon.Client
       RagonLog.Trace("Connected");
 
       _listeners.OnConnected();
-      _status = RagonStatus.CONNECTED;
+      _state = RagonState.CONNECTED;
     }
 
     private void OnDisconnected(RagonDisconnect reason)
@@ -248,7 +238,7 @@ namespace Ragon.Client
       RagonLog.Trace($"Disconnected: {reason}");
 
       _listeners.OnDisconnected(reason);
-      _status = RagonStatus.DISCONNECTED;
+      _state = RagonState.DISCONNECTED;
     }
 
     private void OnData(byte[] data)

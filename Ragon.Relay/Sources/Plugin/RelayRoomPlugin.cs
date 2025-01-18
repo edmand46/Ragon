@@ -9,10 +9,11 @@ public class RelayRoomPlugin: BaseRoomPlugin
   {
     
   }
-
   public void OnAttached()
   {
     Console.WriteLine("Room attached");
+    
+    
   }
 
   public void OnDetached()

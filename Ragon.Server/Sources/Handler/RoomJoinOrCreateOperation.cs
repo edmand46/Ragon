@@ -30,11 +30,11 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
   private readonly RagonRoomParameters _roomParameters = new();
   private readonly IServerPlugin _serverPlugin;
   private readonly RagonServerConfiguration _configuration;
-  
+
   public RoomJoinOrCreateOperation(
     RagonStream reader,
     RagonStream writer,
-    IServerPlugin serverPlugin, 
+    IServerPlugin serverPlugin,
     RagonServerConfiguration configuration
   ) : base(reader, writer)
   {
@@ -52,52 +52,35 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
 
     var roomId = Guid.NewGuid().ToString();
     var lobbyPlayer = context.LobbyPlayer;
-
+    
     _roomParameters.Deserialize(Reader);
-
-    if (context.Lobby.FindRoomByScene(_roomParameters.Scene, out var existsRoom))
+    
+    var information = new RoomInformation()
     {
-      var player = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
+      Max = _roomParameters.Max,
+      Min = _roomParameters.Min,
+    };
 
-      context.SetRoom(existsRoom, player);
+    if (information.Max > _configuration.LimitPlayersPerRoom)
+      information.Max = _configuration.LimitPlayersPerRoom;
 
-      JoinSuccess(player, existsRoom, Writer);
+    var roomPlayer = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
+    var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
+    var room = new RagonRoom(roomId, information, roomPlugin);
 
-      existsRoom.RestoreBufferedEvents(player);
+    _serverPlugin.OnRoomCreate(lobbyPlayer, room);
 
-      existsRoom.Plugin.OnPlayerJoined(player);
-    }
-    else
-    {
-      var information = new RoomInformation()
-      {
-        Scene = _roomParameters.Scene,
-        Max = _roomParameters.Max,
-        Min = _roomParameters.Min,
-      };
+    room.Plugin.OnAttached(room);
 
-      if (information.Max > _configuration.LimitPlayersPerRoom)
-        information.Max = _configuration.LimitPlayersPerRoom;
+    context.Lobby.Persist(room);
+    context.Scheduler.Run(room);
+    context.SetRoom(room, roomPlayer);
 
-      var roomPlayer = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
-      var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
-      var room = new RagonRoom(roomId, information, roomPlugin);
+    _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id}");
 
-      _serverPlugin.OnRoomCreate(lobbyPlayer, room);
+    JoinSuccess(roomPlayer, room, Writer);
 
-      room.Plugin.OnAttached(room);
-
-      context.Lobby.Persist(room);
-      context.Scheduler.Run(room);
-      context.SetRoom(room, roomPlayer);
-
-      _logger.Trace(
-        $"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with scene {information.Scene}");
-
-      JoinSuccess(roomPlayer, room, Writer);
-
-      room.Plugin.OnPlayerJoined(roomPlayer);
-    }
+    room.Plugin.OnPlayerJoined(roomPlayer);
   }
 
   private void JoinSuccess(RagonRoomPlayer player, RagonRoom room, RagonStream writer)
@@ -107,7 +90,6 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
     writer.WriteString(room.Id);
     writer.WriteUShort((ushort)room.PlayerMin);
     writer.WriteUShort((ushort)room.PlayerMax);
-    writer.WriteString(room.Scene);
     writer.WriteString(player.Id);
     writer.WriteString(room.Owner.Id);
 

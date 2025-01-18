@@ -21,20 +21,21 @@ namespace Ragon.Client
   public class RagonSession
   {
     private readonly RagonClient _client;
-    private readonly RagonStream _buffer;
     
+    private readonly RagonStream _buffer;
+
     public RagonSession(RagonClient client, RagonStream buffer)
     {
       _client = client;
       _buffer = buffer;
     }
 
-    public void CreateOrJoin(string sceneName, int minPlayers, int maxPlayers)
+    public void CreateOrJoin(string sessionName, int minPlayers, int maxPlayers)
     {
-      var parameters = new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers};
+      var parameters = new RagonRoomParameters() { Min = minPlayers, Max = maxPlayers };
       CreateOrJoin(parameters);
     }
-    
+
     public void CreateOrJoin(RagonRoomParameters parameters)
     {
       _buffer.Clear();
@@ -46,16 +47,16 @@ namespace Ragon.Client
       _client.Reliable.Send(sendData);
     }
 
-    public void Create(string sceneName, int minPlayers, int maxPlayers)
+    public void Create(string sessionName, int minPlayers, int maxPlayers)
     {
-      Create(null, new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers});
+      Create(null, new RagonRoomParameters() { Min = minPlayers, Max = maxPlayers });
     }
 
-    public void Create(string roomId, string sceneName, int minPlayers, int maxPlayers)
+    public void Create(string roomId, string sessionName, int minPlayers, int maxPlayers)
     {
-      Create(roomId, new RagonRoomParameters() {Scene = sceneName, Min = minPlayers, Max = maxPlayers});
+      Create(roomId, new RagonRoomParameters() { Min = minPlayers, Max = maxPlayers });
     }
-    
+
     public void Create(string roomId, RagonRoomParameters parameters)
     {
       _buffer.Clear();
@@ -76,14 +77,14 @@ namespace Ragon.Client
       var sendData = _buffer.ToArray();
       _client.Reliable.Send(sendData);
     }
-    
-    public  void Leave()
+
+    public void Leave()
     {
-      var sendData = new[] {(byte) RagonOperation.LEAVE_ROOM};
+      var sendData = new[] { (byte)RagonOperation.LEAVE_ROOM };
       _client.Reliable.Send(sendData);
     }
 
-    public  void Join(string roomId)
+    public void Join(string roomId)
     {
       _buffer.Clear();
       _buffer.WriteOperation(RagonOperation.JOIN_ROOM);
@@ -93,7 +94,7 @@ namespace Ragon.Client
       _client.Reliable.Send(sendData);
     }
 
-    public  void AuthorizeWithKey(string key, string playerName, string payload = "")
+    public void AuthorizeWithKey(string key, string playerName, string payload = "")
     {
       _buffer.Clear();
       _buffer.WriteOperation(RagonOperation.AUTHORIZE);
@@ -104,6 +105,5 @@ namespace Ragon.Client
       var sendData = _buffer.ToArray();
       _client.Reliable.Send(sendData);
     }
-    
   }
 }

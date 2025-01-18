@@ -76,11 +76,10 @@ namespace Ragon.Server.Handler
 
       var information = new RoomInformation()
       {
-        Scene = _roomParameters.Scene,
         Max = _roomParameters.Max,
         Min = _roomParameters.Min,
       };
-
+      
       if (information.Max > _configuration.LimitPlayersPerRoom)
         information.Max = _configuration.LimitPlayersPerRoom;
       
@@ -97,8 +96,7 @@ namespace Ragon.Server.Handler
       context.Lobby.Persist(room);
       context.SetRoom(room, roomPlayer);
 
-      _logger.Trace(
-        $"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id} with scene {information.Scene}");
+      _logger.Trace($"Player {context.Connection.Id}|{context.LobbyPlayer.Name} create room {room.Id}");
 
       JoinSuccess(roomPlayer, room, Writer);
 
@@ -114,7 +112,6 @@ namespace Ragon.Server.Handler
       writer.WriteString(room.Id);
       writer.WriteUShort((ushort)room.PlayerMin);
       writer.WriteUShort((ushort)room.PlayerMax);
-      writer.WriteString(room.Scene);
       writer.WriteString(player.Id);
       writer.WriteString(room.Owner.Id);
 

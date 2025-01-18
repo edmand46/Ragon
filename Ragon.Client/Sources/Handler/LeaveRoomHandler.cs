@@ -35,6 +35,7 @@ internal class LeaveRoomHandler : IHandler
   public void Handle(RagonStream reader)
   {    
     _listenerList.OnLeft();
-    _client.Room.Cleanup();
+    
+    _client.Room.Clear();
   }
 }

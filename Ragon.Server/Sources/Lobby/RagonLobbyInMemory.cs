@@ -49,35 +49,7 @@ public class LobbyInMemory : IRagonLobby
     room = default;
     return false;
   }
-
-  public bool FindRoomByScene(string sceneName, [MaybeNullWhen(false)] out RagonRoom room)
-  {
-    foreach (var existsRoom in _rooms)
-    {
-      if (existsRoom.Scene == sceneName)
-      {
-        if (existsRoom.PlayerCount >= existsRoom.PlayerMax)
-        {
-          _logger.Warning($"Room with scene {sceneName} fulfilled");
-          
-          room = default;
-          return false;          
-        }
-        
-        room = existsRoom;
-        return true;
-      }
-    }
-
-    room = default;
-    return false;
-  }
-
-  public bool FindRoomByProperties(Dictionary<string, object> props)
-  {
-    return true;
-  }
-
+  
   public void Persist(RagonRoom room)
   {
     room.Attach();
@@ -86,7 +58,7 @@ public class LobbyInMemory : IRagonLobby
     _logger.Trace($"New room: {room.Id}");
     
     foreach (var r in _rooms)
-      _logger.Trace($"Room: {r.Id} Scene: {r.Scene} Players: {r.Players.Count}");
+      _logger.Trace($"Room: {r.Id} ID: {r.Id} Players: {r.Players.Count}");
   }
 
   public bool RemoveIfEmpty(RagonRoom room)
@@ -103,7 +75,7 @@ public class LobbyInMemory : IRagonLobby
     }
 
     foreach (var r in _rooms)
-      _logger.Trace($"Room: {r.Id} Scene: {r.Scene} Players: {r.Players.Count}");
+      _logger.Trace($"Room: {r.Id} ID: {r.Id} Players: {r.Players.Count}");
 
     return result;
   }

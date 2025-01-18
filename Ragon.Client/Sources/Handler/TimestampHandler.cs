@@ -16,6 +16,6 @@ public class TimestampHandler: IHandler
     var timestamp1 = (uint)buffer.ReadInt();
     var value = new DoubleToUInt { Int0 = timestamp0, Int1 = timestamp1 };
     
-    _client.SetTimestamp(value.Double);
+    _client.UpdateTimestamp(value.Double);
   }
 }

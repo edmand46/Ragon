@@ -18,14 +18,15 @@ namespace Ragon.Server;
 
 public class RagonContextObserver
 {
-  private Dictionary<string, RagonContext> _contexts;
-  public RagonContextObserver(Dictionary<string, RagonContext> contexts)
+  private readonly RagonConnectionRegistry _registry;
+
+  public RagonContextObserver(RagonConnectionRegistry registry)
   {
-    _contexts = contexts;
+    _registry = registry;
   }
 
-  public void OnAuthorized(RagonContext context) 
+  public void OnAuthorized(RagonContext context)
   {
-    _contexts.Add(context.LobbyPlayer.Id, context);
+    _registry.Add(context.LobbyPlayer.Id, context);
   }
 }
