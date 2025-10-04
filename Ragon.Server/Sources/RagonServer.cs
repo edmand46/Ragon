@@ -28,7 +28,7 @@ namespace Ragon.Server;
 
 public class RagonServer : IRagonServer, INetworkListener
 {
-  private const string ServerVersion = "1.4.1";
+  private const string ServerVersion = "1.4.3";
 
   private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RagonServer));
   private readonly INetworkServer _server;
