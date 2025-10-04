@@ -14,7 +14,7 @@
         <RepositoryUrl>https://github.com/edmand46/Ragon</RepositoryUrl>
         <RepositoryType>Source</RepositoryType>
         <LangVersion>10</LangVersion>
-        <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+        <TargetFramework>net9.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
