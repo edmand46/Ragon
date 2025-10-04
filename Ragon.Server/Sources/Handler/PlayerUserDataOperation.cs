@@ -27,7 +27,7 @@ namespace Ragon.Server.Handler
         return;
       }
 
-      context.UserData.Read(Reader);
+      context.UserData.Read(Reader, _userDataLimit);
     }
   }
 }

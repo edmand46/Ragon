@@ -31,7 +31,8 @@ public class RagonRoom : IRagonRoom, IRagonAction
   public int PlayerMax { get; private set; }
   public int PlayerMin { get; private set; }
   public int PlayerCount => WaitPlayersList.Count;
-  
+  public int ProjectId { get; private set; }
+
   public bool IsDone { get; private set; }
 
   public RagonData UserData { get; set; }
@@ -53,13 +54,14 @@ public class RagonRoom : IRagonRoom, IRagonAction
   private readonly List<RagonEvent> _bufferedEvents;
   private readonly int _limitBufferedEvents;
 
-  public RagonRoom(string roomId, RoomInformation info, IRoomPlugin roomPlugin)
+  public RagonRoom(string roomId, RoomInformation info, IRoomPlugin roomPlugin, int projectId)
   {
     Id = roomId;
     Scene = info.Scene;
     PlayerMax = info.Max;
     PlayerMin = info.Min;
     Plugin = roomPlugin;
+    ProjectId = projectId;
 
     Players = new Dictionary<ushort, RagonRoomPlayer>(info.Max);
     WaitPlayersList = new List<RagonRoomPlayer>(info.Max);

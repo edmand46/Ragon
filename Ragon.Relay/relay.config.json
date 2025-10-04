@@ -10,5 +10,6 @@
   "limitRooms": 200,
   "limitBufferedEvents": 50,
   "limitUserDataSize": 1024,
-  "limitPropertySize": 512
+  "limitPropertySize": 512,
+  "limitConnectionsPerProject": 100
 }

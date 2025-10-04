@@ -57,6 +57,12 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
 
     if (context.Lobby.FindRoomByScene(_roomParameters.Scene, out var existsRoom))
     {
+      if (existsRoom.ProjectId != lobbyPlayer.ProjectId)
+      {
+        _logger.Warning($"Player {context.Connection.Id}|{lobbyPlayer.Name} tried to join room from different project");
+        return;
+      }
+
       var player = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
 
       context.SetRoom(existsRoom, player);
@@ -81,7 +87,7 @@ public sealed class RoomJoinOrCreateOperation : BaseOperation
 
       var roomPlayer = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
       var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
-      var room = new RagonRoom(roomId, information, roomPlugin);
+      var room = new RagonRoom(roomId, information, roomPlugin, lobbyPlayer.ProjectId);
 
       _serverPlugin.OnRoomCreate(lobbyPlayer, room);
 

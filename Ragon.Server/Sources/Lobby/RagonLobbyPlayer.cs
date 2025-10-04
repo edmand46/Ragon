@@ -32,12 +32,14 @@ public class RagonLobbyPlayer
   public string Id { get; private set; }
   public string Name { get; private set; }
   public string Payload { get; private set; }
-  
-  public RagonLobbyPlayer(INetworkConnection connection, string id, string name, string payload)
+  public int ProjectId { get; private set; }
+
+  public RagonLobbyPlayer(INetworkConnection connection, string id, string name, string payload, int projectId)
   {
     Id = id;
     Name = name;
     Connection = connection;
     Payload = payload;
+    ProjectId = projectId;
   }
 }

@@ -45,6 +45,6 @@ public sealed class RoomUserDataOperation : BaseOperation
     
     var room = context.Room;
     if (room != null)
-      room.UserData.Read(Reader);
+      room.UserData.Read(Reader, _userDataLimit);
   }
 }

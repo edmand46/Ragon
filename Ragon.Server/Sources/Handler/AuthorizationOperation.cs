@@ -19,6 +19,7 @@ using Ragon.Server.IO;
 using Ragon.Server.Lobby;
 using Ragon.Server.Logging;
 using Ragon.Server.Plugin;
+using Ragon.Server.Project;
 
 namespace Ragon.Server.Handler
 {
@@ -30,19 +31,22 @@ namespace Ragon.Server.Handler
     private readonly RagonContextObserver _observer;
     private readonly RagonServerConfiguration _configuration;
     private readonly RagonBuffer _writer;
+    private readonly ProjectRegistry _projectRegistry;
 
     public AuthorizationOperation(RagonBuffer reader,
       RagonBuffer writer,
       IRagonServer server,
       IServerPlugin serverPlugin,
       RagonContextObserver observer,
-      RagonServerConfiguration configuration) : base(reader, writer)
+      RagonServerConfiguration configuration,
+      ProjectRegistry projectRegistry) : base(reader, writer)
     {
       _serverPlugin = serverPlugin;
       _configuration = configuration;
       _observer = observer;
       _writer = writer;
       _server = server;
+      _projectRegistry = projectRegistry;
     }
 
     public override void Handle(RagonContext context, NetworkChannel channel)
@@ -59,31 +63,45 @@ namespace Ragon.Server.Handler
         return;
       }
 
-      var configuration = _configuration;
-      var key = Reader.ReadString();
+      var projectKey = Reader.ReadString();
       var name = Reader.ReadString();
       var payload = Reader.ReadString();
 
-      if (key == configuration.ServerKey)
+      if (!_projectRegistry.ValidateKey(projectKey))
       {
-        var authorizeViaPlugin = _serverPlugin.OnAuthorize(new ConnectionRequest(_server, context.Connection.Id, payload));
-        if (authorizeViaPlugin)
-          return;
-
-        var id = Guid.NewGuid().ToString();
-        Approve(context, new ConnectionResponse(id, name, payload));
-      }
-      else
-      {
-        _logger.Warning($"Invalid key for connection {context.Connection.Id}");
-        
+        _logger.Warning($"Invalid project key from connection {context.Connection.Id}");
         Reject(context);
+        return;
       }
+
+      if (!_projectRegistry.CanConnect(projectKey))
+      {
+        _logger.Warning($"Connection limit reached for project key: {projectKey}");
+        Reject(context);
+        return;
+      }
+
+      var authorizeViaPlugin = _serverPlugin.OnAuthorize(new ConnectionRequest(_server, context.Connection.Id, payload));
+      if (authorizeViaPlugin)
+        return;
+
+      var project = _projectRegistry.GetOrCreateProject(projectKey);
+      if (project == null)
+      {
+        _logger.Warning($"Failed to create project for key: {projectKey}");
+        Reject(context);
+        return;
+      }
+
+      var id = Guid.NewGuid().ToString();
+      Approve(context, new ConnectionResponse(id, name, payload), project.Id);
+
+      _projectRegistry.RegisterConnection(project.Id);
     }
 
-    public void Approve(RagonContext context, ConnectionResponse result)
+    public void Approve(RagonContext context, ConnectionResponse result, int projectId)
     {
-      var lobbyPlayer = new RagonLobbyPlayer(context.Connection, result.Id, result.Name, result.Payload);
+      var lobbyPlayer = new RagonLobbyPlayer(context.Connection, result.Id, result.Name, result.Payload, projectId);
       context.SetPlayer(lobbyPlayer);
       context.ConnectionStatus = ConnectionStatus.Authorized;
 
@@ -102,7 +120,7 @@ namespace Ragon.Server.Handler
       var sendData = _writer.ToArray();
       context.Connection.Reliable.Send(sendData);
 
-      _logger.Trace($"Approved {context.Connection.Id} as {playerId}|{context.LobbyPlayer.Name}");
+      _logger.Trace($"Approved {context.Connection.Id} as {playerId}|{context.LobbyPlayer.Name} for project {projectId}");
     }
 
     public void Reject(RagonContext context)

@@ -65,6 +65,8 @@ namespace Ragon.Protocol
 {
   public class RagonBuffer
   {
+    private const int MaxBufferSize = 1024 * 1024; // 1MB max buffer size
+
     private int _read;
     private int _write;
     private uint[] _buckets;
@@ -404,6 +406,12 @@ namespace Ragon.Protocol
     public void FromArray(byte[] data)
     {
       var length = data.Length;
+
+      if (length > MaxBufferSize)
+      {
+        throw new InvalidOperationException($"Input data exceeds maximum buffer size: {length} bytes > {MaxBufferSize} bytes");
+      }
+
       var bucketsCount = length / 4 + 1;
 
       if (_buckets.Length < bucketsCount)
@@ -493,7 +501,14 @@ namespace Ragon.Protocol
 
     private void Resize(int capacity)
     {
-      var buckets = new uint[_buckets.Length * 2 + capacity];
+      var newSize = _buckets.Length * 2 + capacity;
+
+      if (newSize * 4 > MaxBufferSize)
+      {
+        throw new InvalidOperationException($"Buffer size limit exceeded: {newSize * 4} bytes > {MaxBufferSize} bytes");
+      }
+
+      var buckets = new uint[newSize];
       Array.Copy(_buckets, buckets, _buckets.Length);
       _buckets = buckets;
     }

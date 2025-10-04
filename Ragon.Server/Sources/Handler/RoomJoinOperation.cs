@@ -43,6 +43,13 @@ public sealed class RoomJoinOperation : BaseOperation
       return;
     }
 
+    if (existsRoom.ProjectId != lobbyPlayer.ProjectId)
+    {
+      JoinFailed(context, Writer);
+      _logger.Warning($"Player {context.Connection.Id}|{lobbyPlayer.Name} tried to join room from different project");
+      return;
+    }
+
     var player = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
     context.SetRoom(existsRoom, player);
     

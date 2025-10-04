@@ -12,13 +12,25 @@ public class RagonData
   {
   }
 
-  public void Read(RagonBuffer buffer)
+  public void Read(RagonBuffer buffer, int maxSize = 0)
   {
     var len = buffer.ReadUShort();
+    var totalSize = 0;
+
     for (int i = 0; i < len; i++)
     {
       var key = buffer.ReadString();
       var valueSize = buffer.ReadUShort();
+
+      if (maxSize > 0)
+      {
+        totalSize += valueSize;
+        if (totalSize > maxSize)
+        {
+          throw new InvalidOperationException($"User data exceeds limit: {totalSize} > {maxSize}");
+        }
+      }
+
       if (valueSize > 0)
       {
         var value = buffer.ReadBytes(valueSize);
@@ -59,8 +71,6 @@ public class RagonData
       buffer.WriteString(prop.Key);
       buffer.WriteUShort((ushort)prop.Value.Length);
       buffer.WriteBytes(prop.Value);
-      
-      Console.WriteLine($"Key: {prop.Key} Value: {prop.Value.Length}");
     }
   }
 }

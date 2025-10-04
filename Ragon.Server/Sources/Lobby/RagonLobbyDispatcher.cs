@@ -12,11 +12,16 @@ public class RagonLobbyDispatcher
     _lobby = lobby;
   }
 
-  public void Write(RagonBuffer writer)
+  public void Write(RagonBuffer writer, int projectId = 0)
   {
     writer.Clear();
     writer.WriteOperation(RagonOperation.ROOM_LIST_UPDATED);
     var rooms = _lobby.Rooms;
+
+    if (projectId > 0)
+    {
+      rooms = rooms.Where(r => r.ProjectId == projectId).ToList();
+    }
 
     writer.WriteUShort((ushort)rooms.Count);
     for (int i = 0; i < rooms.Count; i++)

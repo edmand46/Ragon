@@ -47,7 +47,7 @@ namespace Ragon.Server.Plugin
         return;
 
       var operation = (AuthorizationOperation)_server.ResolveHandler(RagonOperation.AUTHORIZE);
-      operation.Approve(ctx, new ConnectionResponse(id, name, payload));
+      operation.Approve(ctx, new ConnectionResponse(id, name, payload), 0);
     }
 
     public void Reject()

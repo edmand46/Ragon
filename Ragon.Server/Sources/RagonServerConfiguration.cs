@@ -36,6 +36,7 @@ public struct RagonServerConfiguration
   public int LimitBufferedEvents;
   public int LimitUserDataSize;
   public int LimitPropertySize;
+  public int LimitConnectionsPerProject;
 
   private static Dictionary<string, ServerType> _serverTypes = new Dictionary<string, ServerType>()
   {

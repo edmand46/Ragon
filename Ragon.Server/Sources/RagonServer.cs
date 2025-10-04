@@ -21,6 +21,7 @@ using Ragon.Server.IO;
 using Ragon.Server.Lobby;
 using Ragon.Server.Logging;
 using Ragon.Server.Plugin;
+using Ragon.Server.Project;
 using Ragon.Server.Time;
 
 namespace Ragon.Server;
@@ -28,7 +29,7 @@ namespace Ragon.Server;
 public class RagonServer : IRagonServer, INetworkListener
 {
   private const string ServerVersion = "1.4.1";
-  
+
   private readonly IRagonLogger _logger = LoggerManager.GetLogger(nameof(RagonServer));
   private readonly INetworkServer _server;
   private readonly BaseOperation[] _handlers;
@@ -40,12 +41,14 @@ public class RagonServer : IRagonServer, INetworkListener
   private readonly RagonScheduler _scheduler;
   private readonly Dictionary<ushort, RagonContext> _contextsByConnection;
   private readonly Dictionary<string, RagonContext> _contextsByPlayerId;
+  private readonly ProjectRegistry _projectRegistry;
   private readonly Stopwatch _timer;
   private readonly RagonLobbyDispatcher _lobbySerializer;
   private readonly long _tickRate = 0;
   private bool _isRunning = false;
 
   public bool IsRunning => _isRunning;
+  public ProjectRegistry ProjectRegistry => _projectRegistry;
 
   public RagonServer(
     INetworkServer server,
@@ -57,6 +60,7 @@ public class RagonServer : IRagonServer, INetworkListener
     _serverPlugin = plugin;
     _contextsByConnection = new Dictionary<ushort, RagonContext>();
     _contextsByPlayerId = new Dictionary<string, RagonContext>();
+    _projectRegistry = new ProjectRegistry(configuration.LimitConnectionsPerProject);
     _lobby = new LobbyInMemory();
     _lobbySerializer = new RagonLobbyDispatcher(_lobby);
     _scheduler = new RagonScheduler();
@@ -73,7 +77,7 @@ public class RagonServer : IRagonServer, INetworkListener
     _serverPlugin.OnAttached(this);
 
     _handlers = new BaseOperation[byte.MaxValue];
-    _handlers[(byte)RagonOperation.AUTHORIZE] = new AuthorizationOperation(_reader, _writer, this, _serverPlugin, contextObserver, configuration);
+    _handlers[(byte)RagonOperation.AUTHORIZE] = new AuthorizationOperation(_reader, _writer, this, _serverPlugin, contextObserver, configuration, _projectRegistry);
     _handlers[(byte)RagonOperation.JOIN_OR_CREATE_ROOM] = new RoomJoinOrCreateOperation(_reader, _writer, plugin, _configuration);
     _handlers[(byte)RagonOperation.CREATE_ROOM] = new RoomCreateOperation(_reader, _writer, plugin, _configuration);
     _handlers[(byte)RagonOperation.JOIN_ROOM] = new RoomJoinOperation(_reader, _writer);
@@ -152,12 +156,15 @@ public class RagonServer : IRagonServer, INetworkListener
       if (room != null)
       {
         room.DetachPlayer(context.RoomPlayer);
-        
+
         _lobby.RemoveIfEmpty(room);
       }
-      
+
       if (context.ConnectionStatus == ConnectionStatus.Authorized)
+      {
         _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
+        _projectRegistry.UnregisterConnection(context.LobbyPlayer.ProjectId);
+      }
 
       _logger.Trace($"Disconnected: {connection.Id}");
     }
@@ -177,10 +184,13 @@ public class RagonServer : IRagonServer, INetworkListener
         room.DetachPlayer(context.RoomPlayer);
         _lobby.RemoveIfEmpty(room);
       }
-      
+
       if (context.ConnectionStatus == ConnectionStatus.Authorized)
+      {
         _contextsByPlayerId.Remove(context.LobbyPlayer.Id);
-      
+        _projectRegistry.UnregisterConnection(context.LobbyPlayer.ProjectId);
+      }
+
       _logger.Trace($"Timeout: {connection.Id}|{context.LobbyPlayer.Name}|{context.LobbyPlayer.Id}");
     }
     else
@@ -198,9 +208,16 @@ public class RagonServer : IRagonServer, INetworkListener
         _writer.Clear();
         _reader.Clear();
         _reader.FromArray(data);
-        
+
         var operation = _reader.ReadByte();
-        _handlers[operation]?.Handle(context, channel);
+
+        if (operation >= _handlers.Length || _handlers[operation] == null)
+        {
+          _logger.Warning($"Invalid operation code: {operation} from connection {connection.Id}");
+          return;
+        }
+
+        _handlers[operation].Handle(context, channel);
       }
     }
     catch (Exception ex)
@@ -228,13 +245,14 @@ public class RagonServer : IRagonServer, INetworkListener
 
   public void SendRoomList()
   {
-    _lobbySerializer.Write(_writer);
-
-    var sendData = _writer.ToArray();
-    foreach (var (_, value) in _contextsByPlayerId)
+    foreach (var (_, context) in _contextsByPlayerId)
     {
-      if (value.Room == null) // If only in lobby, then send room list data
-        value.Connection.Reliable.Send(sendData);
+      if (context.Room == null) // If only in lobby, then send room list data
+      {
+        _lobbySerializer.Write(_writer, context.LobbyPlayer.ProjectId);
+        var sendData = _writer.ToArray();
+        context.Connection.Reliable.Send(sendData);
+      }
     }
   }
 
@@ -287,7 +305,7 @@ public class RagonServer : IRagonServer, INetworkListener
   {
     return _contextsByPlayerId.TryGetValue(playerId, out var context) ? context : null;
   }
-  
+
   private void CopyrightInfo()
   {
     _logger.Info($"Server Version: {ServerVersion}");

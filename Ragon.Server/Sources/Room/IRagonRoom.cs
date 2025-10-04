@@ -24,6 +24,7 @@ public interface IRagonRoom
 {
   public string Id { get; }
   public string Scene { get; }
+  public int ProjectId { get; }
   public int PlayerMin { get; }
   public int PlayerMax { get; }
   public int PlayerCount { get; }

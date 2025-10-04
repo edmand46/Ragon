@@ -43,7 +43,7 @@ public class WebSocketServer : INetworkServer
     _executor = new Executor();
   }
   
-  public async void StartAccept(CancellationToken cancellationToken)
+  public async ValueTask StartAccept(CancellationToken cancellationToken)
   {
     while (!cancellationToken.IsCancellationRequested)
     {
@@ -58,26 +58,26 @@ public class WebSocketServer : INetworkServer
           context.Response.Close();
           continue;
         }
-        
+
         var webSocketContext = await context.AcceptWebSocketAsync(null);
         var webSocket = webSocketContext.WebSocket;
         var peerId = _sequencer.Pop();
-        
-        connection = new WebSocketConnection(webSocket, peerId);  
+
+        connection = new WebSocketConnection(webSocket, peerId);
       }
       catch (Exception ex)
       {
           _logger.Error(ex);
           continue;
       }
-      
+
       _connections[connection.Id] = connection;
-      
-      StartListen(connection, cancellationToken);
+
+      _ = StartListen(connection, cancellationToken);
     }
   }
 
-  async void StartListen(WebSocketConnection connection, CancellationToken cancellationToken)
+  async ValueTask StartListen(WebSocketConnection connection, CancellationToken cancellationToken)
   {
     _activeConnections.Add(connection);
     _networkListener.OnConnected(connection);
@@ -86,7 +86,7 @@ public class WebSocketServer : INetworkServer
     var rawData = new byte[2048];
     var rawDataBuffer = new Memory<byte>(rawData);
     var data = new ArrayBufferWriter<byte>();
-    
+
     while (webSocket.State == WebSocketState.Open || !cancellationToken.IsCancellationRequested)
     {
       try
@@ -95,17 +95,17 @@ public class WebSocketServer : INetworkServer
         {
           var result = await webSocket.ReceiveAsync(rawDataBuffer, cancellationToken);
           var payload = rawDataBuffer.Slice(0, result.Count);
-          
+
           data.Write(payload.Span);
-          
+
           if (result.EndOfMessage)
             break;
         }
-        
+
         if (data.WrittenCount > 0)
         {
           _networkListener.OnData(connection, NetworkChannel.RELIABLE, data.WrittenMemory.ToArray());
-          
+
           data.Clear();
         }
       }
@@ -117,15 +117,15 @@ public class WebSocketServer : INetworkServer
 
     _sequencer.Push(connection.Id);
     _activeConnections.Remove(connection);
-    
+
     _networkListener.OnDisconnected(connection);
   }
 
   public void Update()
   {
     _executor.Update();
-    
-    Flush();
+
+    _ = Flush();
   }
 
   public void Broadcast(byte[] data, NetworkChannel channel)
@@ -134,7 +134,7 @@ public class WebSocketServer : INetworkServer
       activeConnection.Reliable.Send(data);    
   }
 
-  public async void Flush()
+  public async ValueTask Flush()
   {
     foreach (var conn in _activeConnections)
       await conn.Flush();

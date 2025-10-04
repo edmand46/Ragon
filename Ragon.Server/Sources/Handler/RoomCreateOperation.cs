@@ -88,7 +88,7 @@ namespace Ragon.Server.Handler
       var roomPlayer = new RagonRoomPlayer(context, lobbyPlayer.Id, lobbyPlayer.Name);
 
       var roomPlugin = _serverPlugin.CreateRoomPlugin(information);
-      var room = new RagonRoom(roomId, information, roomPlugin);
+      var room = new RagonRoom(roomId, information, roomPlugin, lobbyPlayer.ProjectId);
 
       room.Plugin.OnAttached(room);
       roomPlayer.OnAttached(room);
