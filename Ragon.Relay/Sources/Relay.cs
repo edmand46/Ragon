@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Newtonsoft.Json;
@@ -40,9 +41,9 @@ namespace Ragon.Relay
       var configuration = JsonConvert.DeserializeObject<RelayConfiguration>(data);
       var serverType = RagonServerConfiguration.GetServerType(configuration.ServerType);
 
-      INetworkServer networkServer = new ENetServer();
+      INetworkServer networkServer;
       IServerPlugin plugin = new RelayServerPlugin();
-      
+
       switch (serverType)
       {
         case ServerType.ENET:
@@ -50,6 +51,9 @@ namespace Ragon.Relay
           break;
         case ServerType.WEBSOCKET:
           networkServer = new WebSocketServer();
+          break;
+        default:
+          networkServer = new ENetServer();
           break;
       }
 
@@ -67,13 +71,30 @@ namespace Ragon.Relay
         ServerTickRate = configuration.ServerTickRate,
         ServerAddress = configuration.ServerAddress,
       };
-      
+
       var relay = new RagonServer(networkServer, plugin, serverConfiguration);
       relay.Start();
+
+      var sw = Stopwatch.StartNew();
+      var tickRateMs = 1000.0 / configuration.ServerTickRate;
+      var nextTickMs = tickRateMs;
+
       while (relay.IsRunning)
       {
         relay.Tick();
-        Thread.Sleep(1);
+
+        var sleepTime = nextTickMs - sw.Elapsed.TotalMilliseconds;
+        if (sleepTime > 0)
+        {
+          Thread.Sleep((int)sleepTime);
+        }
+
+        nextTickMs += tickRateMs;
+
+        if (nextTickMs < sw.Elapsed.TotalMilliseconds)
+        {
+          nextTickMs = sw.Elapsed.TotalMilliseconds + tickRateMs;
+        }
       }
 
       relay.Dispose();

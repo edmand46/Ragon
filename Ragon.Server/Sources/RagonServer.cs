@@ -42,9 +42,7 @@ public class RagonServer : IRagonServer, INetworkListener
   private readonly Dictionary<ushort, RagonContext> _contextsByConnection;
   private readonly Dictionary<string, RagonContext> _contextsByPlayerId;
   private readonly ProjectRegistry _projectRegistry;
-  private readonly Stopwatch _timer;
   private readonly RagonLobbyDispatcher _lobbySerializer;
-  private readonly long _tickRate = 0;
   private bool _isRunning = false;
 
   public bool IsRunning => _isRunning;
@@ -66,13 +64,12 @@ public class RagonServer : IRagonServer, INetworkListener
     _scheduler = new RagonScheduler();
     _reader = new RagonBuffer();
     _writer = new RagonBuffer();
-    _tickRate = 1000 / _configuration.ServerTickRate;
-    _timer = new Stopwatch();
-    
+
     var contextObserver = new RagonContextObserver(_contextsByPlayerId);
     _scheduler.Run(new RagonActionTimer(SendRoomList, 2.0f));
     _scheduler.Run(new RagonActionTimer(SendPlayerUserData, 0.1f));
     _scheduler.Run(new RagonActionTimer(SendRoomUserData, 0.1f));
+    _scheduler.Run(new RagonActionTimer(SendTimestamp, 1.0f / _configuration.ServerTickRate));
     
     _serverPlugin.OnAttached(this);
 
@@ -98,19 +95,8 @@ public class RagonServer : IRagonServer, INetworkListener
   }
   public void Tick()
   {
-    if (_timer.ElapsedMilliseconds > _tickRate * 2)
-    {
-      _logger.Warning($"Slow performance: {_timer.ElapsedMilliseconds}");
-    }
-
-    if (_timer.ElapsedMilliseconds > _tickRate)
-    {
-      _timer.Restart();
-      _scheduler.Update(_timer.ElapsedMilliseconds / 1000.0f);
-
-      SendTimestamp();
-    }
-
+    var deltaTime = 1.0f / _configuration.ServerTickRate;
+    _scheduler.Update(deltaTime);
     _server.Update();
   }
 
@@ -128,8 +114,6 @@ public class RagonServer : IRagonServer, INetworkListener
 
     _server.Listen(this, networkConfiguration);
     _serverPlugin.OnAttached(this);
-
-    _timer.Start();
 
     _isRunning = true;
   }
