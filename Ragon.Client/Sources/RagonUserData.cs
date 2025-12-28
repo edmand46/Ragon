@@ -98,6 +98,7 @@ namespace Ragon.Client
         }
       }
 
+      _changesCache.Clear();
       _localChanges.Clear();
     }
   }

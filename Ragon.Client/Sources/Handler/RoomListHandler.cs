@@ -17,6 +17,7 @@ internal class RoomListHandler: IHandler
   {
     var roomCount = reader.ReadUShort();
     var roomList = new RagonRoomInformation[roomCount];
+    
     for (int i = 0; i < roomCount; i++)
     {
       var id = reader.ReadString();

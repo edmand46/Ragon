@@ -148,8 +148,7 @@ public class RagonRoom : IRagonRoom, IRagonAction
     RagonTarget targetMode
   )
   {
-    if (eventMode == RagonReplicationMode.Buffered && targetMode != RagonTarget.Owner &&
-        _bufferedEvents.Count < _limitBufferedEvents)
+    if (eventMode == RagonReplicationMode.Buffered && targetMode != RagonTarget.Owner && _bufferedEvents.Count < _limitBufferedEvents)
     {
       _bufferedEvents.Add(evnt);
     }

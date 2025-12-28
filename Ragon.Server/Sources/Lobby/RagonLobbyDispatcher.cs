@@ -16,8 +16,9 @@ public class RagonLobbyDispatcher
   {
     writer.Clear();
     writer.WriteOperation(RagonOperation.ROOM_LIST_UPDATED);
+    
     var rooms = _lobby.Rooms;
-
+    
     if (projectId > 0)
     {
       rooms = rooms.Where(r => r.ProjectId == projectId).ToList();
